@@ -6,7 +6,7 @@ import java.util.List;
 public class Layer {
     private List<Neuron> neurons = new ArrayList<>();
 
-    public void addNeurons(Neuron neuron) {
+    public void addNeuron(Neuron neuron) {
         neurons.add(neuron);
     }
 

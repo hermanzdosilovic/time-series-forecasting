@@ -5,22 +5,22 @@ import java.util.List;
 
 public abstract class Neuron {
 
-    protected List<Weight> inputWeights = new ArrayList<>();
+    protected List<Synapse> inputSynapses = new ArrayList<>();
     protected double outputValue;
 
     public double getOutputValue() {
         return outputValue;
     }
 
-    public List<Weight> getInputWeights() {
-        return inputWeights;
+    public List<Synapse> getInputSynapses() {
+        return inputSynapses;
     }
 
-    public void addWeight(Weight weight) {
-        if (!weight.getOutputNeuron().equals(this)) {
+    public void addWeight(Synapse synapse) {
+        if (!synapse.getOutputNeuron().equals(this)) {
             throw new NeuronException("Invalid output neuron");
         }
-        inputWeights.add(weight);
+        inputSynapses.add(synapse);
     }
 
     public abstract void calculateOutputValue();

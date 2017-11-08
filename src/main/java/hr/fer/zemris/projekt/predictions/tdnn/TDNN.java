@@ -25,7 +25,6 @@ public class TDNN {
     }
 
 
-
     private void createInputLayer(int size) {
         inputLayer = new Layer();
         for (int i = 0; i < size; ++i) {
@@ -45,12 +44,12 @@ public class TDNN {
         outputLayer.addNeuron(new OutputNeuron());
     }
 
-    private static  List<Synapse> connectLayers(Layer fromLayer, Layer toLayer) {
+    private static List<Synapse> connectLayers(Layer fromLayer, Layer toLayer) {
         List<Synapse> synapses = new ArrayList<>();
         Random random = new Random();
         for (int i = 0; i < toLayer.sizeOfLayer(); ++i) {
             Neuron toNeuron = toLayer.getNeuronAtIndex(i);
-            toNeuron.addWeight(new Synapse(BiasNeuron.getInstance(),toNeuron));
+            toNeuron.addWeight(new Synapse(BiasNeuron.getInstance(), toNeuron));
             for (int j = 0; j < fromLayer.sizeOfLayer(); ++j) {
                 Neuron fromNeuron = fromLayer.getNeuronAtIndex(j);
                 Synapse synapse = new Synapse(fromNeuron, toNeuron);
@@ -59,8 +58,8 @@ public class TDNN {
             }
             //modify weights to starting values from interval [-2.4/m , 2.4/m]
             int m = toNeuron.getInputSynapses().size();
-            double rangeMin = -2.4/m;
-            double rangeMax = 2.4/m;
+            double rangeMin = -2.4 / m;
+            double rangeMax = 2.4 / m;
             toNeuron.getInputSynapses().forEach(s -> {
                 double weight = rangeMin + (rangeMax - rangeMin) * random.nextDouble();
                 s.setWeight(weight);

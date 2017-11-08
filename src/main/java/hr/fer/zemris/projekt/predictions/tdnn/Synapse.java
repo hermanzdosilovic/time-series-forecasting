@@ -1,14 +1,18 @@
 package hr.fer.zemris.projekt.predictions.tdnn;
 
-public class Weight {
+public class Synapse {
     private Neuron inputNeuron;
     private Neuron outputNeuron;
     private double weight;
 
-    public Weight(Neuron inputNeuron, Neuron outputNeuron, double weight) {
+    public Synapse(Neuron inputNeuron, Neuron outputNeuron, double weight) {
         this.inputNeuron = inputNeuron;
         this.outputNeuron = outputNeuron;
         this.weight = weight;
+    }
+
+    public Synapse(Neuron inputNeuron, Neuron outputNeuron) {
+        this(inputNeuron,outputNeuron,1.);
     }
 
     public Neuron getInputNeuron() {

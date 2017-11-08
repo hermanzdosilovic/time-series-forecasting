@@ -18,7 +18,7 @@ public abstract class Neuron {
 
     public void addWeight(Weight weight) {
         if (!weight.getOutputNeuron().equals(this)) {
-            throw new TDNNException("Invalid output neuron");
+            throw new NeuronException("Invalid output neuron");
         }
         inputWeights.add(weight);
     }

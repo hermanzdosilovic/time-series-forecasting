@@ -4,17 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Layer {
-    private List<Neuron[]> neurons = new ArrayList<>();
+    private List<Neuron> neurons = new ArrayList<>();
 
-    public void addNeurons(Neuron[] neuronsArray) {
-        neurons.add(neuronsArray);
+    public void addNeurons(Neuron neuron) {
+        neurons.add(neuron);
     }
 
-    public Neuron[] getNeuronsAtIndex(int index) {
+    public Neuron getNeuronAtIndex(int index) {
         return neurons.get(index);
     }
 
-    public int sizeOfNeuronsList() {
+    public int sizeOfLayer() {
         return neurons.size();
     }
 }

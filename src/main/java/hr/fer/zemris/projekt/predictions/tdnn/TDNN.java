@@ -12,7 +12,6 @@ public class TDNN {
     private int timeDelay;
     private List<Synapse> synapses = new ArrayList<>();
 
-
     public TDNN(int timeDelay, int inputLayerSize, int hiddenLayerSize) {
         this.timeDelay = timeDelay;
 
@@ -47,6 +46,21 @@ public class TDNN {
         for (int i = 0; i < size; ++i) {
             inputLayer.addNeuron(new InputNeuron());
         }
+    }
+
+    public double feedForward() {
+        for(int i = 0, n = inputLayer.sizeOfLayer(); i<n ; ++i) {
+            inputLayer.getNeuronAtIndex(i).calculateOutputValue();
+        }
+
+        for(int i = 0, n = hiddenLayer.sizeOfLayer(); i<n ; ++i) {
+            hiddenLayer.getNeuronAtIndex(i).calculateOutputValue();
+        }
+
+        for(int i = 0, n = outputLayer.sizeOfLayer(); i<n ; ++i) {
+            outputLayer.getNeuronAtIndex(i).calculateOutputValue();
+        }
+        return outputLayer.getNeuronAtIndex(0).getOutputValue();
     }
 
     private void createHiddenLayer(int size) {

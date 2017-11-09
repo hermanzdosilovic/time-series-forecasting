@@ -24,6 +24,23 @@ public class TDNN {
         synapses.addAll(connectLayers(hiddenLayer, outputLayer));
     }
 
+    public double[] getWeights() {
+        double[] weights = new double[synapses.size()];
+        for (int i = 0, n = synapses.size(); i < n; ++i) {
+            weights[i] = synapses.get(i).getWeight();
+        }
+        return weights;
+    }
+
+    public void setWeights(double[] weights) {
+        if (weights.length != synapses.size()) {
+            throw new TDNNException("Invalid weights array size.");
+        }
+
+        for (int i = 0, n = weights.length; i < n; ++i) {
+            synapses.get(i).setWeight(weights[i]);
+        }
+    }
 
     private void createInputLayer(int size) {
         inputLayer = new Layer();
@@ -43,6 +60,7 @@ public class TDNN {
         outputLayer = new Layer();
         outputLayer.addNeuron(new OutputNeuron());
     }
+
 
     private static List<Synapse> connectLayers(Layer fromLayer, Layer toLayer) {
         List<Synapse> synapses = new ArrayList<>();

@@ -109,9 +109,9 @@ public class Util {
         for (Map.Entry<String, List<Double>> dataset : data.entrySet()) {
             final XYSeries series = new XYSeries(dataset.getKey());
 
-            List<Double> pom = dataset.getValue();
-            for (int j = 0; j < pom.size(); j++) {
-                series.add(j, pom.get(j));
+            List<Double> tmpList = dataset.getValue();
+            for (int j = 0; j < tmpList.size(); j++) {
+                series.add(j, tmpList.get(j));
             }
             xyCollection.addSeries(series);
 
@@ -121,13 +121,9 @@ public class Util {
 
             i++;
         }
-        JFreeChart chart = ChartFactory.createXYLineChart(
-                "Graph",
-                "Time interval",
-                "Value",
-                xyCollection,
-                PlotOrientation.VERTICAL,
-                true, true, false);
+        JFreeChart chart = ChartFactory
+            .createXYLineChart("Graph", "Time interval", "Value", xyCollection,
+                PlotOrientation.VERTICAL, true, true, false);
 
         final XYPlot plot = chart.getXYPlot();
         plot.setRenderer(renderer);

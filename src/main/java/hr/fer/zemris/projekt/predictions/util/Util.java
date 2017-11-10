@@ -12,7 +12,6 @@ import org.jfree.data.xy.XYSeriesCollection;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,58 +20,107 @@ import java.util.List;
 
 public class Util {
 
-    public static List<Double> parseDataset(Path path, Integer indexOfValue, String delimiter) throws UtilException {
-        List<String> dataset;
-        try {
-            dataset = Files.readAllLines(path);
-        } catch (IOException e) {
-            throw new UtilException("Error while reading file.");
-        }
-
+    public static List<Double> readDataset(Path path, Integer indexOfValue, String delimiter) throws IOException {
+        List<String> dataset = Files.readAllLines(path);
         List<Double> result = new ArrayList<>();
         for (String line : dataset) {
-            String[] data = line.trim().split(delimiter);
-            result.add(Double.parseDouble(data[indexOfValue].trim()));
+            String[] data = line.trim().split(String.format("[%s]", delimiter));
+            int index = indexOfValue == -1 ? data.length - 1 : indexOfValue;
+            result.add(Double.parseDouble(data[index].trim()));
         }
         return result;
     }
 
-    public static List<Double> parseDataset(Path path, Integer indexOfValue) throws UtilException {
-        return parseDataset(path, indexOfValue, ",");
+    public static List<Double> readDataset(Path path, Integer indexOfValue) throws IOException {
+        return readDataset(path, indexOfValue, ",");
+    }
+
+    public static List<Double> readDataset(Path path, String delimiter) throws IOException {
+        return readDataset(path, -1, delimiter);
+    }
+
+    public static List<Double> readDataset(Path path) throws IOException {
+        return readDataset(path, -1, ",");
     }
 
 
-    public static void datasetToPNG(Graph graph, Path path, String nameOfFile, Integer width, Integer height) throws UtilException {
-        JFreeChart xylineChart = plotDataset(graph);
-        File XYChart = new File(String.format("%s/%s.png", path.toAbsolutePath().toString(), nameOfFile));
-        try {
-            ChartUtilities.saveChartAsPNG(XYChart, xylineChart, width, height);
-        } catch (IOException e) {
-            throw new UtilException("Error happened while saving image onto disk.");
+    public static void datasetToPNG(Path path, Integer width, Integer height, Map<String, List<Double>> data) throws IOException {
+        JFreeChart xylineChart = plotDataset(data);
+
+        int i = 1;
+        while (Files.exists(path)) {
+            String name = path.getFileName().toString();
+            String[] tmpArray = name.split("[.]");
+
+            int indexOfBracket = tmpArray[0].indexOf("(");
+            String filename;
+            if (indexOfBracket != -1) {
+                filename = tmpArray[0].substring(0, indexOfBracket);
+            }else {
+                filename = tmpArray[0];
+            }
+
+            name = String.format("%s(%d).%s", filename, i++, tmpArray[1]);
+            path = path.getParent();
+            path = path.resolve(name);
         }
+
+        ChartUtilities.saveChartAsPNG(path.toFile(), xylineChart, width, height);
     }
 
-    public static void datasetToPNG(Graph graph, Path path, String nameOfFile) throws UtilException {
-        datasetToPNG(graph, path, nameOfFile, 640, 480);
+    public static void datasetToPNG(Path path, Map<String, List<Double>> data) throws IOException {
+        datasetToPNG(path, 640, 480, data);
     }
 
-    public static JFreeChart plotDataset(Graph graph) throws UtilException {
-        int size = graph.size();
-        if (size < 1) {
-            throw new UtilException("There needs to be at least one dataset in given graph.");
-        }
+    public static void datasetToPNG(Path path, List<List<Double>> data) throws IOException {
+        datasetToPNG(path, listOfListsToMap(data));
+    }
 
+    public static void datasetToPNGOne(Path path, List<Double> data) throws IOException {
+        datasetToPNG(path, listToListOfLists(data));
+    }
+
+    public static void datasetToPNG(Path path, List<Double>... data) throws IOException {
+        datasetToPNG(path, Arrays.asList(data));
+    }
+
+
+    public static void plot(Map<String, List<Double>> data) {
+        SwingUtilities.invokeLater(() -> plotAndShowData(data));
+    }
+
+    public static void plot(List<List<Double>> data) {
+        plot(listOfListsToMap(data));
+    }
+
+    public static void plot(List<Double>... data) {
+        plot(Arrays.asList(data));
+    }
+
+    public static void plotOne(List<Double> data) {
+        plot(listToListOfLists(data));
+    }
+
+
+    public static JFreeChart plotDataset(Map<String, List<Double>> data) {
         final XYSeriesCollection xyCollection = new XYSeriesCollection();
-        for (int i = 0; i < size; i++) {
-            final XYSeries series = new XYSeries(graph.getName(i));
+        XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
+        int i = 0;
+        for (Map.Entry<String, List<Double>> dataset : data.entrySet()) {
+            final XYSeries series = new XYSeries(dataset.getKey());
 
-            List<Double> pom = graph.getData(i);
+            List<Double> pom = dataset.getValue();
             for (int j = 0; j < pom.size(); j++) {
                 series.add(j, pom.get(j));
             }
             xyCollection.addSeries(series);
-        }
 
+            renderer.setSeriesPaint(i, getColor(i));
+            renderer.setSeriesStroke(i, new BasicStroke(2f));
+            renderer.setSeriesShapesVisible(i, false);
+
+            i++;
+        }
         JFreeChart chart = ChartFactory.createXYLineChart(
                 "Graph",
                 "Time interval",
@@ -82,15 +130,35 @@ public class Util {
                 true, true, false);
 
         final XYPlot plot = chart.getXYPlot();
-        XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
-        for (int i = 0; i < size; i++) {
-            renderer.setSeriesPaint(i, getColor(i));
-            renderer.setSeriesStroke(i, new BasicStroke(2f));
-            renderer.setSeriesShapesVisible(i, false);
-        }
         plot.setRenderer(renderer);
 
         return chart;
+    }
+
+    private static void plotAndShowData(Map<String, List<Double>> data) {
+        JFrame frame = new JFrame();
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setLayout(new BorderLayout());
+
+        JPanel panel = graphAsPanel(data);
+        frame.add(panel, BorderLayout.CENTER);
+
+        frame.pack();
+        frame.setVisible(true);
+    }
+
+    private static Map<String, List<Double>> listOfListsToMap(List<List<Double>> data) {
+        Map<String, List<Double>> tmpMap = new HashMap<>();
+        for (int i = 0; i < data.size(); i++) {
+            tmpMap.put(String.format("Data %d", i + 1), data.get(i));
+        }
+        return tmpMap;
+    }
+
+    private static List<List<Double>> listToListOfLists(List<Double> data) {
+        List<List<Double>> tmpList = new ArrayList<>();
+        tmpList.add(data);
+        return tmpList;
     }
 
     private static Color getRandomColor() {
@@ -111,16 +179,14 @@ public class Util {
         }
     }
 
-    public static JPanel graphAsPanel(Graph graph, Integer width, Integer height) throws UtilException {
-        JFreeChart chart = plotDataset(graph);
+    public static JPanel graphAsPanel(Map<String, List<Double>> data, Integer width, Integer height) {
+        JFreeChart chart = plotDataset(data);
         ChartPanel panel = new ChartPanel(chart);
         panel.setPreferredSize(new Dimension(width, height));
         return panel;
     }
 
-    public static JPanel graphAsPanel(Graph graph) throws UtilException {
-        return graphAsPanel(graph, 640, 480);
+    public static JPanel graphAsPanel(Map<String, List<Double>> data) {
+        return graphAsPanel(data, 640, 480);
     }
-
-
 }

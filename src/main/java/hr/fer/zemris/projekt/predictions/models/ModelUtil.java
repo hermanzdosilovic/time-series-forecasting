@@ -8,27 +8,23 @@ import java.util.List;
 public class ModelUtil {
 
     public static List<Double> stationarize(List<Double> data) {
-        List<Double> result = new ArrayList<>();
-        result.addAll(data);
-
-        while (!checkIfStationary(result)) {
+        List<Double> result = new ArrayList<>(data);
+        while (!isStationary(result)) {
             result = differentiate(result);
         }
         return result;
     }
 
-
-    public static boolean checkIfStationary(List<Double> data) {
-        // creating a primitive array
-        double[] pom = new double[data.size()];
-        for (int i = 0; i < pom.length; i++) {
-            pom[i] = data.get(i);
+    public static boolean isStationary(List<Double> data) {
+        // converting list to a primitive array
+        double[] tmpArray = new double[data.size()];
+        for (int i = 0; i < tmpArray.length; i++) {
+            tmpArray[i] = data.get(i);
         }
 
-        AugmentedDickeyFuller adf = new AugmentedDickeyFuller(pom, pom.length - 2);
+        AugmentedDickeyFuller adf = new AugmentedDickeyFuller(tmpArray, tmpArray.length - 2);
         return !adf.isNeedsDiff();
     }
-
 
     public static List<Double> differentiate(List<Double> data) {
         System.out.println("Differencing data given.");
@@ -38,6 +34,4 @@ public class ModelUtil {
         }
         return result;
     }
-
-
 }

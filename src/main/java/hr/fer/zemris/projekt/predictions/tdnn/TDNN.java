@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class TDNN {
+public class TDNN implements INeuralNetwork {
 
     private Layer inputLayer;
     private Layer outputLayer;
@@ -69,6 +69,10 @@ public class TDNN {
         for (int i = 0, n = weights.length; i < n; ++i) {
             synapses.get(i).setWeight(weights[i]);
         }
+    }
+
+    public int getInputLayerSize() {
+        return inputLayer.sizeOfLayer();
     }
 
     private List<Synapse> createSynapses() {

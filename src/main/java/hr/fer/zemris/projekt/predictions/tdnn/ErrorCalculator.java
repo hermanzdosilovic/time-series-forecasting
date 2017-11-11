@@ -13,7 +13,7 @@ public class ErrorCalculator implements IErrorCalculator {
             double[] input = Arrays.copyOfRange(inputs, i, i + windowSize);
             neuralNetwork.setInput(input);
             double result = neuralNetwork.feedForward();
-            error += Math.pow(result - inputs[i + windowSize + 1], 2.)/2.;
+            error += Math.pow(result - inputs[i + windowSize + 1], 2.) / 2.;
         }
         return error;
     }

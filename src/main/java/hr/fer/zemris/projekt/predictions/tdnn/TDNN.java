@@ -8,42 +8,46 @@ public class TDNN {
 
     private Layer inputLayer;
     private Layer outputLayer;
-    private Layer hiddenLayer;
+    private Layer[] hiddenLayers;
     private int timeDelay;
-    private List<Synapse> synapses = new ArrayList<>();
+    private List<Synapse> synapses;
 
-    public TDNN(int timeDelay, int inputLayerSize, int hiddenLayerSize) {
+    public TDNN(int timeDelay, int inputLayerSize, int... hiddenLayerSizes) {
+        if (hiddenLayerSizes.length < 1) {
+            throw new TDNNException("TDNN should have more than zero hidden layers.");
+        }
         this.timeDelay = timeDelay;
 
         createInputLayer(inputLayerSize);
-        createHiddenLayer(hiddenLayerSize);
+        createHiddenLayers(hiddenLayerSizes);
         createOutputLayer();
 
-        synapses.addAll(connectLayers(inputLayer, hiddenLayer));
-        synapses.addAll(connectLayers(hiddenLayer, outputLayer));
+        synapses = createSynapses();
     }
 
     public double feedForward() {
-        for(int i = 0, n = inputLayer.sizeOfLayer(); i<n ; ++i) {
+        for (int i = 0, n = inputLayer.sizeOfLayer(); i < n; ++i) {
             inputLayer.getNeuronAtIndex(i).calculateOutputValue();
         }
 
-        for(int i = 0, n = hiddenLayer.sizeOfLayer(); i<n ; ++i) {
-            hiddenLayer.getNeuronAtIndex(i).calculateOutputValue();
+        for (Layer hiddenLayer : hiddenLayers) {
+            for (int i = 0, n = hiddenLayer.sizeOfLayer(); i < n; ++i) {
+                hiddenLayer.getNeuronAtIndex(i).calculateOutputValue();
+            }
         }
 
-        for(int i = 0, n = outputLayer.sizeOfLayer(); i<n ; ++i) {
+        for (int i = 0, n = outputLayer.sizeOfLayer(); i < n; ++i) {
             outputLayer.getNeuronAtIndex(i).calculateOutputValue();
         }
         return outputLayer.getNeuronAtIndex(0).getOutputValue();
     }
 
-    public void setInput(double[] inputValues){
-        if(inputValues.length != inputLayer.sizeOfLayer()) {
+    public void setInput(double[] inputValues) {
+        if (inputValues.length != inputLayer.sizeOfLayer()) {
             throw new TDNNException("Invalid lenght of input array");
         }
 
-        for(int i=0, n=inputValues.length; i<n;++i) {
+        for (int i = 0, n = inputValues.length; i < n; ++i) {
             InputNeuron inputNeuron = (InputNeuron) inputLayer.getNeuronAtIndex(i);
             inputNeuron.setInputValue(inputValues[i]);
         }
@@ -67,6 +71,16 @@ public class TDNN {
         }
     }
 
+    private List<Synapse> createSynapses() {
+        List<Synapse> synapses = new ArrayList<>();
+        synapses.addAll(connectLayers(inputLayer, hiddenLayers[0]));
+        for (int i = 1, n = hiddenLayers.length; i < n - 1; ++i) {
+            synapses.addAll(connectLayers(hiddenLayers[i], hiddenLayers[i + 1]));
+        }
+        synapses.addAll(connectLayers(hiddenLayers[hiddenLayers.length - 1], outputLayer));
+        return synapses;
+    }
+
     private void createInputLayer(int size) {
         inputLayer = new Layer();
         for (int i = 0; i < size; ++i) {
@@ -75,10 +89,13 @@ public class TDNN {
     }
 
 
-    private void createHiddenLayer(int size) {
-        hiddenLayer = new Layer();
-        for (int i = 0; i < size; ++i) {
-            hiddenLayer.addNeuron(new HiddenNeuron(timeDelay));
+    private void createHiddenLayers(int... size) {
+        hiddenLayers = new Layer[size.length];
+        for (int i = 0, n = size.length; i < n; ++i) {
+            hiddenLayers[i] = new Layer();
+            for (int j = 0, m = size[i]; j < m; ++j) {
+                hiddenLayers[i].addNeuron(new HiddenNeuron(timeDelay));
+            }
         }
     }
 

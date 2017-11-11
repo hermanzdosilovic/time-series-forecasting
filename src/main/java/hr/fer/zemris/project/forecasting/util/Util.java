@@ -1,4 +1,4 @@
-package hr.fer.zemris.projekt.predictions.util;
+package hr.fer.zemris.project.forecasting.util;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;

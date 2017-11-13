@@ -9,10 +9,9 @@ public class TDNN implements INeuralNetwork {
     private Layer inputLayer;
     private Layer outputLayer;
     private Layer[] hiddenLayers;
-    private int timeDelay;
     private List<Synapse> synapses;
 
-    public TDNN(int timeDelay, int inputLayerSize, int... hiddenLayerSizes) {
+    public TDNN(int inputLayerSize, int... hiddenLayerSizes) {
         if (hiddenLayerSizes.length < 1) {
             throw new TDNNException("TDNN should have more than zero hidden layers.");
         }
@@ -98,7 +97,7 @@ public class TDNN implements INeuralNetwork {
         for (int i = 0, n = size.length; i < n; ++i) {
             hiddenLayers[i] = new Layer();
             for (int j = 0, m = size[i]; j < m; ++j) {
-                hiddenLayers[i].addNeuron(new HiddenNeuron(timeDelay));
+                hiddenLayers[i].addNeuron(new HiddenNeuron());
             }
         }
     }

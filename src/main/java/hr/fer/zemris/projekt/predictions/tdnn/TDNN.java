@@ -15,8 +15,6 @@ public class TDNN implements INeuralNetwork {
         if (hiddenLayerSizes.length < 1) {
             throw new TDNNException("TDNN should have more than zero hidden layers.");
         }
-        this.timeDelay = timeDelay;
-
         createInputLayer(inputLayerSize);
         createHiddenLayers(hiddenLayerSizes);
         createOutputLayer();

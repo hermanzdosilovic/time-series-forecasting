@@ -1,4 +1,4 @@
-package hr.fer.zemris.projekt.predictions.tdnn;
+package hr.fer.zemris.project.forecasting.tdnn;
 
 public class BiasNeuron extends Neuron{
 

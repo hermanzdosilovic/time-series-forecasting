@@ -1,4 +1,4 @@
-package hr.fer.zemris.projekt.predictions.tdnn;
+package hr.fer.zemris.project.forecasting.tdnn;
 
 import java.util.ArrayList;
 import java.util.List;

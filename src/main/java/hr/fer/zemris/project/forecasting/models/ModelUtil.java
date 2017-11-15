@@ -1,4 +1,4 @@
-package hr.fer.zemris.projekt.predictions.models;
+package hr.fer.zemris.project.forecasting.models;
 
 import org.surus.math.AugmentedDickeyFuller;
 

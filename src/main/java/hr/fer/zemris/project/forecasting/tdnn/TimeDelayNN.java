@@ -31,9 +31,7 @@ public class TimeDelayNN {
                 }
             }
 
-            layerWeight = layerWeight.transpose();
-
-            layerWeights[i - 1] = layerWeight;
+            layerWeights[i - 1] = layerWeight.transpose();
         }
     }
 

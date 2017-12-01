@@ -2,7 +2,6 @@ package hr.fer.zemris.project.forecasting.tdnn.util;
 
 import hr.fer.zemris.project.forecasting.tdnn.TimeDelayNN;
 import hr.fer.zemris.project.forecasting.tdnn.model.DataEntry;
-import hr.fer.zemris.project.forecasting.util.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,5 +22,6 @@ public final class DataUtil {
     }
 
     public static double calculateError(TimeDelayNN network, List<DataEntry> dataset) {
+        return 0;
     }
 }

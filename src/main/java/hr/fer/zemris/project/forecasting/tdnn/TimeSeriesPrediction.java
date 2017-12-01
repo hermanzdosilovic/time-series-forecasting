@@ -2,7 +2,6 @@ package hr.fer.zemris.project.forecasting.tdnn;
 
 import hr.fer.zemris.project.forecasting.tdnn.model.DataEntry;
 import hr.fer.zemris.project.forecasting.tdnn.util.DataUtil;
-import hr.fer.zemris.project.forecasting.util.Pair;
 import hr.fer.zemris.project.forecasting.util.Util;
 
 import java.io.IOException;

@@ -15,6 +15,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
 
@@ -41,6 +42,10 @@ public class Util {
 
     public static List<Double> readDataset(Path path) throws IOException {
         return readDataset(path, -1, ",");
+    }
+
+    public static List<Double> readDataset(String path) throws IOException {
+        return readDataset(Paths.get(path));
     }
 
 

@@ -40,7 +40,15 @@ public final class DataUtil {
         );
     }
 
-    public static double calculateError(TimeDelayNN network, List<DataEntry> dataset) {
+    public static List<Double> joinExpectedValues(List<DataEntry> dataset) {
+        List<Double> joinedValues = new ArrayList<>();
+        for (DataEntry dataEntry : dataset) {
+            joinedValues.addAll(dataEntry.getExpectedOutput());
+        }
+        return joinedValues;
+    }
+
+    public static double calculateMeanSquaredError(TimeDelayNN network, List<DataEntry> dataset) {
         double error = 0;
         for (DataEntry entry : dataset) {
             RealVector expected = VectorUtil.createArrayRealVector(entry.getExpectedOutput());
@@ -48,6 +56,6 @@ public final class DataUtil {
             RealVector difference = expected.subtract(actual);
             error += difference.dotProduct(difference);
         }
-        return error;
+        return error / dataset.size();
     }
 }

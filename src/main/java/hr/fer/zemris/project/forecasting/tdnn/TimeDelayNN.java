@@ -22,8 +22,8 @@ public class TimeDelayNN {
         layerWeights = new RealMatrix[architecture.length - 1];
 
         for (int i = 1; i < architecture.length; i++) {
-            int rows = architecture[i];
-            int cols = architecture[i - 1] + 1;
+            int rows = architecture[i - 1] + 1;
+            int cols = architecture[i];
             RealMatrix layerWeight = new Array2DRowRealMatrix(rows, cols);
 
             for (int row = 0; row < rows; row++) {
@@ -33,7 +33,7 @@ public class TimeDelayNN {
             }
 
             numberOfWeights += rows * cols;
-            layerWeights[i - 1] = layerWeight.transpose();
+            layerWeights[i - 1] = layerWeight;
         }
     }
 

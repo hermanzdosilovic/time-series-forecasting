@@ -40,7 +40,7 @@ public final class OSGATrain {
         List<Double> trainData = splittedDataset.getFirst();
         List<Double> testData = splittedDataset.getSecond();
 
-        final int[] ARCHITECTURE = { 5, 4, 4, 1 };
+        final int[] ARCHITECTURE = { 5, 4, 1 };
         int tdnnInputSize = ARCHITECTURE[0];
         int tdnnOutputSize = ARCHITECTURE[ARCHITECTURE.length - 1];
 
@@ -67,15 +67,15 @@ public final class OSGATrain {
     }
 
     public static double[] train(TDNN tdnn, List<DataEntry> trainSet) {
-        final int     POPULATION_SIZE               = 100;
-        final int     INITIAL_SEARCH_SPACE_SIZE     = 10;
+        final int     POPULATION_SIZE               = 1000;
+        final int     INITIAL_SEARCH_SPACE_SIZE     = 5;
         final int     TOURNAMENT_SIZE               = 5;
         final boolean SELECT_WITH_REPEAT_TOURNAMENT = false;
         final double  ALPHA                         = 0.3;
         final double  SIGMA                         = 0.9;
         final double  MUTATION_PROBABILITY          = 0.1;
-        final int     MAX_GENERATIONS               = 200;
-        final double  MIN_COMPARISON_FACTOR         = 0.8;
+        final int     MAX_GENERATIONS               = 100;
+        final double  MIN_COMPARISON_FACTOR         = 0.5;
         final double  MAX_COMPARISON_FACTOR         = 1;
         final double  SUCCESS_RATIO                 = 0.9;
         final double  MAX_SELECTION_PRESSURE        = 1000;

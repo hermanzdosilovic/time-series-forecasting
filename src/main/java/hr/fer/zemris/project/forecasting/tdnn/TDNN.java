@@ -1,6 +1,8 @@
 package hr.fer.zemris.project.forecasting.tdnn;
 
+import hr.fer.zemris.project.forecasting.tdnn.model.ActivationFunction;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.math3.analysis.UnivariateFunction;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -14,10 +16,11 @@ public class TDNN {
 
     private RealMatrix[] layerWeights;
     private int numberOfWeights;
+    private UnivariateFunction activationFunction;
 
     private static final Random rand = new Random();
 
-    public TDNN(int... architecture) {
+    public TDNN(UnivariateFunction activationFunction, int... architecture) {
         layerWeights = new RealMatrix[architecture.length - 1];
 
         for (int i = 1; i < architecture.length; i++) {
@@ -34,6 +37,12 @@ public class TDNN {
             numberOfWeights += rows * cols;
             layerWeights[i - 1] = layerWeight;
         }
+
+        this.activationFunction = activationFunction;
+    }
+
+    public TDNN(int... architecture) {
+        this(ActivationFunction.LINEAR, architecture);
     }
 
     public int getNumberOfWeights() {
@@ -49,6 +58,7 @@ public class TDNN {
 
         for (int i = 0; i < layerWeights.length; i++) {
             inputVector = layerWeights[i].preMultiply(inputVector);
+            inputVector.map(activationFunction);
 
             if (i + 1 < layerWeights.length) {
                 inputVector = inputVector.append(1);

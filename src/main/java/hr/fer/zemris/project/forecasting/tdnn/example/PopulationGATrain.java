@@ -14,6 +14,7 @@ import hr.fer.zemris.model.solution.IOptimizationSolution;
 import hr.fer.zemris.model.solution.RealVectorSolution;
 import hr.fer.zemris.numeric.AbstractFunction;
 import hr.fer.zemris.project.forecasting.tdnn.TDNN;
+import hr.fer.zemris.project.forecasting.tdnn.model.ActivationFunction;
 import hr.fer.zemris.project.forecasting.tdnn.model.DataEntry;
 import hr.fer.zemris.project.forecasting.tdnn.model.MeanSquaredErrorFunction;
 import hr.fer.zemris.project.forecasting.tdnn.util.DataUtil;
@@ -34,14 +35,14 @@ public final class PopulationGATrain {
         List<Double> trainData = splittedDataset.getFirst();
         List<Double> testData = splittedDataset.getSecond();
 
-        final int[] ARCHITECTURE = { 5, 4, 4, 1 };
+        final int[] ARCHITECTURE = { 5, 4, 1 };
         int tdnnInputSize = ARCHITECTURE[0];
         int tdnnOutputSize = ARCHITECTURE[ARCHITECTURE.length - 1];
 
         List<DataEntry> trainSet = DataUtil.createTDNNDateset(trainData, tdnnInputSize, tdnnOutputSize);
         List<DataEntry> testSet = DataUtil.createTDNNDateset(testData, tdnnInputSize, tdnnOutputSize);
 
-        TDNN tdnn = new TDNN(ARCHITECTURE);
+        TDNN tdnn = new TDNN(ActivationFunction.LINEAR, ARCHITECTURE);
         double[] trainedWeights = train(tdnn, trainSet);
 
         tdnn.setWeights(trainedWeights);
@@ -61,17 +62,17 @@ public final class PopulationGATrain {
     }
 
     public static double[] train(TDNN tdnn, List<DataEntry> trainSet) {
-        final int     POPULATION_SIZE               = 200;
+        final int     POPULATION_SIZE               = 500;
         final int     INITIAL_SEARCH_SPACE_SIZE     = 10;
-        final int     TOURNAMENT_SIZE               = 5;
+        final int     TOURNAMENT_SIZE               = 20;
         final boolean SELECT_WITH_REPEAT_TOURNAMENT = false;
         final double  ALPHA                         = 0.3;
         final double  SIGMA                         = 0.9;
         final double  MUTATION_PROBABILITY          = 0.1;
         final boolean ENABLE_ELITISM                = true;
-        final int     MAX_GENERATIONS               = 1000;
+        final int     MAX_GENERATIONS               = 2000;
         final double  DESIRED_FITNESS               = 0;
-        final double  PRECISION                     = 1e-3;
+        final double  PRECISION                     = 1e-5;
 
         AbstractFunction function = new MeanSquaredErrorFunction(tdnn, trainSet);
         IOptimizationProblem problem = new FunctionMinimizationProblem(function);

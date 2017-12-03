@@ -24,11 +24,11 @@ public final class DataUtil {
         return dataset;
     }
 
-    public static Pair<List<Double>, List<Double>> splitDataset(List<Double> rawData, double trainPercentage) {
-        int trainSize = (int) (rawData.size()*trainPercentage);
+    public static Pair<List<Double>, List<Double>> splitDataset(List<Double> dataset, double trainPercentage) {
+        int trainSize = (int) (dataset.size()*trainPercentage);
         return new Pair<>(
-            rawData.subList(0, trainSize),
-            rawData.subList(trainSize, rawData.size())
+            dataset.subList(0, trainSize),
+            dataset.subList(trainSize, dataset.size())
         );
     }
 
@@ -57,5 +57,22 @@ public final class DataUtil {
             result.addAll(tdnn.forward(entry.getInput()));
         }
         return result;
+    }
+
+    public static List<Double> featureScale(List<Double> dataset) {
+        double max = Double.MIN_VALUE;
+        double min = Double.MAX_VALUE;
+
+        for (double v : dataset) {
+            max = Math.max(v, max);
+            min = Math.min(v, min);
+        }
+
+        List<Double> scaled = new ArrayList<>();
+        for (double v : dataset) {
+            scaled.add((v - min)/(max - min));
+        }
+
+        return scaled;
     }
 }

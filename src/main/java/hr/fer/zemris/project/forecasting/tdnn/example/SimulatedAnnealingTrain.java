@@ -36,7 +36,7 @@ public final class SimulatedAnnealingTrain {
         List<Double> trainData = splittedDataset.getFirst();
         List<Double> testData = splittedDataset.getSecond();
 
-        final int[] ARCHITECTURE = { 5, 4, 4, 1 };
+        final int[] ARCHITECTURE = { 5, 4, 1 };
         int tdnnInputSize = ARCHITECTURE[0];
         int tdnnOutputSize = ARCHITECTURE[ARCHITECTURE.length - 1];
 

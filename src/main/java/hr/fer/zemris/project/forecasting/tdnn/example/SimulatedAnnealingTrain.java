@@ -1,20 +1,20 @@
 package hr.fer.zemris.project.forecasting.tdnn.example;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import hr.fer.zemris.heuristic.IHeuristic;
 import hr.fer.zemris.heuristic.metaheuristic.SimulatedAnnealing;
 import hr.fer.zemris.heuristic.metaheuristic.model.AbstractCoolingSchedule;
 import hr.fer.zemris.heuristic.metaheuristic.model.GeometricCoolingSchedule;
-import hr.fer.zemris.model.crossover.BLXAlphaCrossover;
-import hr.fer.zemris.model.crossover.ICrossover;
 import hr.fer.zemris.model.problems.FunctionMinimizationProblem;
 import hr.fer.zemris.model.problems.IOptimizationProblem;
-import hr.fer.zemris.model.selections.ISelection;
-import hr.fer.zemris.model.selections.TournamentSelection;
 import hr.fer.zemris.model.solution.AbstractOptimizationSolution;
-import hr.fer.zemris.model.solution.IOptimizationSolution;
 import hr.fer.zemris.model.solution.RealVectorSolution;
-import hr.fer.zemris.model.solution.generator.INeighbourGenerator;
-import hr.fer.zemris.model.solution.generator.RealVectorGaussianGenerator;
+import hr.fer.zemris.model.solution.neighbour.generator.INeighbourGenerator;
+import hr.fer.zemris.model.solution.neighbour.generator.RealVectorGaussianGenerator;
 import hr.fer.zemris.numeric.AbstractFunction;
 import hr.fer.zemris.project.forecasting.tdnn.TDNN;
 import hr.fer.zemris.project.forecasting.tdnn.model.DataEntry;
@@ -22,12 +22,6 @@ import hr.fer.zemris.project.forecasting.tdnn.model.MeanSquaredErrorFunction;
 import hr.fer.zemris.project.forecasting.tdnn.util.DataUtil;
 import hr.fer.zemris.project.forecasting.util.Pair;
 import hr.fer.zemris.project.forecasting.util.Util;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public final class SimulatedAnnealingTrain {
     public static void main(String[] args) throws IOException {

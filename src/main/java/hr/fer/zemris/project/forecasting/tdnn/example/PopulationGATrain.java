@@ -42,7 +42,7 @@ public final class PopulationGATrain {
         List<DataEntry> trainSet = DataUtil.createTDNNDateset(trainData, tdnnInputSize, tdnnOutputSize);
         List<DataEntry> testSet = DataUtil.createTDNNDateset(testData, tdnnInputSize, tdnnOutputSize);
 
-        TDNN tdnn = new TDNN(ActivationFunction.LINEAR, ARCHITECTURE);
+        TDNN tdnn = new TDNN(ActivationFunction.RELU, ARCHITECTURE);
         double[] trainedWeights = train(tdnn, trainSet);
 
         tdnn.setWeights(trainedWeights);

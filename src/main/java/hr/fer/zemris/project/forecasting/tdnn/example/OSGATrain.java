@@ -20,6 +20,7 @@ import hr.fer.zemris.model.solution.IOptimizationSolution;
 import hr.fer.zemris.model.solution.RealVectorSolution;
 import hr.fer.zemris.numeric.AbstractFunction;
 import hr.fer.zemris.project.forecasting.tdnn.TDNN;
+import hr.fer.zemris.project.forecasting.tdnn.model.ActivationFunction;
 import hr.fer.zemris.project.forecasting.tdnn.model.DataEntry;
 import hr.fer.zemris.project.forecasting.tdnn.model.MeanSquaredErrorFunction;
 import hr.fer.zemris.project.forecasting.tdnn.util.DataUtil;
@@ -47,7 +48,7 @@ public final class OSGATrain {
         List<DataEntry> trainSet = DataUtil.createTDNNDateset(trainData, tdnnInputSize, tdnnOutputSize);
         List<DataEntry> testSet = DataUtil.createTDNNDateset(testData, tdnnInputSize, tdnnOutputSize);
 
-        TDNN tdnn = new TDNN(ARCHITECTURE);
+        TDNN tdnn = new TDNN(ActivationFunction.RELU, ARCHITECTURE);
         double[] trainedWeights = train(tdnn, trainSet);
 
         tdnn.setWeights(trainedWeights);

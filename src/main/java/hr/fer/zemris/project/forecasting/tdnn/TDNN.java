@@ -42,7 +42,7 @@ public class TDNN {
     }
 
     public TDNN(int... architecture) {
-        this(ActivationFunction.LINEAR, architecture);
+        this(ActivationFunction.IDENTITY, architecture);
     }
 
     public int getNumberOfWeights() {
@@ -58,9 +58,9 @@ public class TDNN {
 
         for (int i = 0; i < layerWeights.length; i++) {
             inputVector = layerWeights[i].preMultiply(inputVector);
-            inputVector.map(activationFunction);
 
             if (i + 1 < layerWeights.length) {
+                inputVector = inputVector.map(activationFunction);
                 inputVector = inputVector.append(1);
             }
         }

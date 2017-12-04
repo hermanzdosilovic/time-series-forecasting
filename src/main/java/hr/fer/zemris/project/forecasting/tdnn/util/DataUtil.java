@@ -10,26 +10,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class DataUtil {
-    public static List<DataEntry> createTDNNDateset(List<Double> rawData,
-        int inputSize, int outputSize) {
+    public static List<DataEntry> createTDNNDateset(List<Double> rawData, int inputSize,
+        int outputSize) {
         List<DataEntry> dataset = new ArrayList<>();
 
         for (int i = inputSize; i < rawData.size() - outputSize; i++) {
-            dataset.add(new DataEntry(
-                rawData.subList(i - inputSize, i),
-                rawData.subList(i, i + outputSize)
-            ));
+            dataset.add(new DataEntry(rawData.subList(i - inputSize, i),
+                rawData.subList(i, i + outputSize)));
         }
 
         return dataset;
     }
 
-    public static Pair<List<Double>, List<Double>> splitDataset(List<Double> dataset, double trainPercentage) {
-        int trainSize = (int) (dataset.size()*trainPercentage);
-        return new Pair<>(
-            dataset.subList(0, trainSize),
-            dataset.subList(trainSize, dataset.size())
-        );
+    public static Pair<List<Double>, List<Double>> splitDataset(List<Double> dataset,
+        double trainPercentage) {
+        int trainSize = (int) (dataset.size() * trainPercentage);
+        return new Pair<>(dataset.subList(0, trainSize),
+            dataset.subList(trainSize, dataset.size()));
     }
 
     public static List<Double> joinExpectedValues(List<DataEntry> dataset) {
@@ -42,13 +39,43 @@ public final class DataUtil {
 
     public static double calculateMeanSquaredError(TDNN network, List<DataEntry> dataset) {
         double error = 0;
+        int n = 0;
         for (DataEntry entry : dataset) {
             RealVector expected = Vectors.asRealVector(entry.getExpectedOutput());
             RealVector actual = Vectors.asRealVector(network.forward(entry.getInput()));
             RealVector difference = expected.subtract(actual);
             error += difference.dotProduct(difference);
+            n += expected.getDimension();
         }
-        return error / dataset.size();
+        return error / n;
+    }
+
+    public static double calculateMeanPercentageError(TDNN network, List<DataEntry> dataset) {
+        double error = 0;
+        int n = 0;
+        for (DataEntry entry : dataset) {
+            RealVector expected = Vectors.asRealVector(entry.getExpectedOutput());
+            RealVector actual = Vectors.asRealVector(network.forward(entry.getInput()));
+            n += expected.getDimension();
+            for (int i = 0; i < expected.getDimension(); i++) {
+                error += (actual.getEntry(i) - expected.getEntry(i)) / actual.getEntry(i);
+            }
+        }
+        return error / n;
+    }
+
+    public static double calculateMeanAbsoluteError(TDNN network, List<DataEntry> dataset) {
+        double error = 0;
+        int n = 0;
+        for (DataEntry entry : dataset) {
+            RealVector expected = Vectors.asRealVector(entry.getExpectedOutput());
+            RealVector actual = Vectors.asRealVector(network.forward(entry.getInput()));
+            n += expected.getDimension();
+            for (int i = 0; i < expected.getDimension(); i++) {
+                error += Math.abs(actual.getEntry(i) - expected.getEntry(i));
+            }
+        }
+        return error / n;
     }
 
     public static List<Double> forward(TDNN tdnn, List<DataEntry> dataset) {
@@ -70,7 +97,7 @@ public final class DataUtil {
 
         List<Double> scaled = new ArrayList<>();
         for (double v : dataset) {
-            scaled.add((v - min)/(max - min));
+            scaled.add((v - min) / (max - min));
         }
 
         return scaled;

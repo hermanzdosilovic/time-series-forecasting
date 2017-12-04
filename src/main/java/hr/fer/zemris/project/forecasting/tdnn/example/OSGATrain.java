@@ -36,17 +36,18 @@ import java.util.Map;
 public final class OSGATrain {
 
     public static void main(String[] args) throws IOException {
-        List<Double> dataset = Util.readDataset("./datasets/exchange-rate-twi-may-1970-aug-1.csv");
-        Pair<List<Double>, List<Double>> splittedDataset = DataUtil.splitDataset(dataset, 0.8);
-        List<Double> trainData = splittedDataset.getFirst();
-        List<Double> testData = splittedDataset.getSecond();
-
-        final int[] ARCHITECTURE = { 5, 4, 1 };
+        final int[] ARCHITECTURE = {5, 4, 1};
         int tdnnInputSize = ARCHITECTURE[0];
         int tdnnOutputSize = ARCHITECTURE[ARCHITECTURE.length - 1];
 
-        List<DataEntry> trainSet = DataUtil.createTDNNDateset(trainData, tdnnInputSize, tdnnOutputSize);
-        List<DataEntry> testSet = DataUtil.createTDNNDateset(testData, tdnnInputSize, tdnnOutputSize);
+        List<Double> dataset = Util.readDataset("./datasets/exchange-rate-twi-may-1970-aug-1.csv");
+        List<DataEntry> tdnnDataset =
+            DataUtil.createTDNNDateset(dataset, tdnnInputSize, tdnnOutputSize);
+        Pair<List<DataEntry>, List<DataEntry>> splittedTDNNDataset =
+            DataUtil.splitTDNNDataset(tdnnDataset, 0.8);
+
+        List<DataEntry> trainSet = splittedTDNNDataset.getFirst();
+        List<DataEntry> testSet = splittedTDNNDataset.getSecond();
 
         TDNN tdnn = new TDNN(ActivationFunction.RELU, ARCHITECTURE);
         double[] trainedWeights = train(tdnn, trainSet);
@@ -57,8 +58,13 @@ public final class OSGATrain {
 
         System.err.printf("\nTrain MSE: %f\nTest  MSE: %f\n\n", trainError, testError);
 
-        List<Double> expectedValues = DataUtil.joinExpectedValues(testSet);
-        List<Double> predictedValues   = DataUtil.forward(tdnn, testSet);
+        plot(tdnn, trainSet);
+        plot(tdnn, testSet);
+    }
+
+    public static void plot(TDNN tdnn, List<DataEntry> dataset) {
+        List<Double> expectedValues = DataUtil.joinExpectedValues(dataset);
+        List<Double> predictedValues = DataUtil.forward(tdnn, dataset);
 
         Map<String, List<Double>> graph = new HashMap<>();
         graph.put("Expected", expectedValues);

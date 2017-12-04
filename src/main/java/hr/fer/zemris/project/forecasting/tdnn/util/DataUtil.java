@@ -3,10 +3,12 @@ package hr.fer.zemris.project.forecasting.tdnn.util;
 import hr.fer.zemris.project.forecasting.tdnn.TDNN;
 import hr.fer.zemris.project.forecasting.tdnn.model.DataEntry;
 import hr.fer.zemris.project.forecasting.util.Pair;
+import hr.fer.zemris.project.forecasting.util.Util;
 import hr.fer.zemris.project.forecasting.util.math.Vectors;
 import org.apache.commons.math3.linear.RealVector;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public final class DataUtil {
@@ -27,6 +29,13 @@ public final class DataUtil {
         int trainSize = (int) (dataset.size() * trainPercentage);
         return new Pair<>(dataset.subList(0, trainSize),
             dataset.subList(trainSize, dataset.size()));
+    }
+
+    public static Pair<List<DataEntry>, List<DataEntry>> splitTDNNDataset(List<DataEntry> dataset,
+        double trainPercentage) {
+        int trainSize = (int) (dataset.size() * trainPercentage);
+        return new Pair<>(dataset.subList(0, trainSize),
+            dataset.subList(trainSize,  dataset.size()));
     }
 
     public static List<Double> joinExpectedValues(List<DataEntry> dataset) {
@@ -61,7 +70,7 @@ public final class DataUtil {
                 error += (actual.getEntry(i) - expected.getEntry(i)) / actual.getEntry(i);
             }
         }
-        return error / n;
+        return 100.0 * error / n;
     }
 
     public static double calculateMeanAbsoluteError(TDNN network, List<DataEntry> dataset) {

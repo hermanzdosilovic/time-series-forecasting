@@ -17,6 +17,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 
 public class Util {
 
@@ -184,5 +186,14 @@ public class Util {
 
     public static JPanel graphAsPanel(Map<String, List<Double>> data) {
         return graphAsPanel(data, 640, 480);
+    }
+
+
+    public static double[] listToArray(List<Double> list) {
+        return list.stream().mapToDouble(d -> d).toArray();
+    }
+
+    public static List<Double> arrayToList(double[] array) {
+        return DoubleStream.of(array).boxed().collect(Collectors.toList());
     }
 }

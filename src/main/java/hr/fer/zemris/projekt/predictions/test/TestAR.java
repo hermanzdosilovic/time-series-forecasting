@@ -1,6 +1,6 @@
 //package hr.fer.zemris.projekt.predictions.test;
 //
-//import hr.fer.zemris.project.forecasting.models.ModelUtil;
+//import hr.fer.zemris.project.forecasting.models.Stationary;
 //import hr.fer.zemris.projekt.predictions.models.AR;
 //import hr.fer.zemris.project.forecasting.util.Util;
 //import javax.swing.*;
@@ -29,7 +29,7 @@
 //            Graph graph = new Graph();
 //
 //            List<Double> ar_data = Util.parseDataset(path, 3, " ");
-//            List<Double> ar_data_stationary = ModelUtil.stationarize(ar_data);
+//            List<Double> ar_data_stationary = Stationary.stationarize(ar_data);
 //            //graph.addNewData(ar_data_stationary, "AR data");
 //
 //            AR ar = new AR(1, ar_data_stationary);

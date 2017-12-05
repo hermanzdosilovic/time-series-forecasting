@@ -4,6 +4,7 @@ import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.stat.descriptive.moment.Mean;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,20 +18,16 @@ public class AR {
 
     public AR(int p, List<Double> data) {
         this.p = p;
-        this.data = new ArrayList<>();
-        this.data.addAll(data);
+        this.data = new ArrayList<>(data);
     }
 
     public double computeNextValue() {
-        double nextValue = 0.0;
         double[] coefficients = YuleWalker(data, p);
-        for (int i = 0; i < p; i++) {
-            nextValue += coefficients[i] * data.get(data.size() - 1 - i);
-        }
+        double nextValue = computeValue(coefficients, data.size());
 
-        // TODO error
-        double error = 0.0;
-        nextValue += error;
+        double[] error = computeErrorArray(coefficients);
+        double mean = computeMean(error);
+        nextValue += mean;
 
         data.add(nextValue);
         return nextValue;
@@ -62,7 +59,8 @@ public class AR {
         for (int lag = 1; lag <= p; lag++) {
             autocovarianceArray[lag - 1] = computeAutocorellation(data, lag);
             for (int k = 1; k <= p; k++) {
-                autocovarianceMatrixArray[lag - 1][k - 1] = computeAutocorellation(data, lag - k);
+                autocovarianceMatrixArray[lag - 1][k - 1] =
+                    computeAutocorellation(data, Math.abs(lag - k));
             }
         }
 
@@ -74,8 +72,7 @@ public class AR {
         // TODO
 
         RealVector coefficients = new LUDecomposition(autocovarianceMatrix).getSolver().getInverse()
-                .operate(autocovarianceVector)
-                .mapMultiply(-1);
+            .operate(autocovarianceVector);
         return coefficients.toArray();
     }
 
@@ -83,6 +80,29 @@ public class AR {
         return estimateAutocovariance(data, index) / estimateAutocovariance(data, 0);
     }
 
+    private double[] computeErrorArray(double[] coefficients) {
+        int order = coefficients.length;
+        double[] error = new double[data.size() - order];
+
+        for (int i = 0; i < error.length; i++) {
+            double coefficientValue = computeValue(coefficients, i + order);
+            double realValue = data.get(i + order);
+            error[i] = realValue - coefficientValue;
+        }
+        return error;
+    }
+
+    private double computeMean(double[] array) {
+        return new Mean().evaluate(array);
+    }
+
+    private double computeValue(double[] coefficients, int index) {
+        double nextValue = 0.0;
+        for (int i = 0; i < p; i++) {
+            nextValue += coefficients[i] * data.get(index - 1 - i);
+        }
+        return nextValue;
+    }
 
     public static double estimateAutocovariance(List<Double> data, int index) {
         int N = data.size();

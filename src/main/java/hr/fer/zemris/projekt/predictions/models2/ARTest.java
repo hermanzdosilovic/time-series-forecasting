@@ -22,9 +22,9 @@ public class ARTest {
         double[] dataset = new double[b.size()];
         for (String s : b) {
             double value = Double.parseDouble(s.split(" ")[4]);
-            int k = (int) (value * 100);
-            int l = k % 1000;
-            value = l / 100.;
+//            int k = (int) (value * 100);
+//            int l = k % 1000;
+//            value = l / 100.;
             System.out.println(value + ",");
             dataset[i] = value;
             i++;

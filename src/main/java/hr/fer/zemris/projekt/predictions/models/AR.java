@@ -1,5 +1,6 @@
 package hr.fer.zemris.projekt.predictions.models;
 
+import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
@@ -72,7 +73,7 @@ public class AR {
         // tu ide ili operate ili preMultiply
         // TODO
 
-        RealVector coefficients = MatrixUtils.inverse(autocovarianceMatrix)
+        RealVector coefficients = new LUDecomposition(autocovarianceMatrix).getSolver().getInverse()
                 .operate(autocovarianceVector)
                 .mapMultiply(-1);
         return coefficients.toArray();

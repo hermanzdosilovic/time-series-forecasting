@@ -16,7 +16,7 @@ public final class DataUtil {
                                                     int outputSize) {
         List<DataEntry> dataset = new ArrayList<>();
 
-        for (int i = inputSize; i < rawData.length - outputSize; i++) {
+        for (int i = inputSize; i <= rawData.length - outputSize; i++) {
             dataset.add(new DataEntry(
                     Arrays.copyOfRange(rawData, i - inputSize, i), Arrays.copyOfRange(rawData, i, i + outputSize)
             ));

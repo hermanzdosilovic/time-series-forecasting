@@ -1,4 +1,4 @@
-package hr.fer.zemris.project.forecasting.tdnn.example;
+package hr.fer.zemris.project.forecasting.examples.tdnn;
 
 import hr.fer.zemris.heuristic.metaheuristic.ga.AbstractGeneticAlgorithm;
 import hr.fer.zemris.heuristic.metaheuristic.ga.GenerationGeneticAlgorithm;

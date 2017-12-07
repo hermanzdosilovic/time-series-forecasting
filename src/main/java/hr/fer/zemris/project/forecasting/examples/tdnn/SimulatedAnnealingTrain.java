@@ -1,4 +1,4 @@
-package hr.fer.zemris.project.forecasting.tdnn.example;
+package hr.fer.zemris.project.forecasting.examples.tdnn;
 
 import java.io.IOException;
 import java.util.HashMap;

@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-public class TDNN {
+public class TDNN implements INeuralNetwork {
 
     private RealMatrix[] layerWeights;
     private int numberOfWeights;
@@ -49,12 +49,12 @@ public class TDNN {
         return numberOfWeights;
     }
 
-    public List<Double> forward(List<Double> input) {
-        RealVector inputVector = new ArrayRealVector(input.size() + 1);
-        for (int i = 0; i < input.size(); i++) {
-            inputVector.setEntry(i, input.get(i));
+    public double[] forward(double[] input) {
+        RealVector inputVector = new ArrayRealVector(input.length + 1);
+        for (int i = 0; i < input.length; i++) {
+            inputVector.setEntry(i, input[i]);
         }
-        inputVector.setEntry(input.size(), 1);
+        inputVector.setEntry(input.length, 1);
 
         for (int i = 0; i < layerWeights.length; i++) {
             inputVector = layerWeights[i].preMultiply(inputVector);
@@ -65,14 +65,14 @@ public class TDNN {
             }
         }
 
-        return Arrays.asList(ArrayUtils.toObject(inputVector.toArray()));
+        return inputVector.toArray();
     }
 
     public void setWeights(double[] weights) {
         if (weights.length != numberOfWeights) {
             throw new IllegalArgumentException(
-                "invalid number of weights. Given " + weights.length + ", expected "
-                    + numberOfWeights);
+                    "invalid number of weights. Given " + weights.length + ", expected "
+                            + numberOfWeights);
         }
 
         int k = 0;

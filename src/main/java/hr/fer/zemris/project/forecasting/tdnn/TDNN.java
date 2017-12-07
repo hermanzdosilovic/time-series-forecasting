@@ -17,11 +17,13 @@ public class TDNN implements INeuralNetwork {
     private RealMatrix[] layerWeights;
     private int numberOfWeights;
     private UnivariateFunction activationFunction;
+    private int numberOfOutputs;
 
     private static final Random rand = new Random();
 
     public TDNN(UnivariateFunction activationFunction, int... architecture) {
         layerWeights = new RealMatrix[architecture.length - 1];
+        numberOfOutputs = architecture[architecture.length-1];
 
         for (int i = 1; i < architecture.length; i++) {
             int rows = architecture[i - 1] + 1;
@@ -83,5 +85,10 @@ public class TDNN implements INeuralNetwork {
                 }
             }
         }
+    }
+
+    @Override
+    public int getNumberOfOutputs() {
+        return numberOfOutputs;
     }
 }

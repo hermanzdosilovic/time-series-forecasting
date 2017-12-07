@@ -11,7 +11,7 @@ public class ExamplePNG {
     public static void main(String[] args) throws IOException {
         Path pathToDataset = Paths.get("./datasets/exchange-rate-twi-may-1970-aug-1.csv");
         Path toPNG = Paths.get("./graph.png");
-        List<Double> ex_rate = Util.readDataset(pathToDataset);
+        double[] ex_rate = Util.readDataset(pathToDataset);
         Util.datasetToPNG(toPNG, ex_rate);
     }
 }

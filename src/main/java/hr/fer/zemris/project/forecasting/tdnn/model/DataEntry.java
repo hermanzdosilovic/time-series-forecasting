@@ -4,19 +4,19 @@ import java.util.List;
 
 public class DataEntry {
 
-    private List<Double> input;
-    private List<Double> expectedOutput;
+    private double[] input;
+    private double[] expectedOutput;
 
-    public DataEntry(List<Double> input, List<Double> expectedOutput) {
+    public DataEntry(double[] input, double[] expectedOutput) {
         this.input = input;
         this.expectedOutput = expectedOutput;
     }
 
-    public List<Double> getInput() {
+    public double[] getInput() {
         return input;
     }
 
-    public List<Double> getExpectedOutput() {
+    public double[] getExpectedOutput() {
         return expectedOutput;
     }
 }

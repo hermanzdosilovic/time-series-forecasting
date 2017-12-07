@@ -21,35 +21,35 @@ import java.util.List;
 
 public class Util {
 
-    public static List<Double> readDataset(Path path, Integer indexOfValue, String delimiter) throws IOException {
+    public static double[] readDataset(Path path, Integer indexOfValue, String delimiter) throws IOException {
         List<String> dataset = Files.readAllLines(path);
-        List<Double> result = new ArrayList<>();
-        for (String line : dataset) {
-            String[] data = line.trim().split(String.format("[%s]", delimiter));
+        double[] result = new double[dataset.size()];
+        for (int i = 0, n = dataset.size(); i < n; ++i) {
+            String[] data = dataset.get(i).trim().split(String.format("[%s]", delimiter));
             int index = indexOfValue == -1 ? data.length - 1 : indexOfValue;
-            result.add(Double.parseDouble(data[index].trim()));
+            result[i] = Double.parseDouble(data[index].trim());
         }
         return result;
     }
 
-    public static List<Double> readDataset(Path path, Integer indexOfValue) throws IOException {
+    public static double[] readDataset(Path path, Integer indexOfValue) throws IOException {
         return readDataset(path, indexOfValue, ",");
     }
 
-    public static List<Double> readDataset(Path path, String delimiter) throws IOException {
+    public static double[] readDataset(Path path, String delimiter) throws IOException {
         return readDataset(path, -1, delimiter);
     }
 
-    public static List<Double> readDataset(Path path) throws IOException {
+    public static double[] readDataset(Path path) throws IOException {
         return readDataset(path, -1, ",");
     }
 
-    public static List<Double> readDataset(String path) throws IOException {
+    public static double[] readDataset(String path) throws IOException {
         return readDataset(Paths.get(path));
     }
 
 
-    public static void datasetToPNG(Path path, Integer width, Integer height, Map<String, List<Double>> data) throws IOException {
+    public static void datasetToPNG(Path path, Integer width, Integer height, Map<String, double[]> data) throws IOException {
         JFreeChart xylineChart = plotDataset(data);
 
         int i = 1;
@@ -61,7 +61,7 @@ public class Util {
             String filename;
             if (indexOfBracket != -1) {
                 filename = tmpArray[0].substring(0, indexOfBracket);
-            }else {
+            } else {
                 filename = tmpArray[0];
             }
 
@@ -73,50 +73,50 @@ public class Util {
         ChartUtilities.saveChartAsPNG(path.toFile(), xylineChart, width, height);
     }
 
-    public static void datasetToPNG(Path path, Map<String, List<Double>> data) throws IOException {
+    public static void datasetToPNG(Path path, Map<String, double[]> data) throws IOException {
         datasetToPNG(path, 640, 480, data);
     }
 
-    public static void datasetToPNG(Path path, List<List<Double>> data) throws IOException {
+    public static void datasetToPNG(Path path, List<double[]> data) throws IOException {
         datasetToPNG(path, listOfListsToMap(data));
     }
 
-    public static void datasetToPNGOne(Path path, List<Double> data) throws IOException {
+    public static void datasetToPNGOne(Path path, double[] data) throws IOException {
         datasetToPNG(path, listToListOfLists(data));
     }
 
-    public static void datasetToPNG(Path path, List<Double>... data) throws IOException {
-        datasetToPNG(path, Arrays.asList(data));
+    public static void datasetToPNG(Path path, double[]... data) throws IOException {
+        datasetToPNG(path, data);
     }
 
 
-    public static void plot(Map<String, List<Double>> data) {
+    public static void plot(Map<String, double[]> data) {
         SwingUtilities.invokeLater(() -> plotAndShowData(data));
     }
 
-    public static void plot(List<List<Double>> data) {
+    public static void plot(List<double[]> data) {
         plot(listOfListsToMap(data));
     }
 
-    public static void plot(List<Double>... data) {
+    public static void plot(double[]... data) {
         plot(Arrays.asList(data));
     }
 
-    public static void plotOne(List<Double> data) {
+    public static void plotOne(double[] data) {
         plot(listToListOfLists(data));
     }
 
 
-    public static JFreeChart plotDataset(Map<String, List<Double>> data) {
+    public static JFreeChart plotDataset(Map<String, double[]> data) {
         final XYSeriesCollection xyCollection = new XYSeriesCollection();
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
         int i = 0;
-        for (Map.Entry<String, List<Double>> dataset : data.entrySet()) {
+        for (Map.Entry<String, double[]> dataset : data.entrySet()) {
             final XYSeries series = new XYSeries(dataset.getKey());
 
-            List<Double> tmpList = dataset.getValue();
-            for (int j = 0; j < tmpList.size(); j++) {
-                series.add(j, tmpList.get(j));
+            double[] tmpList = dataset.getValue();
+            for (int j = 0; j < tmpList.length; j++) {
+                series.add(j, tmpList[j]);
             }
             xyCollection.addSeries(series);
 
@@ -127,8 +127,8 @@ public class Util {
             i++;
         }
         JFreeChart chart = ChartFactory
-            .createXYLineChart("Graph", "Time interval", "Value", xyCollection,
-                PlotOrientation.VERTICAL, true, true, false);
+                .createXYLineChart("Graph", "Time interval", "Value", xyCollection,
+                        PlotOrientation.VERTICAL, true, true, false);
 
         final XYPlot plot = chart.getXYPlot();
         plot.setRenderer(renderer);
@@ -136,7 +136,7 @@ public class Util {
         return chart;
     }
 
-    private static void plotAndShowData(Map<String, List<Double>> data) {
+    private static void plotAndShowData(Map<String, double[]> data) {
         JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setLayout(new BorderLayout());
@@ -148,16 +148,16 @@ public class Util {
         frame.setVisible(true);
     }
 
-    private static Map<String, List<Double>> listOfListsToMap(List<List<Double>> data) {
-        Map<String, List<Double>> tmpMap = new HashMap<>();
+    private static Map<String, double[]> listOfListsToMap(List<double[]> data) {
+        Map<String, double[]> tmpMap = new HashMap<>();
         for (int i = 0; i < data.size(); i++) {
             tmpMap.put(String.format("Data %d", i + 1), data.get(i));
         }
         return tmpMap;
     }
 
-    private static List<List<Double>> listToListOfLists(List<Double> data) {
-        List<List<Double>> tmpList = new ArrayList<>();
+    private static List<double[]> listToListOfLists(double[] data) {
+        List<double[]> tmpList = new ArrayList<>();
         tmpList.add(data);
         return tmpList;
     }
@@ -180,14 +180,14 @@ public class Util {
         }
     }
 
-    public static JPanel graphAsPanel(Map<String, List<Double>> data, Integer width, Integer height) {
+    public static JPanel graphAsPanel(Map<String, double[]> data, Integer width, Integer height) {
         JFreeChart chart = plotDataset(data);
         ChartPanel panel = new ChartPanel(chart);
         panel.setPreferredSize(new Dimension(width, height));
         return panel;
     }
 
-    public static JPanel graphAsPanel(Map<String, List<Double>> data) {
+    public static JPanel graphAsPanel(Map<String, double[]> data) {
         return graphAsPanel(data, 640, 480);
     }
 }

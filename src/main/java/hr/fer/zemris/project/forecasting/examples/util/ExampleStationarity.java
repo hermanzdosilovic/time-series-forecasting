@@ -12,7 +12,7 @@ public class ExampleStationarity {
 
     public static void main(String[] args) throws IOException {
         Path path = Paths.get("./datasets/exchange-rate-twi-may-1970-aug-1.csv");
-        List<Double> ex_rate = Util.readDataset(path, 1);
+        double[] ex_rate = Util.readDataset(path, 1);
         Util.plot(ModelUtil.stationarize(ex_rate));
     }
 }

@@ -30,7 +30,7 @@ public final class SimulatedAnnealingTrain {
         int tdnnInputSize = ARCHITECTURE[0];
         int tdnnOutputSize = ARCHITECTURE[ARCHITECTURE.length - 1];
 
-        List<Double> dataset = Util.readDataset("./datasets/exchange-rate-twi-may-1970-aug-1.csv");
+        double[] dataset = Util.readDataset("./datasets/exchange-rate-twi-may-1970-aug-1.csv");
         List<DataEntry> tdnnDataset =
             DataUtil.createTDNNDateset(dataset, tdnnInputSize, tdnnOutputSize);
         Pair<List<DataEntry>, List<DataEntry>> splittedTDNNDataset =
@@ -53,10 +53,10 @@ public final class SimulatedAnnealingTrain {
     }
 
     public static void plot(TDNN tdnn, List<DataEntry> dataset) {
-        List<Double> expectedValues = DataUtil.joinExpectedValues(dataset);
-        List<Double> predictedValues = DataUtil.forward(tdnn, dataset);
+        double[] expectedValues = DataUtil.joinExpectedValues(dataset);
+        double[] predictedValues = DataUtil.forward(tdnn, dataset);
 
-        Map<String, List<Double>> graph = new HashMap<>();
+        Map<String, double[]> graph = new HashMap<>();
         graph.put("Expected", expectedValues);
         graph.put("Predicted", predictedValues);
 

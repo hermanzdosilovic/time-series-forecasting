@@ -1,7 +1,5 @@
 package hr.fer.zemris.project.forecasting.examples.tdnn;
 
-import hr.fer.zemris.heuristic.metaheuristic.ga.AbstractGeneticAlgorithm;
-import hr.fer.zemris.heuristic.metaheuristic.ga.GenerationGeneticAlgorithm;
 import hr.fer.zemris.heuristic.metaheuristic.ga.IGeneticAlgorithm;
 import hr.fer.zemris.heuristic.metaheuristic.ga.OffspringSelectionGA;
 import hr.fer.zemris.heuristic.metaheuristic.model.ICoolingSchedule;
@@ -13,9 +11,7 @@ import hr.fer.zemris.model.mutation.RealVectorGaussianMutation;
 import hr.fer.zemris.model.problems.FunctionMinimizationProblem;
 import hr.fer.zemris.model.problems.IOptimizationProblem;
 import hr.fer.zemris.model.selections.ISelection;
-import hr.fer.zemris.model.selections.RouletteWheelSelection;
 import hr.fer.zemris.model.selections.TournamentSelection;
-import hr.fer.zemris.model.solution.BitVectorSolution;
 import hr.fer.zemris.model.solution.IOptimizationSolution;
 import hr.fer.zemris.model.solution.RealVectorSolution;
 import hr.fer.zemris.numeric.AbstractFunction;
@@ -25,7 +21,7 @@ import hr.fer.zemris.project.forecasting.tdnn.model.DataEntry;
 import hr.fer.zemris.project.forecasting.tdnn.model.MeanSquaredErrorFunction;
 import hr.fer.zemris.project.forecasting.tdnn.util.DataUtil;
 import hr.fer.zemris.project.forecasting.util.Pair;
-import hr.fer.zemris.project.forecasting.util.Util;
+import hr.fer.zemris.project.forecasting.util.Graph;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,7 +36,7 @@ public final class OSGATrain {
         int tdnnInputSize = ARCHITECTURE[0];
         int tdnnOutputSize = ARCHITECTURE[ARCHITECTURE.length - 1];
 
-        double[] dataset = Util.readDataset("./datasets/exchange-rate-twi-may-1970-aug-1.csv");
+        double[] dataset = Graph.readDataset("./datasets/exchange-rate-twi-may-1970-aug-1.csv");
         List<DataEntry> tdnnDataset =
             DataUtil.createTDNNDateset(dataset, tdnnInputSize, tdnnOutputSize);
         Pair<List<DataEntry>, List<DataEntry>> splittedTDNNDataset =
@@ -70,7 +66,7 @@ public final class OSGATrain {
         graph.put("Expected", expectedValues);
         graph.put("Predicted", predictedValues);
 
-        Util.plot(graph);
+        Graph.plot(graph);
     }
 
     public static double[] train(TDNN tdnn, List<DataEntry> trainSet) {

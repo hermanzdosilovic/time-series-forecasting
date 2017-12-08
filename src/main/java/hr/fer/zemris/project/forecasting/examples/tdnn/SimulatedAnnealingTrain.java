@@ -22,7 +22,7 @@ import hr.fer.zemris.project.forecasting.tdnn.model.DataEntry;
 import hr.fer.zemris.project.forecasting.tdnn.model.MeanSquaredErrorFunction;
 import hr.fer.zemris.project.forecasting.tdnn.util.DataUtil;
 import hr.fer.zemris.project.forecasting.util.Pair;
-import hr.fer.zemris.project.forecasting.util.Util;
+import hr.fer.zemris.project.forecasting.util.Graph;
 
 public final class SimulatedAnnealingTrain {
     public static void main(String[] args) throws IOException {
@@ -30,7 +30,7 @@ public final class SimulatedAnnealingTrain {
         int tdnnInputSize = ARCHITECTURE[0];
         int tdnnOutputSize = ARCHITECTURE[ARCHITECTURE.length - 1];
 
-        double[] dataset = Util.readDataset("./datasets/exchange-rate-twi-may-1970-aug-1.csv");
+        double[] dataset = Graph.readDataset("./datasets/exchange-rate-twi-may-1970-aug-1.csv");
         List<DataEntry> tdnnDataset =
             DataUtil.createTDNNDateset(dataset, tdnnInputSize, tdnnOutputSize);
         Pair<List<DataEntry>, List<DataEntry>> splittedTDNNDataset =
@@ -60,7 +60,7 @@ public final class SimulatedAnnealingTrain {
         graph.put("Expected", expectedValues);
         graph.put("Predicted", predictedValues);
 
-        Util.plot(graph);
+        Graph.plot(graph);
     }
 
     public static double[] train(TDNN tdnn, List<DataEntry> trainSet) {

@@ -1,7 +1,5 @@
 package hr.fer.zemris.project.forecasting.tdnn.model;
 
-import java.util.List;
-
 public class DataEntry {
 
     private double[] input;

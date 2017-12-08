@@ -40,7 +40,24 @@
             <artifactId>commons-lang3</artifactId>
             <version>3.6</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.dosilovic.hermanzvonimir</groupId>
+            <artifactId>ecfjava</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>netflix</groupId>
+            <artifactId>surus</artifactId>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/surus.jar</systemPath>
+        </dependency>
     </dependencies>
+
+    <modules>
+        <module>ecfjava</module>
+    </modules>
 
 </project>
 

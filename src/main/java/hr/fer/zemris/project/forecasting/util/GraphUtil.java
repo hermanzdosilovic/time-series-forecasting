@@ -16,14 +16,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
 public final class GraphUtil {
 
-    private static final int    DEFAULT_WIDTH      = 640;
-    private static final int    DEFAULT_HEIGHT     = 480;
-    private static final String DEFAULT_GRAPH_NAME = "";
+    public static final  int    DEFAULT_WIDTH      = 640;
+    public static final  int    DEFAULT_HEIGHT     = 480;
+    public static final  String DEFAULT_GRAPH_NAME = "";
     private static final Random RAND               = new Random();
 
     public static void saveAsPNG(
@@ -106,6 +107,26 @@ public final class GraphUtil {
 
     public static void plot(Map<String, double[]> data) {
         plot(data, DEFAULT_GRAPH_NAME);
+    }
+
+    public static void plot(String graphName, int width, int height, double[]... data) {
+        Map<String, double[]> graph = new HashMap<>();
+        for (int i = 0; i < data.length; i++) {
+            graph.put("Data " + i, data[i]);
+        }
+        plot(graph, graphName, height, width);
+    }
+
+    public static void plot(String graphName, double[]... data) {
+        plot(graphName, DEFAULT_WIDTH, DEFAULT_HEIGHT, data);
+    }
+
+    public static void plot(int width, int height, double[]... data) {
+        plot(DEFAULT_GRAPH_NAME, width, height, data);
+    }
+
+    public static void plot(double[]... data) {
+        plot(DEFAULT_GRAPH_NAME, data);
     }
 
     public static JFreeChart dataAsChart(String graphName, Map<String, double[]> data) {

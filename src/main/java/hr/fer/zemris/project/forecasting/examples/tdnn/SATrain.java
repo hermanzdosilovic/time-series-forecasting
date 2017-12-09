@@ -26,7 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-public final class SimulatedAnnealingTrain {
+public final class SATrain {
+
     public static void main(String[] args) throws IOException {
         final int[] ARCHITECTURE   = {5, 4, 1};
         int         tdnnInputSize  = ARCHITECTURE[0];
@@ -34,10 +35,8 @@ public final class SimulatedAnnealingTrain {
 
         double[] dataset = DataReaderUtil.readDataset("./datasets/exchange-rate-twi-may-1970-aug-1.csv");
 
-        List<DataEntry> tdnnDataset =
-            NeuralNetworkUtil.createTDNNDateset(dataset, tdnnInputSize, tdnnOutputSize);
-        Pair<List<DataEntry>, List<DataEntry>> splittedTDNNDataset =
-            NeuralNetworkUtil.splitTDNNDataset(tdnnDataset, 0.8);
+        List<DataEntry> tdnnDataset = NeuralNetworkUtil.createTDNNDateset(dataset, tdnnInputSize, tdnnOutputSize);
+        Pair<List<DataEntry>, List<DataEntry>> splittedTDNNDataset = NeuralNetworkUtil.splitTDNNDataset(tdnnDataset, 0.8);
 
         List<DataEntry> trainSet = splittedTDNNDataset.getFirst();
         List<DataEntry> testSet  = splittedTDNNDataset.getSecond();
@@ -47,11 +46,11 @@ public final class SimulatedAnnealingTrain {
 
         tdnn.setWeights(trainedWeights);
 
-        plot(tdnn, trainSet);
-        plot(tdnn, testSet);
+        plot("Train", tdnn, trainSet);
+        plot("Test", tdnn, testSet);
     }
 
-    public static void plot(TDNN tdnn, List<DataEntry> dataset) {
+    public static void plot(String graphName, TDNN tdnn, List<DataEntry> dataset) {
         double[] expectedValues  = NeuralNetworkUtil.joinExpectedValues(dataset);
         double[] predictedValues = NeuralNetworkUtil.forward(tdnn, dataset);
 
@@ -59,7 +58,7 @@ public final class SimulatedAnnealingTrain {
         graph.put("Expected", expectedValues);
         graph.put("Predicted", predictedValues);
 
-        GraphUtil.plot(graph);
+        GraphUtil.plot(graph, graphName);
     }
 
     public static double[] train(TDNN tdnn, List<DataEntry> trainSet) {
@@ -99,26 +98,14 @@ public final class SimulatedAnnealingTrain {
             innerCoolingSchedule
         );
 
-        ArrayRealVector solution = simulatedAnnealing.run(createInitialSolution(
-            tdnn.getNumberOfWeights(),
-            MIN_COMPONENT_VALUE,
-            MAX_COMPONENT_VALUE
-        ));
+        RealVector solution = simulatedAnnealing.run(
+            new RealVector(
+                tdnn.getNumberOfWeights(),
+                MIN_COMPONENT_VALUE,
+                MAX_COMPONENT_VALUE
+            )
+        );
 
         return solution.toArray();
-    }
-
-    public static RealVector createInitialSolution(
-        int numberOfComponents,
-        double minComponentValue,
-        double maxComponentValue
-    ) {
-        Random rand = new Random();
-
-        RealVector vector = new RealVector(numberOfComponents);
-        for (int i = 0; i < numberOfComponents; i++) {
-            vector.setEntry(i, minComponentValue + rand.nextDouble() * (maxComponentValue - minComponentValue));
-        }
-        return vector;
     }
 }

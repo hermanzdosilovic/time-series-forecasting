@@ -1,11 +1,10 @@
 package hr.fer.zemris.project.forecasting.nn.util;
 
 import hr.fer.zemris.project.forecasting.nn.INeuralNetwork;
+import hr.fer.zemris.project.forecasting.util.GraphUtil;
 import hr.fer.zemris.project.forecasting.util.Pair;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public final class NeuralNetworkUtil {
 
@@ -74,5 +73,16 @@ public final class NeuralNetworkUtil {
         }
 
         return joinedValues;
+    }
+
+    public static void plot(String graphName, INeuralNetwork neuralNetwork, List<DataEntry> dataset) {
+        double[] expectedValues  = NeuralNetworkUtil.joinExpectedValues(dataset);
+        double[] predictedValues = NeuralNetworkUtil.forward(neuralNetwork, dataset);
+
+        Map<String, double[]> graph = new HashMap<>();
+        graph.put("Expected", expectedValues);
+        graph.put("Predicted", predictedValues);
+
+        GraphUtil.plot(graph, graphName);
     }
 }

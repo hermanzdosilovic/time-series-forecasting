@@ -1,17 +1,21 @@
 package hr.fer.zemris.project.forecasting.examples.tdnn;
 
-import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.sa.ISimulatedAnnealing;
-import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.sa.SimpleSA;
+import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.ga.IGeneticAlgorithm;
+import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.ga.SimpleOSGA;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.sa.cooling.GeometricCoolingSchedule;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.sa.cooling.ICoolingSchedule;
+import com.dosilovic.hermanzvonimir.ecfjava.models.crossovers.BLXAlphaCrossover;
+import com.dosilovic.hermanzvonimir.ecfjava.models.crossovers.ICrossover;
 import com.dosilovic.hermanzvonimir.ecfjava.models.mutations.IMutation;
 import com.dosilovic.hermanzvonimir.ecfjava.models.mutations.RealVectorGaussianMutation;
 import com.dosilovic.hermanzvonimir.ecfjava.models.problems.FunctionMinimizationProblem;
 import com.dosilovic.hermanzvonimir.ecfjava.models.problems.IProblem;
+import com.dosilovic.hermanzvonimir.ecfjava.models.selections.ISelection;
+import com.dosilovic.hermanzvonimir.ecfjava.models.selections.TournamentSelection;
 import com.dosilovic.hermanzvonimir.ecfjava.numeric.IFunction;
 import com.dosilovic.hermanzvonimir.ecfjava.util.RealVector;
 import hr.fer.zemris.project.forecasting.metaheuristics.observers.AbstractDataObserver;
-import hr.fer.zemris.project.forecasting.metaheuristics.observers.PenaltyObserver;
+import hr.fer.zemris.project.forecasting.metaheuristics.observers.FitnessObserver;
 import hr.fer.zemris.project.forecasting.nn.ActivationFunction;
 import hr.fer.zemris.project.forecasting.nn.INeuralNetwork;
 import hr.fer.zemris.project.forecasting.nn.TDNN;
@@ -25,7 +29,7 @@ import hr.fer.zemris.project.forecasting.util.Pair;
 import java.io.IOException;
 import java.util.List;
 
-public final class SATrain {
+public final class OSGATrain {
 
     public static void main(String[] args) throws IOException {
         final int[] ARCHITECTURE   = {5, 4, 1};
@@ -53,54 +57,74 @@ public final class SATrain {
     }
 
     public static double[] train(INeuralNetwork neuralNetwork, List<DataEntry> trainSet) {
-        final int     OUTER_ITERATIONS     = 100;
-        final double  OUTER_INITIAL_TEMP   = 1000;
-        final double  OUTER_FINAL_TEMP     = 1e-4;
-        final int     INNER_ITERATIONS     = 4000;
-        final double  INNER_INITIAL_TEMP   = 500;
-        final double  INNER_FINAL_TEMP     = 1e-4;
-        final double  DESIRED_PENALTY      = 0;
-        final double  DESIRED_PRECISION    = 1e-3;
-        final double  MIN_COMPONENT_VALUE  = -5;
-        final double  MAX_COMPONENT_VALUE  = 5;
-        final double  MUTATION_PROBABILITY = 0.1;
-        final boolean FORCE_MUTATION       = true;
-        final double  SIGMA                = 0.9;
+        final int     POPULATION_SIZE        = 500;
+        final int     MAX_GENERATIONS        = 100;
+        final boolean USE_ELITISM            = true;
+        final double  MAX_SELECTION_PRESSURE = 1000;
+        final double  DESIRED_FITNESS        = 0;
+        final double  DESIRED_PRECISION      = 1e-3;
+        final double  MIN_COMPONENT_VALUE    = -5;
+        final double  MAX_COMPONENT_VALUE    = 5;
+        final double  MIN_SUCCESS_RATIO      = 0.3;
+        final double  MAX_SUCCESS_RATIO      = 1;
+        final double  MIN_COMPARISON_FACTOR  = 0.5;
+        final double  MAX_COMPARISON_FACTOR  = 1;
+        final int     TOURNAMENT_SIZE        = 20;
+        final boolean ALLOW_REPEAT           = false;
+        final double  ALPHA                  = 0.3;
+        final double  MUTATION_PROBABILITY   = 0.1;
+        final boolean FORCE_MUTATION         = true;
+        final double  SIGMA                  = 0.9;
 
         IFunction<RealVector> function = new MSEFunction<>(neuralNetwork, trainSet);
         IProblem<RealVector>  problem  = new FunctionMinimizationProblem<>(function);
-        ICoolingSchedule outerCoolingSchedule = new GeometricCoolingSchedule(
-            OUTER_ITERATIONS,
-            OUTER_INITIAL_TEMP,
-            OUTER_FINAL_TEMP
+        ISelection<RealVector> selection = new TournamentSelection<>(
+            TOURNAMENT_SIZE,
+            ALLOW_REPEAT
         );
-        ICoolingSchedule innerCoolingSchedule = new GeometricCoolingSchedule(
-            INNER_ITERATIONS,
-            INNER_INITIAL_TEMP,
-            INNER_FINAL_TEMP
+        ICrossover<RealVector> crossover = new BLXAlphaCrossover<>(ALPHA);
+        IMutation<RealVector> mutation = new RealVectorGaussianMutation<>(
+            MUTATION_PROBABILITY,
+            FORCE_MUTATION,
+            SIGMA
         );
-        IMutation<RealVector> mutation = new RealVectorGaussianMutation<>(MUTATION_PROBABILITY, FORCE_MUTATION, SIGMA);
-        ISimulatedAnnealing<RealVector> simulatedAnnealing = new SimpleSA<>(
-            DESIRED_PENALTY,
+        ICoolingSchedule successRatioSchedule = new GeometricCoolingSchedule(
+            MAX_GENERATIONS,
+            MIN_SUCCESS_RATIO,
+            MAX_SUCCESS_RATIO
+        );
+        ICoolingSchedule comparisonFactorSchedule = new GeometricCoolingSchedule(
+            MAX_GENERATIONS,
+            MIN_COMPARISON_FACTOR,
+            MAX_COMPARISON_FACTOR
+        );
+        IGeneticAlgorithm<RealVector> geneticAlgorithm = new SimpleOSGA<>(
+            USE_ELITISM,
+            MAX_GENERATIONS,
+            DESIRED_FITNESS,
             DESIRED_PRECISION,
+            MAX_SELECTION_PRESSURE,
+            successRatioSchedule,
+            comparisonFactorSchedule,
             problem,
-            mutation,
-            outerCoolingSchedule,
-            innerCoolingSchedule
+            selection,
+            crossover,
+            mutation
         );
 
-        AbstractDataObserver penaltyObserver = new PenaltyObserver();
-        simulatedAnnealing.attachObserver(penaltyObserver);
+        AbstractDataObserver fitnessObserver = new FitnessObserver();
+        geneticAlgorithm.attachObserver(fitnessObserver);
 
-        RealVector solution = simulatedAnnealing.run(
-            new RealVector(
+        RealVector solution = geneticAlgorithm.run(
+            RealVector.createCollection(
+                POPULATION_SIZE,
                 neuralNetwork.getNumberOfWeights(),
                 MIN_COMPONENT_VALUE,
                 MAX_COMPONENT_VALUE
             )
         );
 
-        GraphUtil.plot("Penalty", penaltyObserver.getData());
+        GraphUtil.plot("Fitness", fitnessObserver.getData());
 
         return solution.toArray();
     }

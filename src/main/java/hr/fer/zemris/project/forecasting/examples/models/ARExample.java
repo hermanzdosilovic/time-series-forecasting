@@ -1,7 +1,7 @@
-package hr.fer.zemris.projekt.predictions.examples;
+package hr.fer.zemris.project.forecasting.examples.models;
 
 import hr.fer.zemris.project.forecasting.util.Util;
-import hr.fer.zemris.projekt.predictions.models.AR;
+import hr.fer.zemris.project.forecasting.models.AR;
 
 import java.io.IOException;
 import java.nio.file.Path;

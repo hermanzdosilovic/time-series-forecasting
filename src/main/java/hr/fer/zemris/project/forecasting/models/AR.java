@@ -1,4 +1,4 @@
-package hr.fer.zemris.projekt.predictions.models;
+package hr.fer.zemris.project.forecasting.models;
 
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
@@ -66,10 +66,6 @@ public class AR {
 
         RealVector autocovarianceVector = MatrixUtils.createRealVector(autocovarianceArray);
         RealMatrix autocovarianceMatrix = MatrixUtils.createRealMatrix(autocovarianceMatrixArray);
-        //autocovarianceVector
-        // tu bi zapravo trebalo ić da je a(transponirano) = -m(-1)*v(t)
-        // tu ide ili operate ili preMultiply
-        // TODO
 
         RealVector coefficients = new LUDecomposition(autocovarianceMatrix).getSolver().getInverse()
             .operate(autocovarianceVector);
@@ -108,7 +104,6 @@ public class AR {
         int N = data.size();
         double dataMean = computeMean(data);
         double sum = 0.0;
-        // TODO provjeri  za ovo ok kud kreće t
 
         for (int t = 0; t < N - index; t++) {
             sum += (data.get(t) - dataMean) * (data.get(t + index) - dataMean);

@@ -1,6 +1,6 @@
 package hr.fer.zemris.project.forecasting.nn.util;
 
-import hr.fer.zemris.project.forecasting.nn.INeuralNetwork;
+import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
 import hr.fer.zemris.project.forecasting.util.GraphUtil;
 import hr.fer.zemris.project.forecasting.util.Pair;
 
@@ -10,7 +10,7 @@ public final class NeuralNetworkUtil {
 
     public static double[] forward(INeuralNetwork neuralNetwork, List<DataEntry> tdnnDataset) {
         int      offset = 0;
-        double[] output = new double[tdnnDataset.size() * neuralNetwork.getNumberOfOutputs()];
+        double[] output = new double[tdnnDataset.size() * neuralNetwork.getOutputSize()];
 
         for (DataEntry entry : tdnnDataset) {
             double[] results = (neuralNetwork.forward(entry.getInput()));
@@ -27,8 +27,8 @@ public final class NeuralNetworkUtil {
             neuralNetwork,
             createTDNNDateset(
                 dataset,
-                neuralNetwork.getNumberOfInputs(),
-                neuralNetwork.getNumberOfOutputs()
+                neuralNetwork.getInputSize(),
+                neuralNetwork.getOutputSize()
             )
         );
     }

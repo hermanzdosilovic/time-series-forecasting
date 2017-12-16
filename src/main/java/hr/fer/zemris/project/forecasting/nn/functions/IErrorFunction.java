@@ -1,7 +1,8 @@
 package hr.fer.zemris.project.forecasting.nn.functions;
 
-import hr.fer.zemris.project.forecasting.nn.INeuralNetwork;
+import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
 import hr.fer.zemris.project.forecasting.nn.util.DataEntry;
+
 
 import java.util.List;
 

@@ -2,6 +2,7 @@ package hr.fer.zemris.project.forecasting.models.arma;
 
 import Jama.Matrix;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -209,7 +210,7 @@ public class ARMA {
         Dataset datasetBackup = new Dataset(dataset.getDatasetBackup());
         Dataset residualBackup = new Dataset(a.getDatasetBackup());
 
-        List<Double> results = new LinkedList<>();
+        List<Double> results = new ArrayList<>(numberOfForecasts);
 
         for (int i = 0; i < numberOfForecasts; i++) {
             double oneForecast = forecastOneValue();

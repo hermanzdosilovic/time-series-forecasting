@@ -10,8 +10,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>1.9</maven.compiler.source>
+        <maven.compiler.target>1.9</maven.compiler.target>
         <maven.compiler.showDeprecation>true</maven.compiler.showDeprecation>
     </properties>
 
@@ -48,7 +48,24 @@
             <artifactId>commons-lang3</artifactId>
             <version>3.6</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.dosilovic.hermanzvonimir</groupId>
+            <artifactId>ecfjava</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>netflix</groupId>
+            <artifactId>surus</artifactId>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/surus.jar</systemPath>
+        </dependency>
     </dependencies>
+
+    <modules>
+        <module>ecfjava</module>
+    </modules>
 
 </project>
 

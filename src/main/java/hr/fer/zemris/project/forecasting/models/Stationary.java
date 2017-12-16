@@ -1,6 +1,6 @@
 package hr.fer.zemris.project.forecasting.models;
 
-import hr.fer.zemris.project.forecasting.util.Util;
+import hr.fer.zemris.project.forecasting.util.ArraysUtil;
 import org.surus.math.AugmentedDickeyFuller;
 
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ public class Stationary {
     }
 
     public Stationary(List<Double> dataset) {
-        this(Util.listToArray(dataset));
+        this(ArraysUtil.toPrimitiveArray(dataset));
     }
 
     private void stationarize() {
@@ -38,7 +38,7 @@ public class Stationary {
     }
 
     public List<Double> getDatasetAsList() {
-        return Util.arrayToList(dataset);
+        return ArraysUtil.toList(dataset);
     }
 
     public int getOrder() {
@@ -54,7 +54,7 @@ public class Stationary {
     }
 
     public List<Double> accumulate(List<Double> data) {
-        return Util.arrayToList(accumulate(Util.listToArray(data)));
+        return ArraysUtil.toList(accumulate(ArraysUtil.toPrimitiveArray(data)));
     }
 
     private double[] computeOneBefore(double first, double[] tmp) {
@@ -82,17 +82,17 @@ public class Stationary {
     }
 
     public static List<Double> stationarize(List<Double> data) {
-        return Util.arrayToList(stationarize(Util.listToArray(data)));
+        return ArraysUtil.toList(stationarize(ArraysUtil.toPrimitiveArray(data)));
     }
 
     public static boolean isStationary(double[] data) {
-        int lag = (int) Math.floor(4 * Math.pow(data.length / 100.0, 2.0 / 9));
+        int                   lag = (int) Math.floor(4 * Math.pow(data.length / 100.0, 2.0 / 9));
         AugmentedDickeyFuller adf = new AugmentedDickeyFuller(data, data.length - lag);
         return !adf.isNeedsDiff();
     }
 
     public static boolean isStationary(List<Double> data) {
-        return isStationary(Util.listToArray(data));
+        return isStationary(ArraysUtil.toPrimitiveArray(data));
     }
 
     public static double[] differentiate(double[] data) {
@@ -105,6 +105,6 @@ public class Stationary {
     }
 
     public static List<Double> differentiate(List<Double> data) {
-        return Util.arrayToList(differentiate(Util.listToArray(data)));
+        return ArraysUtil.toList(differentiate(ArraysUtil.toPrimitiveArray(data)));
     }
 }

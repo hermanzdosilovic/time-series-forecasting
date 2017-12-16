@@ -1,6 +1,6 @@
 package hr.fer.zemris.project.forecasting.models;
 
-import hr.fer.zemris.project.forecasting.util.Util;
+import hr.fer.zemris.project.forecasting.util.DataUtil;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -23,10 +23,10 @@ public class AR {
 
     public double computeNextValue() {
         double[] coefficients = YuleWalker(data, p);
-        double nextValue = computeValue(coefficients, data.size());
+        double   nextValue    = computeValue(coefficients, data.size());
 
         double[] error = computeErrorArray(coefficients);
-        double mean = Util.computeMean(error);
+        double   mean  = DataUtil.getMean(error);
         nextValue += mean;
 
         data.add(nextValue);
@@ -55,7 +55,7 @@ public class AR {
     public static double[] YuleWalker(List<Double> data, int p) {
         // autocovariance matrix and vector computed
         double[][] autocovarianceMatrixArray = new double[p][p];
-        double[] autocovarianceArray = new double[p];
+        double[]   autocovarianceArray       = new double[p];
         for (int lag = 1; lag <= p; lag++) {
             autocovarianceArray[lag - 1] = computeAutocorellation(data, lag);
             for (int k = 1; k <= p; k++) {
@@ -68,7 +68,7 @@ public class AR {
         RealMatrix autocovarianceMatrix = MatrixUtils.createRealMatrix(autocovarianceMatrixArray);
 
         RealVector coefficients = new LUDecomposition(autocovarianceMatrix).getSolver().getInverse()
-            .operate(autocovarianceVector);
+                                                                           .operate(autocovarianceVector);
         return coefficients.toArray();
     }
 
@@ -77,9 +77,9 @@ public class AR {
     }
 
     public static double estimateAutocovariance(List<Double> data, int index) {
-        int N = data.size();
-        double dataMean = Util.computeMean(data);
-        double sum = 0.0;
+        int    N        = data.size();
+        double dataMean = DataUtil.getMean(data);
+        double sum      = 0.0;
 
         for (int t = 0; t < N - index; t++) {
             sum += (data.get(t) - dataMean) * (data.get(t + index) - dataMean);
@@ -89,12 +89,12 @@ public class AR {
 
 
     private double[] computeErrorArray(double[] coefficients) {
-        int order = coefficients.length;
+        int      order = coefficients.length;
         double[] error = new double[data.size() - order];
 
         for (int i = 0; i < error.length; i++) {
             double coefficientValue = computeValue(coefficients, i + order);
-            double realValue = data.get(i + order);
+            double realValue        = data.get(i + order);
             error[i] = realValue - coefficientValue;
         }
         return error;
@@ -107,6 +107,4 @@ public class AR {
         }
         return nextValue;
     }
-
-
 }

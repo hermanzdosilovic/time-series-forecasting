@@ -1,0 +1,3 @@
+[submodule "ecfjava"]
+	path = ecfjava
+	url = https://gitlab.com/hermanzdosilovic/ecfjava.git

@@ -1,10 +1,10 @@
 package hr.fer.zemris.project.forecasting.models;
 
+import hr.fer.zemris.project.forecasting.util.Util;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
-import org.apache.commons.math3.stat.descriptive.moment.Mean;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +26,7 @@ public class AR {
         double nextValue = computeValue(coefficients, data.size());
 
         double[] error = computeErrorArray(coefficients);
-        double mean = computeMean(error);
+        double mean = Util.computeMean(error);
         nextValue += mean;
 
         data.add(nextValue);
@@ -76,6 +76,18 @@ public class AR {
         return estimateAutocovariance(data, index) / estimateAutocovariance(data, 0);
     }
 
+    public static double estimateAutocovariance(List<Double> data, int index) {
+        int N = data.size();
+        double dataMean = Util.computeMean(data);
+        double sum = 0.0;
+
+        for (int t = 0; t < N - index; t++) {
+            sum += (data.get(t) - dataMean) * (data.get(t + index) - dataMean);
+        }
+        return sum / N;
+    }
+
+
     private double[] computeErrorArray(double[] coefficients) {
         int order = coefficients.length;
         double[] error = new double[data.size() - order];
@@ -88,10 +100,6 @@ public class AR {
         return error;
     }
 
-    private double computeMean(double[] array) {
-        return new Mean().evaluate(array);
-    }
-
     private double computeValue(double[] coefficients, int index) {
         double nextValue = 0.0;
         for (int i = 0; i < p; i++) {
@@ -100,24 +108,5 @@ public class AR {
         return nextValue;
     }
 
-    public static double estimateAutocovariance(List<Double> data, int index) {
-        int N = data.size();
-        double dataMean = computeMean(data);
-        double sum = 0.0;
 
-        for (int t = 0; t < N - index; t++) {
-            sum += (data.get(t) - dataMean) * (data.get(t + index) - dataMean);
-        }
-        return sum / N;
-    }
-
-    public static double computeMean(List<Double> data) {
-        int N = data.size();
-        double sum = 0.0;
-
-        for (int i = 0; i < N; i++) {
-            sum += data.get(i);
-        }
-        return sum / N;
-    }
 }

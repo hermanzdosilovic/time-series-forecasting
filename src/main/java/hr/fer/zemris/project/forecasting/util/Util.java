@@ -1,5 +1,6 @@
 package hr.fer.zemris.project.forecasting.util;
 
+import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.ChartUtilities;
@@ -195,5 +196,13 @@ public class Util {
 
     public static List<Double> arrayToList(double[] array) {
         return DoubleStream.of(array).boxed().collect(Collectors.toList());
+    }
+
+    public static double computeMean(double[] array) {
+        return new Mean().evaluate(array);
+    }
+
+    public static double computeMean(List<Double> data) {
+        return computeMean(Util.listToArray(data));
     }
 }

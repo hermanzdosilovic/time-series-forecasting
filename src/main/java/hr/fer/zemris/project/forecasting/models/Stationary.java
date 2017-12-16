@@ -1,11 +1,9 @@
 package hr.fer.zemris.project.forecasting.models;
 
 import hr.fer.zemris.project.forecasting.util.Util;
-import org.apache.commons.lang3.ArrayUtils;
 import org.surus.math.AugmentedDickeyFuller;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Stationary {
@@ -55,6 +53,10 @@ public class Stationary {
         return tmp;
     }
 
+    public List<Double> accumulate(List<Double> data) {
+        return Util.arrayToList(accumulate(Util.listToArray(data)));
+    }
+
     private double[] computeOneBefore(double first, double[] tmp) {
         double[] result = new double[tmp.length + 1];
         for (int i = 0; i < result.length; i++) {
@@ -63,17 +65,12 @@ public class Stationary {
         return result;
     }
 
-
     private double sumOfAllBefore(double[] tmp, int index) {
         double sum = 0.0;
         for (int i = 0; i < index; i++) {
             sum += tmp[i];
         }
         return sum;
-    }
-
-    public List<Double> accumulate(List<Double> data) {
-        return Util.arrayToList(accumulate(Util.listToArray(data)));
     }
 
     public static double[] stationarize(double[] data) {

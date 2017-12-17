@@ -3,6 +3,7 @@ package hr.fer.zemris.project.forecasting.util;
 import org.surus.math.AugmentedDickeyFuller;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class DataUtil {
 
@@ -17,26 +18,19 @@ public class DataUtil {
         );
     }
 
-
-    public static double[] stationarize(double[] data) {
-        while (!isStationary(data)) {
-            data = differentiate(data);
+    public static double getMean(double[] data) {
+        double mean = 0;
+        for (double d : data) {
+            mean += d;
         }
-        return data;
+        return mean / data.length;
     }
 
-    public static boolean isStationary(double[] data) {
-        AugmentedDickeyFuller adf = new AugmentedDickeyFuller(data, data.length - 2);
-        return !adf.isNeedsDiff();
-    }
-
-    public static double[] differentiate(double[] data) {
-        double[] result = new double[data.length - 1];
-
-        for (int i = 1; i < data.length; i++) {
-            result[i - 1] = data[i] - data[i - 1];
+    public static double getMean(List<Double> data) {
+        double mean = 0;
+        for (Double d : data) {
+            mean += d;
         }
-
-        return result;
+        return mean / data.size();
     }
 }

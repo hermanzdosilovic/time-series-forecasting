@@ -9,7 +9,7 @@ import org.apache.commons.math3.linear.RealVector;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AR {
+public class AR extends AModel {
 
     /* Order of AR model */
     private int p;
@@ -31,14 +31,6 @@ public class AR {
 
         data.add(nextValue);
         return nextValue;
-    }
-
-    public List<Double> computeNextValues(int number) {
-        List<Double> result = new ArrayList<>();
-        for (int i = 0; i < number; i++) {
-            result.add(computeNextValue());
-        }
-        return result;
     }
 
     public List<Double> getData() {

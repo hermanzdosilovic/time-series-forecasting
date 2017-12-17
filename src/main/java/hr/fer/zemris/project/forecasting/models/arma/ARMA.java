@@ -1,13 +1,11 @@
 package hr.fer.zemris.project.forecasting.models.arma;
 
 import Jama.Matrix;
+import hr.fer.zemris.project.forecasting.models.AModel;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
 
-public class ARMA {
+public class ARMA extends AModel {
 
     private static final double STARTING_VALUE_MIN = -1;
     private static final double STARTING_VALUE_MAX = 1;
@@ -27,7 +25,7 @@ public class ARMA {
     private Dataset a;
     private Dataset dataset;
 
-    public ARMA(int p, int q, double[] dataset, boolean differentiated) {
+    public ARMA(int p, int q, double[] dataset) {
 
         this.p = p;
         this.q = q;
@@ -188,7 +186,7 @@ public class ARMA {
      * treba pogledati racuna li r svaki put novi mean ili za nepoznate vrijednosti
      * samo koristi mean i nista ne racuna
      */
-    public double forecastOneValue() {
+    @Override public double computeNextValue() {
 
         double forecastedValue = dataset.getMean();
 
@@ -206,16 +204,16 @@ public class ARMA {
         return forecastedValue;
     }
 
-    public List<Double> forecast(int numberOfForecasts) {
+    @Override public double[] computeNextValues(int numberOfForecasts) {
         Dataset datasetBackup = new Dataset(dataset.getDatasetBackup());
         Dataset residualBackup = new Dataset(a.getDatasetBackup());
 
-        List<Double> results = new ArrayList<>(numberOfForecasts);
+        double[] results = new double[numberOfForecasts];
 
         for (int i = 0; i < numberOfForecasts; i++) {
-            double oneForecast = forecastOneValue();
+            double oneForecast = computeNextValue();
 
-            results.add(oneForecast);
+            results[i] = oneForecast;
 
             dataset.addSample(oneForecast);
             a = new Dataset(findA(betaCoeffs));

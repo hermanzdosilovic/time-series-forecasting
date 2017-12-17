@@ -53,6 +53,16 @@ public class Stationary {
         return tmp;
     }
 
+    public double accumulateAndReturnLast(double[] data) {
+        double[] tmp = accumulate(data);
+        return tmp[tmp.length - 1];
+    }
+
+    public double accumulateAndReturnLast(List<Double> data) {
+        List<Double> tmp = accumulate(data);
+        return tmp.get(tmp.size() - 1);
+    }
+
     public List<Double> accumulate(List<Double> data) {
         return ArraysUtil.toList(accumulate(ArraysUtil.toPrimitiveArray(data)));
     }

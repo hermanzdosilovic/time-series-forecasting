@@ -72,33 +72,27 @@ public class Backpropagation {
             outputLayerMatrix.setRowVector(i, row);
         }
 
-        int k = layerOutputs.length - 1;
+        RealVector currentError = outputLayerError;
         for (int i = layerWeights.length - 1; i > 0; --i) {
-            RealMatrix oneBeforeMatrix = layerWeights[i];
-            RealVector thisLayerOutput = layerOutputs[k - 1];
-            RealVector thisLayerError = new ArrayRealVector(thisLayerOutput.getDimension());
-
-            for (int j = 0; j < oneBeforeMatrix.getRowDimension(); ++j) {
-                RealVector row = oneBeforeMatrix.getRowVector(j);
-                double err = row.dotProduct(outputLayerError) *
-                        activationFunctions[i - 1].getDerivative(thisLayerOutput.getEntry(j));
-                thisLayerError.setEntry(j, err);
+            RealMatrix nextLayerMatrix = layerWeights[i];
+            RealVector nextLayerOutput = layerOutputs[i];
+            RealVector nextLayerError = new ArrayRealVector(nextLayerOutput.getDimension());
+            for (int j = 0; j < nextLayerMatrix.getRowDimension(); ++j) {
+                RealVector row = nextLayerMatrix.getRowVector(j);
+                double error = row.dotProduct(currentError) *
+                        activationFunctions[i - 1].getDerivative(nextLayerOutput.getEntry(j));
+                nextLayerError.setEntry(j, error);
             }
-            outputLayerError = thisLayerError.getSubVector(0, thisLayerError.getDimension() - 1);
+            currentError = nextLayerError.getSubVector(0, nextLayerError.getDimension() - 1);
 
             RealMatrix currentWeights = layerWeights[i - 1];
-            RealVector currentOutput = layerOutputs[k - 2];
-            --k;
-
+            RealVector currentOutput = layerOutputs[i - 1];
             for (int j = 0; j < currentWeights.getRowDimension(); j++) {
                 RealVector row = currentWeights.getRowVector(j);
-                row = row.add(outputLayerError.mapMultiply(currentOutput.getEntry(j) * learningRate));
+                row = row.add(currentError.mapMultiply(currentOutput.getEntry(j) * learningRate));
                 currentWeights.setRowVector(j, row);
             }
-
         }
-
-
         return deltaOutput.toArray();
     }
 

@@ -36,63 +36,38 @@ public class Backpropagation {
     }
 
     public double[] train(INeuralNetwork neuralNetwork) {
-        for (DatasetEntry entry : trainingSet) {
-
-            while (true) {
-                double trainingError = 0.;
+        for (int i = 0; i < maxIteration; ++i) {
+            double mse = 0.;
+            for (DatasetEntry entry : trainingSet) {
                 double[] err = doBackpropagation(neuralNetwork, entry.getInput(), entry.getOutput());
-                for (double e : err) {
-                    trainingError += e;
-                }
-                currentIteration++;
-                System.out.println("Iter: "+currentIteration+" error:"+trainingError);
-                if (Math.abs(trainingError) < desiredError || currentIteration > maxIteration) {
-                    break;
-                }
-
+                mse += err[0] * err[0];
+            }
+            System.out.println("Iter: " + i + " mse: " + mse / 2.);
+            if (Math.abs(mse / 2. - desiredError) < desiredPrecision) {
+                break;
             }
         }
-//        for (DatasetEntry entry : validationSet) {
-//            while (true) {
-//                double validationError = 0.;
-//                double[] err = doBackpropagation(neuralNetwork, entry.getInput(), entry.getOutput());
-//                for (double e : err) {
-//                    validationError += e;
-//                }
-//
-//                if (validationError < desiredError) {
-//                    break;
-//                }
-//            }
-//        }
-
-
         return new double[]{};
     }
 
     private double[] doBackpropagation(INeuralNetwork neuralNetwork, double[] inputValue, double[] expectedValue) {
-        int layerNumber = neuralNetwork.getNumberOfLayers();
-        RealMatrix[] layerWeights = neuralNetwork.getLayerWeights();
-        IActivation[] activationFunctions = neuralNetwork.getLayerActivations();
+        RealMatrix[] layerWeights = neuralNetwork.getLayerWeights();//tezine između dva sloja
+        IActivation[] activationFunctions = neuralNetwork.getLayerActivations(); //aktiv fje, znaju i svoju derivaciju
 
         RealVector expected = new ArrayRealVector(expectedValue);
-        RealVector forecasted = new ArrayRealVector(neuralNetwork.forward(inputValue));
-        RealVector deltaOutput = expected.subtract(forecasted);
+        RealVector forecast = new ArrayRealVector(neuralNetwork.forward(inputValue));
+        RealVector deltaOutput = expected.subtract(forecast);
         RealVector[] layerOutputs = neuralNetwork.getLayerOutputs()[0].getLayerOutputs();
 
-        RealVector outputLayerError = new ArrayRealVector(deltaOutput.getDimension());
-        for (int i = 0; i < outputLayerError.getDimension(); ++i) {
-            double delta = deltaOutput.getEntry(i);
-            double firstDerivate = activationFunctions[activationFunctions.length - 1].getDerivative(forecasted.getEntry(i));
-            outputLayerError.setEntry(i, delta * firstDerivate);
-        }
+        RealVector outputLayerError = forecast
+                .map(t -> activationFunctions[activationFunctions.length - 1].getDerivative(t))
+                .ebeMultiply(deltaOutput);
 
         RealVector lastHiddenLayerOutput = layerOutputs[layerOutputs.length - 2];
         RealMatrix outputLayerMatrix = layerWeights[layerWeights.length - 1];
         for (int i = 0; i < outputLayerMatrix.getRowDimension(); ++i) {
             RealVector row = outputLayerMatrix.getRowVector(i);
-            row = row.add(outputLayerError.mapMultiply(
-                    learningRate * lastHiddenLayerOutput.getEntry(i))
+            row = row.add(outputLayerError.mapMultiply(learningRate * lastHiddenLayerOutput.getEntry(i))
             );
             outputLayerMatrix.setRowVector(i, row);
         }

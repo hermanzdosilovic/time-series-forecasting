@@ -10,13 +10,14 @@ public class Dataset {
     private double[] dataset;
     private double[] datasetBackup;
 
-    public Dataset(double[] dataset) {
-        datasetBackup = dataset.clone();
+    public Dataset(double[] dataset, boolean differenced) {
         this.dataset = dataset;
         mean = DataUtil.getMean(dataset);
+        if(differenced) mean = 0;
         for (int i = 0; i < dataset.length; i++) {
             this.dataset[i] -= mean;
         }
+        datasetBackup = dataset.clone();
     }
 
     public double getMean() {

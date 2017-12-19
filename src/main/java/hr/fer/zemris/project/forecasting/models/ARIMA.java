@@ -13,13 +13,14 @@ public class ARIMA extends AModel {
     private Stationary stat;
 
     public ARIMA(int p, int q, List<Double> dataset) {
-        setModel(p, q, dataset);
         stat = new Stationary(dataset);
+        setModel(p, q, stat.getDatasetAsList());
     }
 
     private void setModel(int p, int q, List<Double> dataset) {
+        boolean differenced = stat.getOrder() > 0;
         if (p == 0) {
-            model = new ARMA(0, q, ArraysUtil.toPrimitiveArray(dataset));
+            model = new ARMA(0, q, ArraysUtil.toPrimitiveArray(dataset), differenced);
         } else if (q == 0) {
             model = new AR(p, dataset);
         } else {

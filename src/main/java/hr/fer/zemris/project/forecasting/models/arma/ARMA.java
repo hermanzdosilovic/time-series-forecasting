@@ -25,14 +25,17 @@ public class ARMA extends AModel {
     private Dataset a;
     private Dataset dataset;
 
-    public ARMA(int p, int q, double[] dataset) {
+    private boolean differenced;
+
+    public ARMA(int p, int q, double[] dataset, boolean differenced) {
 
         this.p = p;
         this.q = q;
-        this.dataset = new Dataset(dataset);
+        this.dataset = new Dataset(dataset, differenced);
         this.betaCoeffs = new double[this.p + this.q];
         if (p == 0 && q == 0)
             return;
+
     /*
 		 * Osigurava da ce u prolazu za početne vrijednosti biti MAX_REC_ITER iteracija.
 		 */
@@ -48,7 +51,18 @@ public class ARMA extends AModel {
         for (int i = 0; i < numberOfIters; i++) {
             betaCoeffs = adjustBetas();
         }
-        a = new Dataset(findA(betaCoeffs));
+        a = new Dataset(findA(betaCoeffs), false);
+
+        for (int j = 1; j <= p; j++) {
+
+                System.out.println(betaCoeffs[j - 1]);
+
+        }
+
+        for (int j = 1; j <= q; j++) {
+                System.out.println(betaCoeffs[p + j - 1]);
+
+        }
     }
 
     private void findStartingValues() {
@@ -88,25 +102,28 @@ public class ARMA extends AModel {
 
     // Uvijek računa sa dataset - mean
 
-    private double[] findA(double[] coeffs) {
+    //provjeriti je li problem u računanju a ili negdje drugdje
+    public double[] findA(double[] coeffs) {
 
         double[] newDataset = new double[dataset.getDataset().length];
-        for (int i = 0; i < newDataset.length; i++) {
-            newDataset[i] = dataset.getDataset()[i];
+        for (int i = p; i < newDataset.length; i++) {
+            newDataset[i] = dataset.getDataset()[i] + dataset.getMean();
         }
 
+        Dataset next = new Dataset(newDataset, differenced);
         double[] a = new double[newDataset.length];
         for (int i = p; i < a.length; i++) {
-            a[i] = newDataset[i];
+            a[i] = next.getDataset()[i];
             for (int j = 1; j <= p; j++) {
-                if (i - j >= 0)
-                    a[i] -= coeffs[j - 1] * newDataset[i - j];
-
+                if (i - j >= 0) {
+                    a[i] -= coeffs[j - 1] * next.getDataset()[i - j];
+                }
             }
 
             for (int j = 1; j <= q; j++) {
-                if (i - j >= 0)
+                if (i - j >= 0) {
                     a[i] += coeffs[p + j - 1] * a[i - j];
+                }
             }
         }
 
@@ -205,8 +222,8 @@ public class ARMA extends AModel {
     }
 
     @Override public double[] computeNextValues(int numberOfForecasts) {
-        Dataset datasetBackup = new Dataset(dataset.getDatasetBackup());
-        Dataset residualBackup = new Dataset(a.getDatasetBackup());
+        Dataset datasetBackup = new Dataset(dataset.getDatasetBackup(), differenced);
+        Dataset residualBackup = new Dataset(a.getDatasetBackup(), false);
 
         double[] results = new double[numberOfForecasts];
 
@@ -216,7 +233,7 @@ public class ARMA extends AModel {
             results[i] = oneForecast;
 
             dataset.addSample(oneForecast);
-            a = new Dataset(findA(betaCoeffs));
+            a = new Dataset(findA(betaCoeffs), false);
         }
 
         dataset = datasetBackup;
@@ -239,4 +256,5 @@ public class ARMA extends AModel {
         }
 
     }
+
 }

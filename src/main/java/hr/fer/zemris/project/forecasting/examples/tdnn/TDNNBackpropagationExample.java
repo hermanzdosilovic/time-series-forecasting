@@ -2,6 +2,7 @@ package hr.fer.zemris.project.forecasting.examples.tdnn;
 
 import com.dosilovic.hermanzvonimir.ecfjava.neural.FeedForwardANN;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
+import com.dosilovic.hermanzvonimir.ecfjava.neural.activations.IdentityActivation;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.activations.ReLUActivation;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.activations.SigmoidActivation;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
@@ -18,7 +19,7 @@ import java.util.List;
 public final class TDNNBackpropagationExample {
 
     public static void main(String[] args) throws IOException {
-        final int[] ARCHITECTURE   = {5, 4, 1};
+        final int[] ARCHITECTURE   = {5, 1};
         int         tdnnInputSize  = ARCHITECTURE[0];
         int         tdnnOutputSize = ARCHITECTURE[ARCHITECTURE.length - 1];
 
@@ -34,15 +35,22 @@ public final class TDNNBackpropagationExample {
 
         INeuralNetwork tdnn           = new FeedForwardANN(ARCHITECTURE,
                 SigmoidActivation.getInstance(),
-                SigmoidActivation.getInstance(),
-                ReLUActivation.getInstance());
+                ReLUActivation.getInstance()
+                );
+
+
 
         List<DatasetEntry> train = new ArrayList<>();
         trainSet.forEach(t -> train.add(new DatasetEntry(t.getInput(),t.getExpectedOutput())));
         List<DatasetEntry> test = new ArrayList<>();
-        trainSet.forEach(t -> test.add(new DatasetEntry(t.getInput(),t.getExpectedOutput())));
-        Backpropagation bp = new Backpropagation(train,test,0.1,100_000,1E-6,1E-8);
+        testSet.forEach(t -> test.add(new DatasetEntry(t.getInput(),t.getExpectedOutput())));
+        Backpropagation bp = new Backpropagation(train,test,0.1,50,1E-6,1E-8);
         bp.train(tdnn);
+
+        for(int i=0; i<trainSet.size();++i) {
+          System.out.println(i+" expected: "+trainSet.get(i).getExpectedOutput()[0]+" forecast: "+tdnn.forward(trainSet.get(i).getInput())[0]);
+        }
+
         NeuralNetworkUtil.plot("Train", tdnn, trainSet);
         NeuralNetworkUtil.plot("Test", tdnn, testSet);
         NeuralNetworkUtil.plot("Dataset", tdnn, tdnnDataset);

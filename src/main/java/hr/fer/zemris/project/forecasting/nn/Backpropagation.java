@@ -38,12 +38,26 @@ public class Backpropagation {
     public double[] train(INeuralNetwork neuralNetwork) {
         for (int i = 0; i < maxIteration; ++i) {
             double mse = 0.;
+
+
+//            for(RealMatrix m :neuralNetwork.getLayerWeights()) {
+//                for(int k=0; k<m.getRowDimension(); ++k){
+//                    m.getRowVector(k).map(t -> {
+//                        System.out.println(t);
+//                        return t;
+//                    });
+//                }
+//                System.out.println();
+//            }
+
             for (DatasetEntry entry : trainingSet) {
                 double[] err = doBackpropagation(neuralNetwork, entry.getInput(), entry.getOutput());
                 mse += err[0] * err[0];
             }
-            System.out.println("Iter: " + i + " mse: " + mse / 2.);
-            if (Math.abs(mse / 2. - desiredError) < desiredPrecision) {
+            mse = mse/trainingSet.size();
+            System.out.println("Iter: " + i + " mse: " + mse);
+
+            if (Math.abs(mse - desiredError) < desiredPrecision) {
                 break;
             }
         }

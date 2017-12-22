@@ -13,6 +13,7 @@ import org.apache.commons.math3.linear.RealVector;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import static com.dosilovic.hermanzvonimir.ecfjava.neural.FeedForwardANN.*;
 
@@ -27,6 +28,7 @@ public class Backpropagation {
     private long currentIteration;
     private List<NeuralNetworkObserver> observers = new ArrayList<>();
 
+    Random r  = new Random();
 
     public Backpropagation(List<DatasetEntry> trainingSet, List<DatasetEntry> validationSet,
                            double learningRate, long maxIteration, double desiredError, double desiredPrecision) {
@@ -54,7 +56,7 @@ public class Backpropagation {
                 RealVector forecast = new ArrayRealVector(neuralNetwork.forward(entry.getInput()));
                 RealVector expected = new ArrayRealVector(entry.getOutput());
                 outputDeltaMatrix.setRowVector(j, expected.subtract(forecast));
-
+               // System.out.println(expected.subtract(forecast).toString());
                 mse = mse.add(expected.subtract(forecast));
 
                 LayerOutputs outputsByLayer = neuralNetwork.getLayerOutputs()[0];
@@ -65,12 +67,23 @@ public class Backpropagation {
             }
             double[] arr = doBackpropagation(neuralNetwork, outputDeltaMatrix, layerOutputs);
             double msErr = mse.dotProduct(mse) / trainingSet.size();
+           // System.out.println(mse.toString());
             System.out.println("iter: " + (i + 1) + " mse: " + msErr);
 
             if (Math.abs(msErr - desiredError) < desiredPrecision) {
                 break;
             }
+
         }
+        System.out.println("Training");
+        for(DatasetEntry e : trainingSet) {
+            System.out.println("expected: "+ e.getOutput()[0]+" -> forecast: "+neuralNetwork.forward(e.getInput())[0] );
+        }
+        System.out.println("Validation");
+        for(DatasetEntry e : validationSet) {
+            System.out.println("expected: "+ e.getOutput()[0]+" -> forecast: "+neuralNetwork.forward(e.getInput())[0] );
+        }
+
         return new double[]{};
     }
 
@@ -111,7 +124,8 @@ public class Backpropagation {
                     currentLayerError.setEntry(j, k, err * row.getEntry(k));
                 }
             }
-            currentError = currentLayerError;
+            currentError = currentLayerError.getSubMatrix(0,currentLayerError.getRowDimension()-1,
+                    0, currentLayerError.getColumnDimension()-2);
 
             RealMatrix currentWeights = neuralNetwork.getLayerWeights()[i - 1];
             RealMatrix currentOutput = allLayerOutputs[i - 1];

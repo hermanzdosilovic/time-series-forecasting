@@ -6,12 +6,15 @@ import com.dosilovic.hermanzvonimir.ecfjava.neural.activations.IActivation;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.activations.ReLUActivation;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.activations.SigmoidActivation;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.dosilovic.hermanzvonimir.ecfjava.neural.FeedForwardANN.*;
 
 public class Backpropagation {
 
@@ -37,77 +40,105 @@ public class Backpropagation {
 
     public double[] train(INeuralNetwork neuralNetwork) {
         for (int i = 0; i < maxIteration; ++i) {
-            double mse = 0.;
 
-
-//            for(RealMatrix m :neuralNetwork.getLayerWeights()) {
-//                for(int k=0; k<m.getRowDimension(); ++k){
-//                    m.getRowVector(k).map(t -> {
-//                        System.out.println(t);
-//                        return t;
-//                    });
-//                }
-//                System.out.println();
-//            }
-
-            for (DatasetEntry entry : trainingSet) {
-                double[] err = doBackpropagation(neuralNetwork, entry.getInput(), entry.getOutput());
-                mse += err[0] * err[0];
+            RealMatrix outputDeltaMatrix = new Array2DRowRealMatrix(trainingSet.size(), neuralNetwork.getOutputSize());
+            RealMatrix[] layerOutputs = new RealMatrix[neuralNetwork.getNumberOfLayers()];
+            for (int j = 0; j < neuralNetwork.getNumberOfLayers(); ++j) {
+                int size = j == neuralNetwork.getNumberOfLayers() - 1 ? neuralNetwork.getArchitecture()[j] : neuralNetwork.getArchitecture()[j] + 1;
+                layerOutputs[j] = new Array2DRowRealMatrix(trainingSet.size(), size);
             }
-            mse = mse/trainingSet.size();
-            System.out.println("Iter: " + i + " mse: " + mse);
 
-            if (Math.abs(mse - desiredError) < desiredPrecision) {
+            RealVector mse = new ArrayRealVector(neuralNetwork.getOutputSize());
+            for (int j = 0; j < trainingSet.size(); ++j) {
+                DatasetEntry entry = trainingSet.get(j);
+                RealVector forecast = new ArrayRealVector(neuralNetwork.forward(entry.getInput()));
+                RealVector expected = new ArrayRealVector(entry.getOutput());
+                outputDeltaMatrix.setRowVector(j, expected.subtract(forecast));
+
+                mse = mse.add(expected.subtract(forecast));
+
+                LayerOutputs outputsByLayer = neuralNetwork.getLayerOutputs()[0];
+                for (int k = 0; k < outputsByLayer.getLayerOutputs().length; ++k) {
+                    layerOutputs[k].setRowVector(j, outputsByLayer.getLayerOutputs()[k]);
+                }
+
+            }
+            double[] arr = doBackpropagation(neuralNetwork, outputDeltaMatrix, layerOutputs);
+            double msErr = mse.dotProduct(mse) / trainingSet.size();
+            System.out.println("iter: " + (i + 1) + " mse: " + msErr);
+
+            if (Math.abs(msErr - desiredError) < desiredPrecision) {
                 break;
             }
         }
         return new double[]{};
     }
 
-    private double[] doBackpropagation(INeuralNetwork neuralNetwork, double[] inputValue, double[] expectedValue) {
-        RealMatrix[] layerWeights = neuralNetwork.getLayerWeights();//tezine između dva sloja
-        IActivation[] activationFunctions = neuralNetwork.getLayerActivations(); //aktiv fje, znaju i svoju derivaciju
-
-        RealVector expected = new ArrayRealVector(expectedValue);
-        RealVector forecast = new ArrayRealVector(neuralNetwork.forward(inputValue));
-        RealVector deltaOutput = expected.subtract(forecast);
-        RealVector[] layerOutputs = neuralNetwork.getLayerOutputs()[0].getLayerOutputs();
-
-        RealVector outputLayerError = forecast
-                .map(t -> activationFunctions[activationFunctions.length - 1].getDerivative(t))
-                .ebeMultiply(deltaOutput);
-
-        RealVector lastHiddenLayerOutput = layerOutputs[layerOutputs.length - 2];
-        RealMatrix outputLayerMatrix = layerWeights[layerWeights.length - 1];
-        for (int i = 0; i < outputLayerMatrix.getRowDimension(); ++i) {
-            RealVector row = outputLayerMatrix.getRowVector(i);
-            row = row.add(outputLayerError.mapMultiply(learningRate * lastHiddenLayerOutput.getEntry(i))
-            );
-            outputLayerMatrix.setRowVector(i, row);
+    private double[] doBackpropagation(INeuralNetwork neuralNetwork, RealMatrix outputDeltaMatrix, RealMatrix[] allLayerOutputs) {
+        RealMatrix outputLayerError = new Array2DRowRealMatrix(outputDeltaMatrix.getRowDimension(), outputDeltaMatrix.getColumnDimension());
+        for (int i = 0; i < outputDeltaMatrix.getRowDimension(); ++i) {
+            RealVector outputDerived = allLayerOutputs[allLayerOutputs.length - 1].getRowVector(i)
+                    .map(
+                            t -> neuralNetwork.
+                                    getLayerActivations()[neuralNetwork.getLayerActivations().length - 1].getDerivative(t)
+                    );
+            outputLayerError.setRowVector(i, outputDerived.ebeMultiply(outputDeltaMatrix.getRowVector(i)));
         }
 
-        RealVector currentError = outputLayerError;
-        for (int i = layerWeights.length - 1; i > 0; --i) {
-            RealMatrix nextLayerMatrix = layerWeights[i];
-            RealVector nextLayerOutput = layerOutputs[i];
-            RealVector nextLayerError = new ArrayRealVector(nextLayerOutput.getDimension());
-            for (int j = 0; j < nextLayerMatrix.getRowDimension(); ++j) {
-                RealVector row = nextLayerMatrix.getRowVector(j);
-                double error = row.dotProduct(currentError) *
-                        activationFunctions[i - 1].getDerivative(nextLayerOutput.getEntry(j));
-                nextLayerError.setEntry(j, error);
+        RealMatrix lastLayerWeights = neuralNetwork.getLayerWeights()[neuralNetwork.getLayerWeights().length - 1];
+        RealMatrix lastHiddenLayerOutput = allLayerOutputs[allLayerOutputs.length - 2];
+        for (int i = 0; i < lastLayerWeights.getRowDimension(); ++i) {
+            RealVector yOutput = lastHiddenLayerOutput.getColumnVector(i);
+            for (int j = 0; j < lastLayerWeights.getColumnDimension(); ++j) {
+                double sum = outputLayerError.getColumnVector(j).dotProduct(yOutput);
+                double currentWeight = lastLayerWeights.getEntry(i, j);
+                lastLayerWeights.setEntry(i, j, currentWeight + sum * learningRate);
             }
-            currentError = nextLayerError.getSubVector(0, nextLayerError.getDimension() - 1);
+        }
 
-            RealMatrix currentWeights = layerWeights[i - 1];
-            RealVector currentOutput = layerOutputs[i - 1];
+        RealMatrix currentError = outputLayerError;
+        IActivation[] activations = neuralNetwork.getLayerActivations();
+        for (int i = neuralNetwork.getLayerWeights().length - 1; i > 0; --i) {
+            RealMatrix nextLayerMatrix = neuralNetwork.getLayerWeights()[i];
+            RealMatrix currentLayerOutput = allLayerOutputs[i];
+            RealMatrix currentLayerError = new Array2DRowRealMatrix(currentLayerOutput.getRowDimension(), currentLayerOutput.getColumnDimension());
+            final int index = i;
+            for (int j = 0; j < currentLayerOutput.getRowDimension(); ++j) {
+                RealVector row = currentLayerOutput.getRowVector(j);
+                row = row.map(t -> activations[index].getDerivative(t));
+                for (int k = 0; k < row.getDimension(); ++k) {
+                    double err = nextLayerMatrix.getRowVector(k).dotProduct(currentError.getRowVector(j));
+                    currentLayerError.setEntry(j, k, err * row.getEntry(k));
+                }
+            }
+            currentError = currentLayerError;
+
+            RealMatrix currentWeights = neuralNetwork.getLayerWeights()[i - 1];
+            RealMatrix currentOutput = allLayerOutputs[i - 1];
             for (int j = 0; j < currentWeights.getRowDimension(); j++) {
-                RealVector row = currentWeights.getRowVector(j);
-                row = row.add(currentError.mapMultiply(currentOutput.getEntry(j) * learningRate));
-                currentWeights.setRowVector(j, row);
+                for (int k = 0; k < currentWeights.getColumnDimension(); ++k) {
+                    double currentWeight = currentWeights.getEntry(j, k);
+                    double gradient = currentError.getColumnVector(k).dotProduct(currentOutput.getColumnVector(j));
+                    currentWeights.setEntry(j, k, currentWeight + learningRate * gradient);
+                }
             }
         }
-        return deltaOutput.toArray();
+
+
+//        RealVector outputLayerError = forecast
+//                .map(t -> activationFunctions[activationFunctions.length - 1].getDerivative(t))
+//                .ebeMultiply(deltaOutput);
+
+//        RealVector lastHiddenLayerOutput = layerOutputs[layerOutputs.length - 2];
+//        RealMatrix outputLayerMatrix = layerWeights[layerWeights.length - 1];
+//        for (int i = 0; i < outputLayerMatrix.getRowDimension(); ++i) {
+//            RealVector row = outputLayerMatrix.getRowVector(i);
+//            row = row.add(outputLayerError.mapMultiply(learningRate * lastHiddenLayerOutput.getEntry(i))
+//            );
+//            outputLayerMatrix.setRowVector(i, row);
+//        }
+//
+        return new double[]{};
     }
 
     public List<DatasetEntry> getTrainingSet() {

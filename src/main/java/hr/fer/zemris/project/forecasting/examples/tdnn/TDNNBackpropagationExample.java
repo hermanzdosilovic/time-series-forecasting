@@ -19,7 +19,7 @@ import java.util.List;
 public final class TDNNBackpropagationExample {
 
     public static void main(String[] args) throws IOException {
-        final int[] ARCHITECTURE   = {5, 1};
+        final int[] ARCHITECTURE   = {5,4, 1};
         int         tdnnInputSize  = ARCHITECTURE[0];
         int         tdnnOutputSize = ARCHITECTURE[ARCHITECTURE.length - 1];
 
@@ -28,14 +28,15 @@ public final class TDNNBackpropagationExample {
         List<DataEntry> tdnnDataset = NeuralNetworkUtil.createTDNNDateset(dataset, tdnnInputSize, tdnnOutputSize);
 
         Pair<List<DataEntry>, List<DataEntry>> splittedTDNNDataset =
-            NeuralNetworkUtil.splitTDNNDataset(tdnnDataset, 0.8);
+            NeuralNetworkUtil.splitTDNNDataset(tdnnDataset, 0.5);
 
         List<DataEntry> trainSet = splittedTDNNDataset.getFirst();
         List<DataEntry> testSet  = splittedTDNNDataset.getSecond();
 
         INeuralNetwork tdnn           = new FeedForwardANN(ARCHITECTURE,
+                ReLUActivation.getInstance(),
                 SigmoidActivation.getInstance(),
-                ReLUActivation.getInstance()
+                IdentityActivation.getInstance()
                 );
 
 
@@ -44,7 +45,7 @@ public final class TDNNBackpropagationExample {
         trainSet.forEach(t -> train.add(new DatasetEntry(t.getInput(),t.getExpectedOutput())));
         List<DatasetEntry> test = new ArrayList<>();
         testSet.forEach(t -> test.add(new DatasetEntry(t.getInput(),t.getExpectedOutput())));
-        Backpropagation bp = new Backpropagation(train,test,0.1,50,1E-6,1E-8);
+        Backpropagation bp = new Backpropagation(train,test,0.1/trainSet.size(),2000,1E-7,1E-3);
         bp.train(tdnn);
 
         for(int i=0; i<trainSet.size();++i) {

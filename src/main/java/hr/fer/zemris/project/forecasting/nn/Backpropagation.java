@@ -56,7 +56,6 @@ public class Backpropagation {
                 RealVector forecast = new ArrayRealVector(neuralNetwork.forward(entry.getInput()));
                 RealVector expected = new ArrayRealVector(entry.getOutput());
                 outputDeltaMatrix.setRowVector(j, expected.subtract(forecast));
-               // System.out.println(expected.subtract(forecast).toString());
                 mse = mse.add(expected.subtract(forecast));
 
                 LayerOutputs outputsByLayer = neuralNetwork.getLayerOutputs()[0];
@@ -67,7 +66,6 @@ public class Backpropagation {
             }
             double[] arr = doBackpropagation(neuralNetwork, outputDeltaMatrix, layerOutputs);
             double msErr = mse.dotProduct(mse) / trainingSet.size();
-           // System.out.println(mse.toString());
             System.out.println("iter: " + (i + 1) + " mse: " + msErr);
 
             if (Math.abs(msErr - desiredError) < desiredPrecision) {
@@ -137,21 +135,6 @@ public class Backpropagation {
                 }
             }
         }
-
-
-//        RealVector outputLayerError = forecast
-//                .map(t -> activationFunctions[activationFunctions.length - 1].getDerivative(t))
-//                .ebeMultiply(deltaOutput);
-
-//        RealVector lastHiddenLayerOutput = layerOutputs[layerOutputs.length - 2];
-//        RealMatrix outputLayerMatrix = layerWeights[layerWeights.length - 1];
-//        for (int i = 0; i < outputLayerMatrix.getRowDimension(); ++i) {
-//            RealVector row = outputLayerMatrix.getRowVector(i);
-//            row = row.add(outputLayerError.mapMultiply(learningRate * lastHiddenLayerOutput.getEntry(i))
-//            );
-//            outputLayerMatrix.setRowVector(i, row);
-//        }
-//
         return new double[]{};
     }
 

@@ -45,6 +45,7 @@ public final class TDNNBackpropagationExample {
 
         List<DataEntry> trainSet = splittedTDNNDataset.getFirst();
         List<DataEntry> testSet = splittedTDNNDataset.getSecond();
+        testSet = testSet.subList(0,testSet.size()/15);
 
         INeuralNetwork tdnn = new FeedForwardANN(ARCHITECTURE,
                 SigmoidActivation.getInstance(),
@@ -57,7 +58,7 @@ public final class TDNNBackpropagationExample {
         trainSet.forEach(t -> train.add(new DatasetEntry(t.getInput(), t.getExpectedOutput())));
         List<DatasetEntry> test = new ArrayList<>();
         testSet.forEach(t -> test.add(new DatasetEntry(t.getInput(), t.getExpectedOutput())));
-        Backpropagation bp = new Backpropagation(train, test, 0.1, 100_000, 1E-12, 1E-15);
+        Backpropagation bp = new Backpropagation(train, test, 0.1, 200_000, 1E-12, 1E-15);
         bp.train(tdnn);
 
         NeuralNetworkUtil.plot("Train", tdnn, trainSet);

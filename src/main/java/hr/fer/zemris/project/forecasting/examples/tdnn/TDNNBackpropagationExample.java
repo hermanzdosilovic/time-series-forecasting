@@ -41,7 +41,7 @@ public final class TDNNBackpropagationExample {
         List<DataEntry> tdnnDataset = NeuralNetworkUtil.createTDNNDateset(normalizedDataset, tdnnInputSize, tdnnOutputSize);
 
         Pair<List<DataEntry>, List<DataEntry>> splittedTDNNDataset =
-                NeuralNetworkUtil.splitTDNNDataset(tdnnDataset, 0.1);
+                NeuralNetworkUtil.splitTDNNDataset(tdnnDataset, 0.11);
 
         List<DataEntry> trainSet = splittedTDNNDataset.getFirst();
         List<DataEntry> testSet = splittedTDNNDataset.getSecond();

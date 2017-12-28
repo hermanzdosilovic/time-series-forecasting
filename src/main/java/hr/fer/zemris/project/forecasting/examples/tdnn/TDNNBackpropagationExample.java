@@ -12,6 +12,7 @@ import hr.fer.zemris.project.forecasting.nn.util.NeuralNetworkUtil;
 import hr.fer.zemris.project.forecasting.util.DataReaderUtil;
 import hr.fer.zemris.project.forecasting.util.Pair;
 
+import javax.xml.crypto.Data;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,33 +25,18 @@ public final class TDNNBackpropagationExample {
         int tdnnOutputSize = ARCHITECTURE[ARCHITECTURE.length - 1];
 
         double[] dataset = DataReaderUtil.readDataset("./datasets/exchange-rate-twi-may-1970-aug-1.csv");
-
-        double[] normalizedDataset = new double[dataset.length];
-        double min = Integer.MAX_VALUE;
-        double max = Integer.MIN_VALUE;
-        for (double d : dataset) {
-            min = Math.min(min, d);
-            max = Math.max(max, d);
-        }
-        for (int i = 0; i < dataset.length; ++i) {
-            double z = (dataset[i] - min) / (max - min);
-            z = z * 2. - 1.;
-            normalizedDataset[i] = z;
-        }
-
-        List<DataEntry> tdnnDataset = NeuralNetworkUtil.createTDNNDateset(normalizedDataset, tdnnInputSize, tdnnOutputSize);
+        List<DataEntry> tdnnDataset = NeuralNetworkUtil.createTDNNDateset(dataset, tdnnInputSize, tdnnOutputSize);
 
         Pair<List<DataEntry>, List<DataEntry>> splittedTDNNDataset =
-                NeuralNetworkUtil.splitTDNNDataset(tdnnDataset, 0.11);
+                NeuralNetworkUtil.splitTDNNDataset(tdnnDataset, 0.90);
 
         List<DataEntry> trainSet = splittedTDNNDataset.getFirst();
         List<DataEntry> testSet = splittedTDNNDataset.getSecond();
-        testSet = testSet.subList(0,testSet.size()/15);
 
         INeuralNetwork tdnn = new FeedForwardANN(ARCHITECTURE,
-                SigmoidActivation.getInstance(),
-                SigmoidActivation.getInstance(),
-                SigmoidActivation.getInstance()
+                ReLUActivation.getInstance(),
+                ReLUActivation.getInstance(),
+                ReLUActivation.getInstance()
         );
 
 
@@ -58,9 +44,21 @@ public final class TDNNBackpropagationExample {
         trainSet.forEach(t -> train.add(new DatasetEntry(t.getInput(), t.getExpectedOutput())));
         List<DatasetEntry> test = new ArrayList<>();
         testSet.forEach(t -> test.add(new DatasetEntry(t.getInput(), t.getExpectedOutput())));
-        Backpropagation bp = new Backpropagation(train, test, 0.1, 200_000, 1E-12, 1E-15);
-        bp.train(tdnn);
-
+        Backpropagation bp = new Backpropagation(train, test, 1E-8, 300_000, 1E-12, 1E-15);
+        double startTime = System.currentTimeMillis();
+        bp.train(tdnn, 32);
+        double endTime = System.currentTimeMillis();
+        double deltaTime = (endTime - startTime) / 1000.;
+        System.out.println("Time: " + deltaTime + " s");
+        List<DataEntry> datasetEntries = new ArrayList<>(trainSet);
+        datasetEntries.addAll(testSet);
+        double mse = 0;
+        for (DataEntry e : datasetEntries) {
+            double[] forecast = tdnn.forward(e.getInput());
+            mse += Math.pow(forecast[0] - e.getExpectedOutput()[0], 2);
+        }
+        mse /= datasetEntries.size();
+        System.out.println("dataset mse: " + mse);
         NeuralNetworkUtil.plot("Train", tdnn, trainSet);
         NeuralNetworkUtil.plot("Test", tdnn, testSet);
         NeuralNetworkUtil.plot("Dataset", tdnn, tdnnDataset);

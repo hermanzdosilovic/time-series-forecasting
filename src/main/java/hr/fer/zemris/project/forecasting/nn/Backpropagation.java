@@ -8,6 +8,7 @@ import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 
+import javax.xml.crypto.Data;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -37,32 +38,36 @@ public class Backpropagation {
         this.desiredPrecision = desiredPrecision;
     }
 
-    public double[] train(INeuralNetwork neuralNetwork) {
+    public double[] train(INeuralNetwork neuralNetwork, int batchSize) {
         double validationSetMse = 0.;
+        List<DatasetEntry>[] batches = createBatches(batchSize);
         for (int i = 0; i < maxIteration; ++i) {
 
-            RealMatrix outputDeltaMatrix = new Array2DRowRealMatrix(trainingSet.size(), neuralNetwork.getOutputSize());
+//            RealMatrix outputDeltaMatrix = new Array2DRowRealMatrix(batchSize, neuralNetwork.getOutputSize());
             RealMatrix[] layerOutputs = new RealMatrix[neuralNetwork.getNumberOfLayers()];
             for (int j = 0; j < neuralNetwork.getNumberOfLayers(); ++j) {
                 int size = j == neuralNetwork.getNumberOfLayers() - 1 ? neuralNetwork.getArchitecture()[j] : neuralNetwork.getArchitecture()[j] + 1;
-                layerOutputs[j] = new Array2DRowRealMatrix(trainingSet.size(), size);
+                layerOutputs[j] = new Array2DRowRealMatrix(batchSize, size);
             }
 
             RealVector mse = new ArrayRealVector(neuralNetwork.getOutputSize());
-            for (int j = 0; j < trainingSet.size(); ++j) {
-                DatasetEntry entry = trainingSet.get(j);
-                RealVector forecast = new ArrayRealVector(neuralNetwork.forward(entry.getInput()));
-                RealVector expected = new ArrayRealVector(entry.getOutput());
-                outputDeltaMatrix.setRowVector(j, expected.subtract(forecast));
-                mse = mse.add(expected.subtract(forecast));
+            for (List<DatasetEntry> batch : batches) {
+                RealMatrix outputDeltaMatrix = new Array2DRowRealMatrix(batchSize, neuralNetwork.getOutputSize());
+                for (int j = 0; j < batch.size(); ++j) {
+                    DatasetEntry entry = batch.get(j);
+                    RealVector forecast = new ArrayRealVector(neuralNetwork.forward(entry.getInput()));
+                    RealVector expected = new ArrayRealVector(entry.getOutput());
+                    outputDeltaMatrix.setRowVector(j, expected.subtract(forecast));
+                    mse = mse.add(expected.subtract(forecast));
 
-                LayerOutputs outputsByLayer = neuralNetwork.getLayerOutputs()[0];
-                for (int k = 0; k < outputsByLayer.getLayerOutputs().length; ++k) {
-                    layerOutputs[k].setRowVector(j, outputsByLayer.getLayerOutputs()[k]);
+                    LayerOutputs outputsByLayer = neuralNetwork.getLayerOutputs()[0];
+                    for (int k = 0; k < outputsByLayer.getLayerOutputs().length; ++k) {
+                        layerOutputs[k].setRowVector(j, outputsByLayer.getLayerOutputs()[k]);
+                    }
+
                 }
-
+                double[] arr = doBackpropagation(neuralNetwork, outputDeltaMatrix, layerOutputs);
             }
-            double[] arr = doBackpropagation(neuralNetwork, outputDeltaMatrix, layerOutputs);
             double msErr = mse.dotProduct(mse) / trainingSet.size();
 
             RealVector validationMse = new ArrayRealVector(neuralNetwork.getOutputSize());
@@ -72,26 +77,17 @@ public class Backpropagation {
                 RealVector expected = new ArrayRealVector(entry.getOutput());
                 validationMse = validationMse.add(expected.subtract(forecast));
             }
-            double valMse = validationMse.dotProduct(validationMse)/validationSet.size();
-            System.out.println("iter: " + (i + 1) + " train mse: " + msErr+" validation mse: "+valMse);
-            if(Math.abs(valMse)<validationSetMse && currentIteration > maxIteration/2) {
+            double valMse = validationMse.dotProduct(validationMse) / validationSet.size();
+            System.out.println("iter: " + (i + 1) + " train mse: " + msErr + " validation mse: " + valMse);
+            if (Math.abs(valMse) < validationSetMse && currentIteration > maxIteration / 2) {
                 System.out.println("validation set break.");
                 break;
             }
             validationSetMse = valMse;
 
-            if (Math.abs(msErr - desiredError) < desiredPrecision ) {
+            if (Math.abs(msErr - desiredError) < desiredPrecision) {
                 break;
             }
-
-        }
-        System.out.println("Training");
-        for (DatasetEntry e : trainingSet) {
-            System.out.println("expected: " + e.getOutput()[0] + " -> forecast: " + neuralNetwork.forward(e.getInput())[0]);
-        }
-        System.out.println("Validation");
-        for (DatasetEntry e : validationSet) {
-            System.out.println("expected: " + e.getOutput()[0] + " -> forecast: " + neuralNetwork.forward(e.getInput())[0]);
         }
 
         return new double[]{};
@@ -104,7 +100,7 @@ public class Backpropagation {
         for (int i = 0; i < outputDeltaMatrix.getRowDimension(); ++i) {
             RealVector outputDerived = allLayerOutputs[allLayerOutputs.length - 1].getRowVector(i)
                     .map(t -> neuralNetwork.
-                                    getLayerActivations()[neuralNetwork.getLayerActivations().length - 1].getDerivative(t)
+                            getLayerActivations()[neuralNetwork.getLayerActivations().length - 1].getDerivative(t)
                     );
             outputLayerError.setRowVector(i, outputDerived.ebeMultiply(outputDeltaMatrix.getRowVector(i)));
         }
@@ -151,6 +147,22 @@ public class Backpropagation {
             }
         }
         return new double[]{};
+    }
+
+    private List<DatasetEntry>[] createBatches(int batchSize) {
+        int batchNumber = (int) Math.ceil(trainingSet.size() / (double) batchSize);
+        List<DatasetEntry>[] batches = (List<DatasetEntry>[]) new List[batchNumber];
+        for (int i = 0; i < batchNumber; i++) {
+            if (i < batchNumber - 1) {
+                batches[i] = trainingSet.subList(i * batchSize, (i + 1) * batchSize);
+            } else {
+                int len = trainingSet.size() % batchSize;
+                len = len == 0 ? 32 : len;
+                batches[i] = trainingSet.subList(i * batchSize, i * batchSize + len);
+            }
+        }
+
+        return batches;
     }
 
     public List<DatasetEntry> getTrainingSet() {

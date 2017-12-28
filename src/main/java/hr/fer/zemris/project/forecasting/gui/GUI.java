@@ -23,14 +23,14 @@ public class GUI extends Application {
         Tab arima = new Tab("ARIMA");
         arima.setClosable(false);
         Pane arimaContent = new Pane();
-        ARIMA arimaTab = new ARIMA();
+        ARIMA arimaTab = new ARIMA(dataTab);
         arimaTab.createUI(arimaContent);
         arima.setContent(arimaContent);
 
         Tab neuralNetwork = new Tab("ANN");
         neuralNetwork.setClosable(false);
         Pane neuralContent = new Pane();
-        NeuralNetworkUI neuralNetworkTab = new NeuralNetworkUI();
+        NeuralNetworkUI neuralNetworkTab = new NeuralNetworkUI(dataTab);
         neuralNetworkTab.createUI(neuralContent);
         neuralNetwork.setContent(neuralContent);
 

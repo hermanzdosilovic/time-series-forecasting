@@ -45,21 +45,23 @@ public class DatasetValue {
         return tmp;
     }
 
-    public static ObservableList<XYChart.Data<Integer, Double>> getChartData (ObservableList<DatasetValue> dataset){
+    public static XYChart.Series getChartData (ObservableList<DatasetValue> dataset){
         ObservableList<XYChart.Data<Integer, Double>> observableList = FXCollections.observableArrayList();
         for(int i = 0; i < dataset.size(); i++){
             observableList.add(new XYChart.Data<>(i, dataset.get(i).getValue()));
         }
-        dataset.addListener(new ListChangeListener<DatasetValue>(){
+        XYChart.Series series = new XYChart.Series();
+        series.setName("Expected Value");
+        series.setData(observableList);
+        return series;
+    }
 
-            @Override
-            public void onChanged(Change<? extends DatasetValue> c) {
-                for(int i = c.getFrom(); i < c.getTo(); i++){
-                    observableList.set(i, new XYChart.Data<>(i, dataset.get(i).getValue()));
-                }
-                System.out.println(observableList);
-            }
-        });
-        return observableList;
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof DatasetValue){
+            DatasetValue d = (DatasetValue) obj;
+            return Double.compare(d.getValue(), value) == 0;
+        }
+        return false;
     }
 }

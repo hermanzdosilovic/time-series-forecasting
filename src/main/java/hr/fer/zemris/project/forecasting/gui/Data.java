@@ -3,32 +3,29 @@ package hr.fer.zemris.project.forecasting.gui;
 import hr.fer.zemris.project.forecasting.util.DataReaderUtil;
 import hr.fer.zemris.project.forecasting.util.GraphUtil;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.embed.swing.SwingNode;
-import javafx.event.Event;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.scene.control.*;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
+import javafx.scene.control.Button;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.util.StringConverter;
 
-import javax.swing.*;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.Map;
 
 
 public class Data{
 
-
-    public final static ObservableList<DatasetValue> datasetValues = getList();
+    private ObservableList<DatasetValue> datasetValues;
+    private XYChart.Series series;
 
     private static ObservableList<DatasetValue> getList(){
       try{
@@ -39,16 +36,24 @@ public class Data{
       }
     }
 
-    public final static double MAX_TABLE_WIDTH = 150;
+    public Data(){
+       datasetValues = getList();
+       series = DatasetValue.getChartData(datasetValues);
+    }
 
-    public final static TableView table = new TableView();
+   public ObservableList<DatasetValue> getDatasetValues() {
+      return datasetValues;
+   }
+
+   public final static double MAX_TABLE_WIDTH = 150;
+
 
     public void createUI(Pane parent){
 
        GridPane grid = new GridPane();
-       grid.setHgap(15);
-       grid.setVgap(15);
-       grid.setPadding(new Insets(20, 20, 20, 20));
+       grid.setHgap(10);
+       grid.setVgap(10);
+       grid.setPadding(new Insets(30, 30, 30, 30));
 
 
        //Load dataset button
@@ -64,10 +69,7 @@ public class Data{
        grid.add(upperBox, 0,0);
 
        //Editable dataset
-//       ScrollPane sp = new ScrollPane();
-//       sp.setFitToWidth(true);
-//       sp.setMaxWidth(MAX_TABLE_WIDTH);
-
+       TableView table = new TableView();
        table.setEditable(true);
        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
        table.setItems(datasetValues);
@@ -81,11 +83,11 @@ public class Data{
        values.setCellFactory(TextFieldTableCell.forTableColumn(new MyDoubleStringConverter()));
 
        values.setOnEditCommit((e) ->{
-          e.getTableView().getItems().get(e.getTablePosition().getRow()).setValue(e.getNewValue());
+          e.getTableView().getItems().set(e.getTablePosition().getRow(), new DatasetValue(e.getNewValue()));
        });
 
+
        table.getColumns().add(values);
-//       sp.setContent(table);
 
        grid.add(table,0, 1);
 
@@ -93,21 +95,12 @@ public class Data{
        Button normalize = new Button("Normalize");
        grid.add(normalize, 0, 2);
 
-//       //graph space
-//       SwingNode graphSpace = new SwingNode();
-//       double[] dataset = DatasetValue.getDoubleArray(datasetValues);
-//       Map<String, double[]> graph = new HashMap<>();
-//       HBox box = new HBox();
-//       box.setMinSize(GraphUtil.DEFAULT_WIDTH, GraphUtil.DEFAULT_HEIGHT);
-//       graph.put("Data", dataset);
-//          SwingUtilities.invokeLater(() ->{
-//             JPanel panel = GraphUtil.dataAsPanel(graph);
-//             graphSpace.setContent(panel);
-//          });
-//
-//       box.getChildren().add(graphSpace);
-//
-//       grid.add(box, 1, 0, 2, 2);
+       //line chart
+       LineChart line = lineChart(series);
+       addChangeListener(datasetValues, series);
+
+       grid.add(line, 1, 0, 3, 3);
+
 
        parent.getChildren().add(grid);
    }
@@ -131,24 +124,54 @@ public class Data{
       }
    }
 
-   private void addRow() {
+//   private void addRow() {
+//
+//      // get current position
+//      TablePosition pos = table.getFocusModel().getFocusedCell();
+//
+//      // clear current selection
+//      table.getSelectionModel().clearSelection();
+//
+//      // create new record and add it to the model
+//      DatasetValue data = new DatasetValue(Double.NaN);
+//      table.getItems().add(data);
+//
+//      // get last row
+//      int row = table.getItems().size() - 1;
+//      table.getSelectionModel().select( row, pos.getTableColumn());
+//
+//      // scroll to new row
+//      table.scrollTo( data);
+//
+//   }
 
-      // get current position
-      TablePosition pos = table.getFocusModel().getFocusedCell();
+   public static LineChart<Number, Number> lineChart(XYChart.Series series){
+      final NumberAxis xAxis = new NumberAxis();
+      final NumberAxis yAxis = new NumberAxis();
+      xAxis.setLabel("Sample Number");
+      yAxis.setLabel("Sample Value");
+      final LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
+      lineChart.setTitle("Data");
+      lineChart.getData().add(series);
+      lineChart.setCreateSymbols(false);
+      lineChart.setMaxSize(GraphUtil.DEFAULT_WIDTH, GraphUtil.DEFAULT_HEIGHT);
+      lineChart.setAnimated(false);
+      return lineChart;
+   }
 
-      // clear current selection
-      table.getSelectionModel().clearSelection();
-
-      // create new record and add it to the model
-      DatasetValue data = new DatasetValue(Double.NaN);
-      table.getItems().add(data);
-
-      // get last row
-      int row = table.getItems().size() - 1;
-      table.getSelectionModel().select( row, pos.getTableColumn());
-
-      // scroll to new row
-      table.scrollTo( data);
+   public static void addChangeListener(ObservableList<DatasetValue> datasetValues, XYChart.Series series){
+      datasetValues.addListener(new ListChangeListener<DatasetValue>() {
+         @Override
+         public void onChanged(Change<? extends DatasetValue> c) {
+            while(c.next()) {
+               if(c.wasAdded()){
+                  for(int i = c.getFrom(); i < c.getTo(); i++){
+                     series.getData().set(i, new XYChart.Data<>(i, datasetValues.get(i).getValue()));
+                  }
+               }
+            }
+         }
+      });
 
    }
 }

@@ -1,7 +1,10 @@
 package hr.fer.zemris.project.forecasting.gui;
 
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TableColumn;
@@ -13,8 +16,14 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 
 import static hr.fer.zemris.project.forecasting.gui.Data.MAX_TABLE_WIDTH;
+import static hr.fer.zemris.project.forecasting.gui.Data.lineChart;
 
 public class NeuralNetworkUI {
+
+    private Data data;
+    public NeuralNetworkUI(Data data){
+        this.data = data;
+    }
 
     public void createUI(Pane parent){
         GridPane grid = new GridPane();
@@ -47,7 +56,7 @@ public class NeuralNetworkUI {
         table.setMaxWidth(MAX_TABLE_WIDTH);
         table.setEditable(true);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        table.setItems(Data.datasetValues);
+        table.setItems(data.getDatasetValues());
 
         TableColumn<DatasetValue, Double> values = new TableColumn("Data Set Values");
         values.setSortable(false);
@@ -61,9 +70,14 @@ public class NeuralNetworkUI {
         Button start = new Button("Start");
 
         //Button predict
-        Button predict = new Button("Predict next values");
+        Button predict = new Button("Predict future values");
 
         VBox rightSide = new VBox();
+
+        //line chart
+        XYChart.Series series = DatasetValue.getChartData(data.getDatasetValues());
+        LineChart line = lineChart(series);
+        Data.addChangeListener(data.getDatasetValues(), series);
 
         GridPane rightSideGrid = new GridPane();
         rightSideGrid.setHgap(10);
@@ -76,7 +90,8 @@ public class NeuralNetworkUI {
         grid.add(neural, 0, 0);
         grid.add(params, 0, 1);
         grid.add(table, 0, 2);
-        grid.add(rightSide, 1, 0, 1, 2);
+        grid.add(line, 1, 0, 3, 3);
+        grid.add(rightSide, 1, 4);
 
         parent.getChildren().add(grid);
     }

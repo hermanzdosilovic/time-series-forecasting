@@ -1,20 +1,23 @@
 package hr.fer.zemris.project.forecasting.gui;
 
 import hr.fer.zemris.project.forecasting.util.GraphUtil;
-import javafx.collections.ObservableList;
+import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
-import javafx.scene.chart.*;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 
-import javax.sound.sampled.Line;
-import java.util.List;
-
-import static hr.fer.zemris.project.forecasting.gui.Data.MAX_TABLE_WIDTH;
+import static hr.fer.zemris.project.forecasting.gui.Data.*;
 
 public class ARIMA {
+    private Data data;
+
+    public ARIMA(Data data){
+        this.data = data;
+    }
 
     public static int MAX_ORDER = 5;
     public void createUI(Pane parent){
@@ -47,14 +50,10 @@ public class ARIMA {
         //Immutable dataset
         TableView table = new TableView();
 
-//        ScrollPane sp = new ScrollPane();
-//        sp.setFitToWidth(true);
-//        sp.setMaxWidth(MAX_TABLE_WIDTH);
-
         table.setPrefWidth(MAX_TABLE_WIDTH);
-        table.setEditable(false);
+        table.setEditable(true);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        table.setItems(Data.datasetValues);
+        table.setItems(data.getDatasetValues());
 
         TableColumn<DatasetValue, Double> values = new TableColumn("Data Set Values");
         values.setSortable(false);
@@ -63,12 +62,13 @@ public class ARIMA {
         values.setCellValueFactory(new PropertyValueFactory<>("value"));
 
         table.getColumns().add(values);
-//        sp.setContent(table);
 
         //line chart
-        LineChart line = lineChart(Data.datasetValues);
-        line.setMaxSize(GraphUtil.DEFAULT_WIDTH, GraphUtil.DEFAULT_HEIGHT);
+        XYChart.Series series = DatasetValue.getChartData(data.getDatasetValues());
+        LineChart line = lineChart(series);
+        Data.addChangeListener(data.getDatasetValues(), series);
         grid.add(line, 1, 0, 3, 3);
+
         //start button
         Button start = new Button("Start");
         grid.add(start, 3, 3);
@@ -80,20 +80,5 @@ public class ARIMA {
         grid.add(table, 0, 2);
 
         parent.getChildren().add(grid);
-    }
-
-    private LineChart<Number, Number> lineChart(ObservableList<DatasetValue> dataset){
-        final NumberAxis xAxis = new NumberAxis();
-        final NumberAxis yAxis = new NumberAxis();
-        xAxis.setLabel("Sample Number");
-        yAxis.setLabel("Sample Value");
-        final LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
-        lineChart.setTitle("Data");
-        XYChart.Series series = new XYChart.Series();
-        series.setName("Expected Value");
-        series.setData(DatasetValue.getChartData(dataset));
-        lineChart.getData().add(series);
-        lineChart.setCreateSymbols(false);
-        return lineChart;
     }
 }

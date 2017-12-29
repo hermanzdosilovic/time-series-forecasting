@@ -8,7 +8,6 @@ import java.io.IOException;
 public class ARIMATest {
 
     public static void main(String[] args) throws IOException{
-
         double[] dataset = DataReaderUtil.readDataset("./datasets/monthly-milk-production-pounds-p.csv");
 
         for (double d : dataset) {

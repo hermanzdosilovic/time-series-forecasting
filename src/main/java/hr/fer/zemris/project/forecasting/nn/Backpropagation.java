@@ -26,7 +26,7 @@ public class Backpropagation {
     private double trainingMSE;
     private double validationMSE;
 
-    private List<NeuralNetworkObserver> observers = new ArrayList<>();
+    private List<BackpropagationObserver> observers = new ArrayList<>();
 
     public Backpropagation(List<DatasetEntry> trainingSet, List<DatasetEntry> validationSet,
                            double learningRate, long maxIteration, double desiredError, double desiredPrecision) {
@@ -195,11 +195,11 @@ public class Backpropagation {
         observers.forEach(o -> o.update(this));
     }
 
-    public void addObserver(NeuralNetworkObserver observer) {
+    public void addObserver(BackpropagationObserver observer) {
         observers.add(observer);
     }
 
-    public void removeObserver(NeuralNetworkObserver observer) {
+    public void removeObserver(BackpropagationObserver observer) {
         observers.remove(observer);
     }
 }

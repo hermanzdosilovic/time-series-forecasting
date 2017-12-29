@@ -2,9 +2,7 @@ package hr.fer.zemris.project.forecasting.examples.tdnn;
 
 import com.dosilovic.hermanzvonimir.ecfjava.neural.FeedForwardANN;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
-import com.dosilovic.hermanzvonimir.ecfjava.neural.activations.IdentityActivation;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.activations.ReLUActivation;
-import com.dosilovic.hermanzvonimir.ecfjava.neural.activations.SigmoidActivation;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 import hr.fer.zemris.project.forecasting.nn.Backpropagation;
 import hr.fer.zemris.project.forecasting.nn.util.DataEntry;
@@ -12,7 +10,6 @@ import hr.fer.zemris.project.forecasting.nn.util.NeuralNetworkUtil;
 import hr.fer.zemris.project.forecasting.util.DataReaderUtil;
 import hr.fer.zemris.project.forecasting.util.Pair;
 
-import javax.xml.crypto.Data;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +46,7 @@ public final class TDNNBackpropagationExample {
         bp.train(tdnn, 32);
         double endTime = System.currentTimeMillis();
         double deltaTime = (endTime - startTime) / 1000.;
-        System.out.println("Time: " + deltaTime + " s");
+        System.err.println("Time: " + deltaTime + " s");
         List<DataEntry> datasetEntries = new ArrayList<>(trainSet);
         datasetEntries.addAll(testSet);
         double mse = 0;
@@ -58,7 +55,7 @@ public final class TDNNBackpropagationExample {
             mse += Math.pow(forecast[0] - e.getExpectedOutput()[0], 2);
         }
         mse /= datasetEntries.size();
-        System.out.println("dataset mse: " + mse);
+        System.err.println("dataset mse: " + mse);
         NeuralNetworkUtil.plot("Train", tdnn, trainSet);
         NeuralNetworkUtil.plot("Test", tdnn, testSet);
         NeuralNetworkUtil.plot("Dataset", tdnn, tdnnDataset);

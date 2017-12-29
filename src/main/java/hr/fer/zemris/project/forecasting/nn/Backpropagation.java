@@ -8,12 +8,9 @@ import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 
-import javax.xml.crypto.Data;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
-
-import static com.dosilovic.hermanzvonimir.ecfjava.neural.FeedForwardANN.LayerOutputs;
 
 public class Backpropagation {
 
@@ -24,9 +21,10 @@ public class Backpropagation {
     private double desiredError;
     private double desiredPrecision;
     private long currentIteration;
-    private List<NeuralNetworkObserver> observers = new ArrayList<>();
+    private double trainingMSE;
+    private double validationMSE;
 
-    Random r = new Random();
+    private List<NeuralNetworkObserver> observers = new ArrayList<>();
 
     public Backpropagation(List<DatasetEntry> trainingSet, List<DatasetEntry> validationSet,
                            double learningRate, long maxIteration, double desiredError, double desiredPrecision) {
@@ -38,62 +36,66 @@ public class Backpropagation {
         this.desiredPrecision = desiredPrecision;
     }
 
-    public double[] train(INeuralNetwork neuralNetwork, int batchSize) {
-        double validationSetMse = 0.;
-        List<DatasetEntry>[] batches = createBatches(batchSize);
-        for (int i = 0; i < maxIteration; ++i) {
+    public void train(INeuralNetwork neuralNetwork, int batchSize) {
+        List<DatasetEntry>[] batches = createBatches(batchSize, trainingSet);
+        RealMatrix[] layerOutputs = new RealMatrix[neuralNetwork.getNumberOfLayers()];
 
-//            RealMatrix outputDeltaMatrix = new Array2DRowRealMatrix(batchSize, neuralNetwork.getOutputSize());
-            RealMatrix[] layerOutputs = new RealMatrix[neuralNetwork.getNumberOfLayers()];
-            for (int j = 0; j < neuralNetwork.getNumberOfLayers(); ++j) {
-                int size = j == neuralNetwork.getNumberOfLayers() - 1 ? neuralNetwork.getArchitecture()[j] : neuralNetwork.getArchitecture()[j] + 1;
-                layerOutputs[j] = new Array2DRowRealMatrix(batchSize, size);
-            }
-
-            RealVector mse = new ArrayRealVector(neuralNetwork.getOutputSize());
+        for (currentIteration = 1; currentIteration <= maxIteration; ++currentIteration) {
+            RealVector trainingMse = new ArrayRealVector(neuralNetwork.getOutputSize());
             for (List<DatasetEntry> batch : batches) {
-                RealMatrix outputDeltaMatrix = new Array2DRowRealMatrix(batchSize, neuralNetwork.getOutputSize());
+                RealMatrix outputMatrix = new Array2DRowRealMatrix(batch.size(), neuralNetwork.getOutputSize());
+                double[][] inputs = new double[batch.size()][];
                 for (int j = 0; j < batch.size(); ++j) {
-                    DatasetEntry entry = batch.get(j);
-                    RealVector forecast = new ArrayRealVector(neuralNetwork.forward(entry.getInput()));
-                    RealVector expected = new ArrayRealVector(entry.getOutput());
-                    outputDeltaMatrix.setRowVector(j, expected.subtract(forecast));
-                    mse = mse.add(expected.subtract(forecast));
-
-                    LayerOutputs outputsByLayer = neuralNetwork.getLayerOutputs()[0];
-                    for (int k = 0; k < outputsByLayer.getLayerOutputs().length; ++k) {
-                        layerOutputs[k].setRowVector(j, outputsByLayer.getLayerOutputs()[k]);
-                    }
-
+                    DatasetEntry batchElement = batch.get(j);
+                    inputs[j] = batchElement.getInput();
+                    outputMatrix.setRow(j, batchElement.getOutput());
                 }
-                double[] arr = doBackpropagation(neuralNetwork, outputDeltaMatrix, layerOutputs);
+                neuralNetwork.forward(inputs);
+                double[][] outputsByLayer = neuralNetwork.getOutput();
+                for (int k = 0; k < outputsByLayer.length; ++k) {
+                    double[] layerOutput = outputsByLayer[k];
+                    int layerLength = neuralNetwork.getArchitecture()[k];
+                    int width = k < outputsByLayer.length - 1 ? layerLength + 1 : layerLength;
+                    layerOutputs[k] = new Array2DRowRealMatrix(batch.size(), width);
+                    int offset = 0;
+                    for (int l = 0; l < layerOutput.length; l += layerLength) {
+                        double[] output = Arrays.copyOfRange(layerOutput, l, l + layerLength);
+                        RealVector outputVector = new ArrayRealVector(output);
+                        if (k < outputsByLayer.length - 1) {
+                            outputVector = outputVector.append(1.);
+                        }
+                        layerOutputs[k].setRowVector(offset++, outputVector);
+                    }
+                }
+
+                RealMatrix forecastMatrix = layerOutputs[layerOutputs.length - 1];
+                RealMatrix outputDeltaMatrix = outputMatrix.subtract(forecastMatrix);
+
+                for (int k = 0; k < outputDeltaMatrix.getRowDimension(); ++k) {
+                    trainingMse = trainingMse.add(outputDeltaMatrix.getRowVector(k));
+                }
+                doBackpropagation(neuralNetwork, outputDeltaMatrix, layerOutputs);
             }
-            double msErr = mse.dotProduct(mse) / trainingSet.size();
+            trainingMSE = trainingMse.dotProduct(trainingMse) / trainingSet.size();
 
             RealVector validationMse = new ArrayRealVector(neuralNetwork.getOutputSize());
-            for (int j = 0; j < validationSet.size(); ++j) {
-                DatasetEntry entry = validationSet.get(j);
+            for (DatasetEntry entry : validationSet) {
                 RealVector forecast = new ArrayRealVector(neuralNetwork.forward(entry.getInput()));
                 RealVector expected = new ArrayRealVector(entry.getOutput());
                 validationMse = validationMse.add(expected.subtract(forecast));
             }
-            double valMse = validationMse.dotProduct(validationMse) / validationSet.size();
-            System.out.println("iter: " + (i + 1) + " train mse: " + msErr + " validation mse: " + valMse);
-            if (Math.abs(valMse) < validationSetMse && currentIteration > maxIteration / 2) {
-                System.out.println("validation set break.");
-                break;
-            }
-            validationSetMse = valMse;
+            double validationSetMse = validationMSE;
+            validationMSE = validationMse.dotProduct(validationMse) / validationSet.size();
 
-            if (Math.abs(msErr - desiredError) < desiredPrecision) {
+            notifyObservers();
+            System.err.println("iteration: " + currentIteration + " training set mse: " + trainingMSE + " validation set mse: " + validationMSE);
+            if ((validationSetMse < validationMSE && currentIteration > maxIteration / 2) || Math.abs(trainingMSE - desiredError) < desiredPrecision) {
                 break;
             }
         }
-
-        return new double[]{};
     }
 
-    private double[] doBackpropagation(INeuralNetwork neuralNetwork, RealMatrix outputDeltaMatrix, RealMatrix[] allLayerOutputs) {
+    private void doBackpropagation(INeuralNetwork neuralNetwork, RealMatrix outputDeltaMatrix, RealMatrix[] allLayerOutputs) {
         RealMatrix outputLayerError = new Array2DRowRealMatrix(
                 outputDeltaMatrix.getRowDimension(), outputDeltaMatrix.getColumnDimension()
         );
@@ -104,8 +106,8 @@ public class Backpropagation {
                     );
             outputLayerError.setRowVector(i, outputDerived.ebeMultiply(outputDeltaMatrix.getRowVector(i)));
         }
-
-        RealMatrix lastLayerWeights = neuralNetwork.getLayerWeights()[neuralNetwork.getLayerWeights().length - 1];
+        RealMatrix[] layerWeights = createLayerWeights(neuralNetwork.getWeights(), neuralNetwork.getArchitecture());
+        RealMatrix lastLayerWeights = layerWeights[neuralNetwork.getNumberOfLayers() - 2];
         RealMatrix lastHiddenLayerOutput = allLayerOutputs[allLayerOutputs.length - 2];
         for (int i = 0; i < lastLayerWeights.getRowDimension(); ++i) {
             RealVector yOutput = lastHiddenLayerOutput.getColumnVector(i);
@@ -118,8 +120,8 @@ public class Backpropagation {
 
         RealMatrix currentError = outputLayerError;
         IActivation[] activations = neuralNetwork.getLayerActivations();
-        for (int i = neuralNetwork.getLayerWeights().length - 1; i > 0; --i) {
-            RealMatrix nextLayerMatrix = neuralNetwork.getLayerWeights()[i];
+        for (int i = layerWeights.length - 1; i > 0; --i) {
+            RealMatrix nextLayerMatrix = layerWeights[i];
             RealMatrix currentLayerOutput = allLayerOutputs[i];
             RealMatrix currentLayerError = new Array2DRowRealMatrix(
                     currentLayerOutput.getRowDimension(), currentLayerOutput.getColumnDimension()
@@ -136,7 +138,7 @@ public class Backpropagation {
             currentError = currentLayerError.getSubMatrix(0, currentLayerError.getRowDimension() - 1,
                     0, currentLayerError.getColumnDimension() - 2);
 
-            RealMatrix currentWeights = neuralNetwork.getLayerWeights()[i - 1];
+            RealMatrix currentWeights = layerWeights[i - 1];
             RealMatrix currentOutput = allLayerOutputs[i - 1];
             for (int j = 0; j < currentWeights.getRowDimension(); j++) {
                 for (int k = 0; k < currentWeights.getColumnDimension(); ++k) {
@@ -146,24 +148,10 @@ public class Backpropagation {
                 }
             }
         }
-        return new double[]{};
+        double[] weights = extractWeights(layerWeights, neuralNetwork.getNumberOfWeights());
+        neuralNetwork.setWeights(weights);
     }
 
-    private List<DatasetEntry>[] createBatches(int batchSize) {
-        int batchNumber = (int) Math.ceil(trainingSet.size() / (double) batchSize);
-        List<DatasetEntry>[] batches = (List<DatasetEntry>[]) new List[batchNumber];
-        for (int i = 0; i < batchNumber; i++) {
-            if (i < batchNumber - 1) {
-                batches[i] = trainingSet.subList(i * batchSize, (i + 1) * batchSize);
-            } else {
-                int len = trainingSet.size() % batchSize;
-                len = len == 0 ? 32 : len;
-                batches[i] = trainingSet.subList(i * batchSize, i * batchSize + len);
-            }
-        }
-
-        return batches;
-    }
 
     public List<DatasetEntry> getTrainingSet() {
         return trainingSet;
@@ -193,8 +181,67 @@ public class Backpropagation {
         return currentIteration;
     }
 
+    public double getTrainingMSE() {
+        return trainingMSE;
+    }
+
+    public double getValidationMSE() {
+        return validationMSE;
+    }
+
     private void notifyObservers() {
         observers.forEach(o -> o.update(this));
     }
 
+    public void addObserver(NeuralNetworkObserver observer) {
+        observers.add(observer);
+    }
+
+    public void removeObserver(NeuralNetworkObserver observer) {
+        observers.remove(observer);
+    }
+
+    private static RealMatrix[] createLayerWeights(double[] weights, int[] architecture) {
+        RealMatrix[] layerWeights = new RealMatrix[architecture.length - 1];
+        int offset = 0;
+        for (int i = 0; i < architecture.length - 1; ++i) {
+            RealMatrix layer = new Array2DRowRealMatrix(architecture[i] + 1, architecture[i + 1]);
+            for (int j = 0; j < architecture[i] + 1; ++j) {
+                double[] rowWeight = Arrays.copyOfRange(weights, offset, offset + architecture[i + 1]);
+                offset += architecture[i + 1];
+                layer.setRow(j, rowWeight);
+            }
+            layerWeights[i] = layer;
+        }
+        return layerWeights;
+    }
+
+    private static double[] extractWeights(RealMatrix[] layerWeights, int weightsNumber) {
+        double[] weights = new double[weightsNumber];
+        int offset = 0;
+        for (RealMatrix layerWeight : layerWeights) {
+            for (int j = 0; j < layerWeight.getRowDimension(); ++j) {
+                double[] row = layerWeight.getRow(j);
+                System.arraycopy(row, 0, weights, offset, row.length);
+                offset += row.length;
+            }
+        }
+        return weights;
+    }
+
+    private static List<DatasetEntry>[] createBatches(int batchSize, List<DatasetEntry> trainingSet) {
+        int batchNumber = (int) Math.ceil(trainingSet.size() / (double) batchSize);
+        List<DatasetEntry>[] batches = (List<DatasetEntry>[]) new List[batchNumber];
+        for (int i = 0; i < batchNumber; i++) {
+            if (i < batchNumber - 1) {
+                batches[i] = trainingSet.subList(i * batchSize, (i + 1) * batchSize);
+            } else {
+                int len = trainingSet.size() % batchSize;
+                len = len == 0 ? 32 : len;
+                batches[i] = trainingSet.subList(i * batchSize, i * batchSize + len);
+            }
+        }
+
+        return batches;
+    }
 }

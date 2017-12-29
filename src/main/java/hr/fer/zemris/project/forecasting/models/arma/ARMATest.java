@@ -27,16 +27,15 @@ public class ARMATest {
             System.out.println(e);
             return;
         }
-
-        ARMA arma = new ARMA(5, 0, dataset, false);
-
-        List<Double> armaForecast = arma.forecast(100);
-        System.out.println(armaForecast.size());
-        System.out.println(armaForecast);
-
-        armaForecast = arma.forecast(100);
-        System.out.println(armaForecast.size());
-        System.out.println(armaForecast);
-
+//
+//        ARMA arma = new ARMA(5, 0, dataset, false);
+//
+//        List<Double> armaForecast = arma.forecast(100);
+//        System.out.println(armaForecast.size());
+//        System.out.println(armaForecast);
+//
+//        armaForecast = arma.forecast(100);
+//        System.out.println(armaForecast.size());
+//        System.out.println(armaForecast);
     }
 }

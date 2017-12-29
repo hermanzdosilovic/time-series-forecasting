@@ -1,14 +1,23 @@
 package hr.fer.zemris.project.forecasting.gui;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
+import javafx.scene.Cursor;
 import javafx.scene.chart.XYChart;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class DatasetValue {
+public class DatasetValue implements Comparable<DatasetValue>{
 
     private double value;
 
@@ -45,15 +54,15 @@ public class DatasetValue {
         return tmp;
     }
 
-    public static XYChart.Series getChartData (ObservableList<DatasetValue> dataset){
+    public static ObservableList<XYChart.Data<Integer, Double>> getChartData (ObservableList<DatasetValue> dataset){
         ObservableList<XYChart.Data<Integer, Double>> observableList = FXCollections.observableArrayList();
         for(int i = 0; i < dataset.size(); i++){
             observableList.add(new XYChart.Data<>(i, dataset.get(i).getValue()));
+            observableList.get(i).setNode(new HoveredThresholdNode(
+                    observableList.get(i).getXValue(), observableList.get(i).getYValue()
+            ));
         }
-        XYChart.Series series = new XYChart.Series();
-        series.setName("Expected Value");
-        series.setData(observableList);
-        return series;
+        return observableList;
     }
 
     @Override
@@ -63,5 +72,49 @@ public class DatasetValue {
             return Double.compare(d.getValue(), value) == 0;
         }
         return false;
+    }
+
+    @Override
+    public int compareTo(DatasetValue o) {
+        return Double.compare(value, o.getValue());
+    }
+
+    public static class HoveredThresholdNode extends StackPane{
+        HoveredThresholdNode(int priorValue, double value) {
+            setPrefSize(7, 7);
+            setOpacity(0);
+
+            final HBox label = createDataThresholdLabel(priorValue, value);
+
+            setOnMouseEntered(new EventHandler<MouseEvent>() {
+                @Override public void handle(MouseEvent mouseEvent) {
+                    setOpacity(1);
+                    getChildren().setAll(label);
+                    setCursor(Cursor.NONE);
+                    toFront();
+                }
+            });
+            setOnMouseExited(new EventHandler<MouseEvent>() {
+                @Override public void handle(MouseEvent mouseEvent) {
+                    setOpacity(0);
+                    getChildren().clear();
+                    setCursor(Cursor.CROSSHAIR);
+                }
+            });
+        }
+        private HBox createDataThresholdLabel(int priorValue, double value) {
+            Text x = new Text(priorValue + "");
+            Text y = new Text(String.format("%.2f", value));
+
+            x.setFill(Color.RED);
+            x.setFont(Font.font("Calibri", FontWeight.BOLD, 12));
+            y.setFill(Color.BLUE);
+            y.setFont(Font.font("Calibri", FontWeight.BOLD, 12));
+
+            HBox b = new HBox(x, y);
+            b.setSpacing(2);
+            b.getStyleClass().addAll("default-color0", "chart-line-symbol", "chart-series-line");
+            return b;
+        }
     }
 }

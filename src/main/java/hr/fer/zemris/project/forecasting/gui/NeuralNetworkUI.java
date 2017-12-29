@@ -1,7 +1,7 @@
 package hr.fer.zemris.project.forecasting.gui;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
@@ -17,6 +17,7 @@ import javafx.scene.layout.VBox;
 
 import static hr.fer.zemris.project.forecasting.gui.Data.MAX_TABLE_WIDTH;
 import static hr.fer.zemris.project.forecasting.gui.Data.lineChart;
+import static hr.fer.zemris.project.forecasting.gui.Data.updateSeriesOnListChangeListener;
 
 public class NeuralNetworkUI {
 
@@ -75,9 +76,12 @@ public class NeuralNetworkUI {
         VBox rightSide = new VBox();
 
         //line chart
-        XYChart.Series series = DatasetValue.getChartData(data.getDatasetValues());
-        LineChart line = lineChart(series);
-        Data.addChangeListener(data.getDatasetValues(), series);
+        XYChart.Series<Integer, Double> series = new XYChart.Series();
+        series.setName("Expected");
+        ObservableList<XYChart.Data<Integer, Double>> observableList = DatasetValue.getChartData(data.getDatasetValues());
+        series.setData(observableList);
+        updateSeriesOnListChangeListener(data.getDatasetValues(), series);
+        LineChart line = lineChart(series, "Data");
 
         GridPane rightSideGrid = new GridPane();
         rightSideGrid.setHgap(10);

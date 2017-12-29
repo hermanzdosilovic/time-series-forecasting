@@ -10,20 +10,20 @@ import javafx.stage.Stage;
 public class GUI extends Application {
 
     @Override
-    public void start(Stage primaryStage) throws Exception {
+    public void start(Stage primaryStage){
         primaryStage.setTitle("Time Series Forecasting");
 
         Tab data = new Tab("Data");
         data.setClosable(false);
         Pane dataContent = new Pane();
-        Data dataTab = new Data();
+        Data dataTab = new Data(primaryStage);
         dataTab.createUI(dataContent);
         data.setContent(dataContent);
 
         Tab arima = new Tab("ARIMA");
         arima.setClosable(false);
         Pane arimaContent = new Pane();
-        ARIMA arimaTab = new ARIMA(dataTab);
+        ARIMAUI arimaTab = new ARIMAUI(dataTab);
         arimaTab.createUI(arimaContent);
         arima.setContent(arimaContent);
 

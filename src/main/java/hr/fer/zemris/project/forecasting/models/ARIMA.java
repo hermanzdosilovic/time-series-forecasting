@@ -12,12 +12,12 @@ public class ARIMA extends AModel {
 
     private Stationary stat;
 
-    public ARIMA(int p, int q, List<Double> dataset) {
+    public ARIMA(int p, int q, List<Double> dataset){
         stat = new Stationary(dataset);
         setModel(p, q, stat.getDatasetAsList());
     }
 
-    private void setModel(int p, int q, List<Double> dataset) {
+    private void setModel(int p, int q, List<Double> dataset) throws IllegalArgumentException{
         boolean differenced = stat.getOrder() > 0;
         if (p == 0) {
             model = new ARMA(0, q, ArraysUtil.toPrimitiveArray(dataset), differenced);
@@ -28,11 +28,24 @@ public class ARIMA extends AModel {
         }
     }
 
+    public void setModel(AModel model){
+        this.model = model;
+    }
+
+    public AModel getModel() {
+        return model;
+    }
+
     public double computeNextValue() {
         double value = model.computeNextValue();
         List<Double> tmp = stat.getDatasetAsList();
         tmp.add(value);
         return stat.accumulateAndReturnLast(tmp);
+    }
+
+    @Override
+    public double[] getCoeffs() {
+        return model.getCoeffs();
     }
 
     @Override public double[] computeNextValues(int n) {
@@ -47,4 +60,12 @@ public class ARIMA extends AModel {
             .copyOfRange(accumulatedData, accumulatedData.length - n, accumulatedData.length);
 
     }
+
+    @Override
+    public double[] testDataset() {
+        if(stat.getOrder() == 0) return model.testDataset();
+        return null;
+    }
+
+
 }

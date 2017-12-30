@@ -1,27 +1,40 @@
 package hr.fer.zemris.project.forecasting.gui;
 
+import hr.fer.zemris.project.forecasting.models.AModel;
+import hr.fer.zemris.project.forecasting.models.ARIMA;
 import hr.fer.zemris.project.forecasting.models.arma.ARMA;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
-import javafx.scene.control.Button;
-import javafx.scene.control.Slider;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+
+import java.util.List;
 
 import static hr.fer.zemris.project.forecasting.gui.Data.*;
+import static hr.fer.zemris.project.forecasting.gui.DatasetValue.getChartData;
 
 public class ARIMAUI {
     private Data data;
-    private ARMA arima;
+    private ARIMA arima;
 
     //TODO pokazati kako ARMA pogadja nakon što se pokrene
     public ARIMAUI(Data data) {
@@ -91,7 +104,7 @@ public class ARIMAUI {
         //line chart
         XYChart.Series<Integer, Double> series = new XYChart.Series();
         series.setName("Expected");
-        ObservableList<XYChart.Data<Integer, Double>> observableList = DatasetValue.getChartData(data.getDatasetValues());
+        ObservableList<XYChart.Data<Integer, Double>> observableList = getChartData(data.getDatasetValues());
         series.setData(observableList);
         updateSeriesOnListChangeListener(data.getDatasetValues(), series);
         LineChart line = lineChart(series, "Data");
@@ -102,22 +115,132 @@ public class ARIMAUI {
         grid.add(start, 3, 3);
         start.setDisable(true);
         enableButtonWhenDatasetExistsListener(data.getDatasetValues(), start);
+        allowOneSeriesUponDatasetChangeListener(data.getDatasetValues(), line);
 
         //predict button
         Button predict = new Button("Predict future values");
         predict.setDisable(true);
         grid.add(predict, 4, 3);
 
+        predict.setOnAction(predictAction());
+
+        //TODO promijeniti seriju koju se dobije s novim datasetom
         start.setOnAction(
-                event -> new Thread(() -> {
-                    arima = new ARMA((int) ar.getValue(), (int) ma.getValue(),
-                            DatasetValue.getDoubleArray(data.getDatasetValues()), false);
-                    predict.setDisable(false);
-                }).run());
+                event -> {
+                    new Thread(() -> {
+                            arima = new ARIMA((int) ar.getValue(), (int) ma.getValue(),
+                                    DatasetValue.getDoubleList(data.getDatasetValues()));
+                            AModel am = arima.getModel();
+                            if(am instanceof  ARMA) {
+                                if (!ARMA.invertibleCheck(arima.getCoeffs())) {
+                                    Platform.runLater(() -> {
+                                        Stage notInvertible = new Stage();
+                                        notInvertible.initOwner(data.getPrimaryStage());
+                                        notInvertible.initModality(Modality.WINDOW_MODAL);
+
+                                        Label l = new Label("Could not compute an invertible model. Using " +
+                                                "starting values instead.");
+
+                                        l.setPadding(new Insets(30, 30, 30, 30));
+
+                                        Scene scene = new Scene(l);
+                                        notInvertible.setScene(scene);
+                                        notInvertible.show();
+                                    });
+                                }
+                            }
+//
+//                            ObservableList<DatasetValue> sim = FXCollections.observableArrayList
+//                                    (DatasetValue.encapsulateDoubleArray(arima.testDataset()));
+//                            Platform.runLater(() ->{
+//                                XYChart.Series<Integer, Double> simSeries = new XYChart.Series();
+//                                simSeries.setName("ARIMA produced");
+//                                simSeries.setData(getChartData(sim));
+//                                line.getData().add(simSeries);
+//                            });
+
+                        predict.setDisable(false);
+                    }).run();
+                    if(line.getData().size() > 1) line.getData().remove(1);
+                });
 
         grid.add(table, 0, 2);
 
         parent.getChildren().add(grid);
+    }
+
+    private static void allowOneSeriesUponDatasetChangeListener(ObservableList<DatasetValue> datasetValues, LineChart line) {
+        datasetValues.addListener((ListChangeListener<DatasetValue>) c -> {
+            if(line.getData().size() > 1) line.getData().remove(1);
+        });
+    }
+
+    private EventHandler<ActionEvent> predictAction(){
+        return event -> {
+            Stage predictStage = new Stage();
+            predictStage.setTitle("Predict!");
+            predictStage.initOwner(data.getPrimaryStage());
+            predictStage.initModality(Modality.WINDOW_MODAL);
+
+            Label numberOfPredictions = new Label("Number of predictions: ");
+            TextField predicts = new TextField();
+
+            Label invalidInput = new Label("Invalid input");
+            invalidInput.setTextFill(Color.RED);
+            invalidInput.setVisible(false);
+
+            Button ok = new Button("OK");
+
+            HBox okBox = new HBox(ok);
+            okBox.setAlignment(Pos.CENTER);
+
+            VBox predictBox = new VBox(numberOfPredictions, predicts, invalidInput, okBox);
+            predictBox.setSpacing(10);
+            predictBox.setPadding(new Insets(20, 20, 20, 20));
+
+            Scene predictScene = new Scene(predictBox);
+            predictStage.setScene(predictScene);
+            predictStage.show();
+
+            ok.setOnAction((e) ->{
+                try{
+                    int howManyPredictions = Integer.parseInt(predicts.getText());
+                    new Thread(() -> {
+                        double[] predictions = arima.computeNextValues(howManyPredictions);
+                        ObservableList<DatasetValue> observableList = FXCollections.observableList(
+                                DatasetValue.encapsulateDoubleArray(predictions));
+                        Platform.runLater(() ->{
+                                Stage stage = new Stage();
+                                stage.setTitle("Predictions");
+                                stage.initOwner(data.getPrimaryStage());
+                                stage.initModality(Modality.WINDOW_MODAL);
+
+                            NumberAxis xAxis = new NumberAxis();
+                            xAxis.setLabel("Sample number");
+
+                            NumberAxis yAxis = new NumberAxis();
+                            yAxis.setLabel("Predicted value");
+
+                            XYChart.Series series = new XYChart.Series();
+                            series.setName("Prediction");
+
+                            series.setData(getChartData(observableList));
+
+                            LineChart line = new LineChart(xAxis, yAxis);
+                            line.getData().add(series);
+
+                            Scene scene = new Scene(line);
+                            stage.setScene(scene);
+
+                            stage.show();
+                            predictStage.hide();
+                        });
+                    }).run();
+                }catch(IllegalArgumentException iae){
+                    invalidInput.setVisible(true);
+                }
+            });
+        };
     }
 
 }

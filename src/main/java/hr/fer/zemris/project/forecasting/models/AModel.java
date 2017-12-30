@@ -8,6 +8,8 @@ public abstract class AModel {
 
     public abstract double computeNextValue();
 
+    public abstract double[] getCoeffs();
+
     public double[] computeNextValues(int n) {
         double[] array = new double[n];
         for (int i = 0; i < array.length; i++) {
@@ -16,4 +18,5 @@ public abstract class AModel {
         return array;
     }
 
+    public abstract double[] testDataset();
 }

@@ -1,24 +1,34 @@
 package hr.fer.zemris.project.forecasting.models.arma;
 
 import Jama.Matrix;
+import Jama.QRDecomposition;
 import hr.fer.zemris.project.forecasting.models.AModel;
+import hr.fer.zemris.project.forecasting.util.ArraysUtil;
+import org.apache.commons.math3.analysis.solvers.LaguerreSolver;
+import org.apache.commons.math3.complex.Complex;
 
+import javax.sound.midi.SysexMessage;
 import java.util.Arrays;
 
+/**
+ * DEGENERATE CLASS, ONLY MA COEFFICIENTS SHOULD BE INPUT!
+ * -- rješenje nije u skladu s R-om jer on koristi intercept, a ja mean -> objasniti Čupiću
+ */
 public class ARMA extends AModel {
 
     private static final double STARTING_VALUE_MIN = -1;
     private static final double STARTING_VALUE_MAX = 1;
-    private static final int CONVERGENCE_ITERS = 100;
+    private static final int CONVERGENCE_ITERS = 1;
     private static final int MAX_REC_ITER = 10_000;
     private static double STARTING_VALUE_STEP;
-    private final int p;
-    private final int q;
+    private int p;
+    private int q;
     /**
      * Coefficients of the ARMA model. The first p are AR coefficients, while the
      * rest are MA coefficients.
      */
     private double[] betaCoeffs;
+    private double[] startingValues;
     /**
      * White noise of the ARMA model.
      */
@@ -27,15 +37,15 @@ public class ARMA extends AModel {
 
     private boolean differenced;
 
-    public ARMA(int p, int q, double[] dataset, boolean differenced) {
+    public ARMA(int p, int q, double[] dataset, boolean differenced){
 
         this.p = p;
         this.q = q;
         this.dataset = new Dataset(dataset, differenced);
         this.betaCoeffs = new double[this.p + this.q];
+        this.startingValues = new double[this.p + this.q];
         if (p == 0 && q == 0)
             return;
-
     /*
 		 * Osigurava da ce u prolazu za početne vrijednosti biti MAX_REC_ITER iteracija.
 		 */
@@ -46,23 +56,37 @@ public class ARMA extends AModel {
         fitModel(CONVERGENCE_ITERS);
     }
 
-    private void fitModel(int numberOfIters) {
+    public ARMA(double[] betaCoeffs, Dataset dataset, int p, int q){
+        this.betaCoeffs = betaCoeffs;
+        this.dataset = dataset;
+        this.p = p;
+        this.q = q;
+        this.a = new Dataset(findA(betaCoeffs), false);
+    }
+
+    public double[] getStartingValues(){
+        return startingValues;
+    }
+
+    public Dataset getDataset(){
+        return dataset;
+    }
+
+    public int getP(){
+        return p;
+    }
+
+    public int getQ(){
+        return q;
+    }
+
+    private void fitModel(int numberOfIters){
         findStartingValues();
         for (int i = 0; i < numberOfIters; i++) {
             betaCoeffs = adjustBetas();
         }
-        a = new Dataset(findA(betaCoeffs), false);
-
-        for (int j = 1; j <= p; j++) {
-
-                System.out.println(betaCoeffs[j - 1]);
-
-        }
-
-        for (int j = 1; j <= q; j++) {
-                System.out.println(betaCoeffs[p + j - 1]);
-
-        }
+        if(!invertibleCheck(betaCoeffs)) a = new Dataset(findA(betaCoeffs), differenced);
+        else a = new Dataset(findA(betaCoeffs),true);
     }
 
     private void findStartingValues() {
@@ -79,6 +103,7 @@ public class ARMA extends AModel {
             0);
 
         betaCoeffs = rec.currentBestCoeffs;
+        startingValues = Arrays.copyOf(betaCoeffs, betaCoeffs.length);
     }
 
     private RecursionParameters iterate(RecursionParameters rec, int i) {
@@ -109,7 +134,6 @@ public class ARMA extends AModel {
         for (int i = p; i < newDataset.length; i++) {
             newDataset[i] = dataset.getDataset()[i] + dataset.getMean();
         }
-
         Dataset next = new Dataset(newDataset, differenced);
         double[] a = new double[newDataset.length];
         for (int i = p; i < a.length; i++) {
@@ -122,11 +146,10 @@ public class ARMA extends AModel {
 
             for (int j = 1; j <= q; j++) {
                 if (i - j >= 0) {
-                    a[i] += coeffs[p + j - 1] * a[i - j];
+                    a[i] += coeffs[p + j-1] * a[i - j];
                 }
             }
         }
-
         return a;
     }
 
@@ -146,12 +169,19 @@ public class ARMA extends AModel {
         double[] u = findU(a, ARcoeffs);
         double[] v = findV(a, MAcoeffs);
 
-        IHFunction f = new Correction(a, u, v, p, q);
-
-        NumOptAlgorithms.setInitialVector(new double[betaCoeffs.length]);
-
         Matrix oldBetaCoeffs = new Matrix(betaCoeffs, betaCoeffs.length);
-        oldBetaCoeffs.plusEquals(NumOptAlgorithms.newtonMethod(f, 10));
+
+        Matrix y = new Matrix(a, a.length);
+        Matrix X = new Matrix(a.length, betaCoeffs.length);
+
+        for(int i = 0; i < X.getRowDimension(); i++){
+            for(int j = 0; j < X.getColumnDimension(); j++){
+                X.set(i, j, i - j > 0 ? v[i-j-1] : 0);
+            }
+        }
+
+        Matrix betaAdditions = (X.transpose().times(X)).inverse().times(X.transpose()).times(y);
+        oldBetaCoeffs.plusEquals(betaAdditions);
         return oldBetaCoeffs.getRowPackedCopy();
     }
 
@@ -207,15 +237,30 @@ public class ARMA extends AModel {
 
         double forecastedValue = dataset.getMean();
 
-        for (int i = 0; i < p; i++) {
-            forecastedValue +=
-                betaCoeffs[i] * dataset.getDataset()[dataset.getDataset().length - 1 - i];
+        if(invertibleCheck(betaCoeffs)){
+            for (int i = 0; i < p; i++) {
+                forecastedValue +=
+                    betaCoeffs[i] * dataset.getDataset()[dataset.getDataset().length - 1 - i];
+            }
+        }
+        else{
+            for (int i = 0; i < p; i++) {
+                forecastedValue +=
+                        startingValues[i] * dataset.getDataset()[dataset.getDataset().length - 1 - i];
+            }
         }
 
         forecastedValue += a.getMean();
 
-        for (int j = 0; j < q; j++) {
-            forecastedValue -= betaCoeffs[p + j] * a.getDataset()[a.getDataset().length - 1 - j];
+        if(invertibleCheck(betaCoeffs)) {
+            for (int j = 0; j < q; j++) {
+                forecastedValue -= betaCoeffs[p + j] * a.getDataset()[a.getDataset().length - 1 - j];
+            }
+        }
+        else{
+            for (int j = 0; j < q; j++) {
+                forecastedValue -= startingValues[p + j] * a.getDataset()[a.getDataset().length - 1 - j];
+            }
         }
 
         return forecastedValue;
@@ -233,7 +278,9 @@ public class ARMA extends AModel {
             results[i] = oneForecast;
 
             dataset.addSample(oneForecast);
-            a = new Dataset(findA(betaCoeffs), false);
+            if(invertibleCheck(betaCoeffs))
+                a = new Dataset(findA(betaCoeffs), false);
+            else a = new Dataset(findA(startingValues), false);
         }
 
         dataset = datasetBackup;
@@ -241,6 +288,44 @@ public class ARMA extends AModel {
 
         return results;
     }
+
+    @Override
+    public double[] testDataset() {
+        double[] test = new double[dataset.getDataset().length];
+        for(int k = q; k < test.length; k++){
+            Dataset dataset = new Dataset(Arrays.copyOfRange(this.dataset.getDataset(), 0, k),
+                    differenced);
+            double forecastedValue = dataset.getMean();
+            if(invertibleCheck(betaCoeffs)){
+                for (int i = 0; i < p; i++) {
+                    forecastedValue +=
+                            betaCoeffs[i] * dataset.getDataset()[dataset.getDataset().length - 1 - i];
+                }
+            }
+            else{
+                for (int i = 0; i < p; i++) {
+                    forecastedValue +=
+                            startingValues[i] * dataset.getDataset()[dataset.getDataset().length - 1 - i];
+                }
+            }
+
+            forecastedValue += a.getMean();
+
+            if(invertibleCheck(betaCoeffs)) {
+                for (int j = 0; j < q; j++) {
+                    forecastedValue -= betaCoeffs[p + j] * a.getDataset()[a.getDataset().length - 1 - j];
+                }
+            }
+            else{
+                for (int j = 0; j < q; j++) {
+                    forecastedValue -= startingValues[p + j] * a.getDataset()[a.getDataset().length - 1 - j];
+                }
+            }
+            test[k] = forecastedValue;
+        }
+        return test;
+    }
+
 
     private class RecursionParameters {
 
@@ -256,5 +341,29 @@ public class ARMA extends AModel {
         }
 
     }
+
+
+        public static boolean invertibleCheck(double...coeff){
+
+            double[] a = new double[coeff.length + 1];
+            a[0] = 1;
+            for(int i = 1; i < a.length; i++){
+                a[i] = coeff[i-1];
+            }
+
+            LaguerreSolver p = new LaguerreSolver();
+
+            Complex[] solutions = p.solveAllComplex(a, 0);
+
+            boolean invertible = true;
+
+            for (Complex complex : solutions) {
+                if(complex.abs() < 1){
+                    invertible = false;
+                }
+            }
+
+            return invertible;
+        }
 
 }

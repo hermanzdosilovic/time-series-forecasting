@@ -4,22 +4,21 @@ import hr.fer.zemris.project.forecasting.util.ArraysUtil;
 import hr.fer.zemris.project.forecasting.util.DataReaderUtil;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 public class ARIMATest {
 
-    public static void main(String[] args) throws IOException{
-        double[] dataset = DataReaderUtil.readDataset("./datasets/monthly-milk-production-pounds-p.csv");
+    public static void main(String[] args) throws Exception{
+        double[] dataset = DataReaderUtil.readDataset("datasets/exchange-rate-twi-may-1970-aug-1.csv");
 
-        for (double d : dataset) {
-            System.out.println(d + ",");
-        }
+        System.out.println(ArraysUtil.toList(dataset));
 
-        ARIMA arima = new ARIMA(0, 2, ArraysUtil.toList(dataset));
+        ARIMA arima = new ARIMA(0, 4, ArraysUtil.toList(dataset));
 
+//        for(double d: arima.computeNextValues(10)){
+//            System.out.println(d);
+//        }
         System.out.println(arima.computeNextValue());
-        for(double d: arima.computeNextValues(7)){
-            System.out.println(d);
-        }
 
         //treba dobiti: [1] 834.3850 844.0228 850.6506
 

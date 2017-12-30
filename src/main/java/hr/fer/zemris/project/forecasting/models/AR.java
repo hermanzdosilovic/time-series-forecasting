@@ -16,13 +16,15 @@ public class AR extends AModel {
 
     private List<Double> data;
 
+    double[] coefficients;
+
     public AR(int p, List<Double> data) {
         this.p = p;
         this.data = new ArrayList<>(data);
+        coefficients = YuleWalker(data, p);
     }
 
     public double computeNextValue() {
-        double[] coefficients = YuleWalker(data, p);
         double   nextValue    = computeValue(coefficients, data.size());
 
         double[] error = computeErrorArray(coefficients);
@@ -31,6 +33,20 @@ public class AR extends AModel {
 
         data.add(nextValue);
         return nextValue;
+    }
+
+    @Override
+    public double[] getCoeffs() {
+        return coefficients;
+    }
+
+    @Override
+    public double[] testDataset() {
+        double[] test = new double[data.size()];
+        for(int i = p; i < data.size(); i++){
+            test[i] = computeValue(coefficients, i);
+        }
+        return test;
     }
 
     public List<Double> getData() {

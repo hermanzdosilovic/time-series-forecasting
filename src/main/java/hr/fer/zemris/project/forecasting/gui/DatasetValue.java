@@ -1,5 +1,6 @@
 package hr.fer.zemris.project.forecasting.gui;
 
+import hr.fer.zemris.project.forecasting.util.ArraysUtil;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
@@ -52,6 +53,10 @@ public class DatasetValue implements Comparable<DatasetValue>{
             tmp[i] = datasetValues.get(i).getValue();
         }
         return tmp;
+    }
+
+    public static List<Double> getDoubleList(List<DatasetValue> datasetValues){
+        return ArraysUtil.toList(getDoubleArray(datasetValues));
     }
 
     public static ObservableList<XYChart.Data<Integer, Double>> getChartData (ObservableList<DatasetValue> dataset){

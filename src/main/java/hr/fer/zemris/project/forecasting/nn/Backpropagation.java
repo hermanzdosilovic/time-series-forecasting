@@ -28,8 +28,8 @@ public class Backpropagation {
 
     private List<BackpropagationObserver> observers = new ArrayList<>();
 
-    public Backpropagation(List<DatasetEntry> trainingSet, List<DatasetEntry> validationSet,
-                           double learningRate, long maxIteration, double desiredError, double desiredPrecision) {
+    public Backpropagation(List<DatasetEntry> trainingSet, List<DatasetEntry> validationSet, double learningRate,
+                           long maxIteration, double desiredError, double desiredPrecision) {
         this.trainingSet = trainingSet;
         this.validationSet = validationSet;
         this.learningRate = learningRate;
@@ -53,6 +53,7 @@ public class Backpropagation {
                     outputMatrix.setRow(j, batchElement.getOutput());
                 }
                 neuralNetwork.forward(inputs);
+
                 double[][] outputsByLayer = neuralNetwork.getOutput();
                 for (int k = 0; k < outputsByLayer.length; ++k) {
                     double[] layerOutput = outputsByLayer[k];
@@ -72,7 +73,6 @@ public class Backpropagation {
 
                 RealMatrix forecastMatrix = layerOutputs[layerOutputs.length - 1];
                 RealMatrix outputDeltaMatrix = outputMatrix.subtract(forecastMatrix);
-
                 for (int k = 0; k < outputDeltaMatrix.getRowDimension(); ++k) {
                     trainingMse = trainingMse.add(outputDeltaMatrix.getRowVector(k));
                 }
@@ -90,8 +90,10 @@ public class Backpropagation {
             validationMSE = validationMse.dotProduct(validationMse) / validationSet.size();
 
             notifyObservers();
-            System.err.println("iteration: " + currentIteration + " training set mse: " + trainingMSE + " validation set mse: " + validationMSE);
-            if ((validationSetMse < validationMSE && currentIteration > maxIteration / 2) || Math.abs(trainingMSE - desiredError) < desiredPrecision) {
+            System.err.println("iteration: " + currentIteration + " training set mse: " + trainingMSE
+                    + " validation set mse: " + validationMSE);
+            if ((validationSetMse < validationMSE && currentIteration > maxIteration / 2)
+                    || Math.abs(trainingMSE - desiredError) < desiredPrecision) {
                 break;
             }
         }

@@ -101,15 +101,6 @@ public class NeuralNetworkUI {
         updateSeriesOnListChangeListener(data.getDatasetValues(), series);
         LineChart line = lineChart(series, "Data");
 
-        Slider dataSlider = new Slider(0, 100, 90);
-        dataSlider.setShowTickMarks(true);
-        dataSlider.setShowTickLabels(true);
-        dataSlider.setMajorTickUnit(10);
-        dataSlider.setMinorTickCount(0);
-        dataSlider.setSnapToTicks(true);
-
-        Label dataLabel = new Label("Train set percentage.");
-
         GridPane rightSideGrid = new GridPane();
         rightSideGrid.setHgap(10);
         rightSideGrid.setVgap(10);
@@ -122,7 +113,6 @@ public class NeuralNetworkUI {
         grid.add(table, 0, 2);
         grid.add(line, 1, 0, 3, 3);
         grid.add(rightSide, 1, 4);
-        grid.add(dataSlider, 0, 4);
 
         parent.getChildren().add(grid);
     }
@@ -159,6 +149,15 @@ public class NeuralNetworkUI {
             ComboBox<String> outputActivation = new ComboBox<>(FXCollections.observableArrayList(
                     "Sigmoid", "Binary Step", "Identity", "ReLU", "TanH"));
             outputActivation.getSelectionModel().select(0);
+
+            Label datasetLabel = new Label("Train set percentage:");
+            Slider dataSlider = new Slider(0, 100, 90);
+            dataSlider.setShowTickMarks(true);
+            dataSlider.setShowTickLabels(true);
+            dataSlider.setMajorTickUnit(10);
+            dataSlider.setMinorTickCount(0);
+            dataSlider.setSnapToTicks(true);
+
 
             if (architecture != null) {
                 input.setText(architecture[0] + "");
@@ -217,8 +216,11 @@ public class NeuralNetworkUI {
             gridPane.add(outputLayerActivation, 0, 5);
             gridPane.add(outputActivation, 1, 5);
 
-            gridPane.add(invalidBox, 0, 6, 2, 1);
-            gridPane.add(okBox, 0, 7, 2, 1);
+            gridPane.add(datasetLabel, 0, 6);
+            gridPane.add(dataSlider, 1, 6);
+
+            gridPane.add(invalidBox, 0, 7, 2, 1);
+            gridPane.add(okBox, 0, 8, 2, 1);
 
             Scene gridScene = new Scene(gridPane);
             changeArch.setScene(gridScene);

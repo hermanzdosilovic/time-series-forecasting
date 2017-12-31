@@ -37,11 +37,11 @@ public class NeuralNetworkUI {
     private INeuralNetwork nn;
     private IMetaheuristic<RealVector> metaheuristic;
 
-    public NeuralNetworkUI(Data data){
+    public NeuralNetworkUI(Data data) {
         this.data = data;
     }
 
-    public void createUI(Pane parent){
+    public void createUI(Pane parent) {
         GridPane grid = new GridPane();
 
         grid.setVgap(10);
@@ -61,9 +61,8 @@ public class NeuralNetworkUI {
 
         //choose algorithm
         ComboBox<String> chooseAlgorithm = new ComboBox<>(FXCollections.observableArrayList(
-                "<none>", "Genetic", "OSGA", "SA", "DE", "PSO"));
+                "<none>", "Genetic", "OSGA", "SA", "DE", "PSO", "Backpropagation"));
         chooseAlgorithm.getSelectionModel().select(0);
-
         chooseAlgorithm.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, metaheuristic, nn, data.getPrimaryStage()));
         //change algorithm parameters
         Button changeParams = new Button("Change parameters");
@@ -102,12 +101,20 @@ public class NeuralNetworkUI {
         updateSeriesOnListChangeListener(data.getDatasetValues(), series);
         LineChart line = lineChart(series, "Data");
 
+        Slider dataSlider = new Slider(0, 100, 90);
+        dataSlider.setShowTickMarks(true);
+        dataSlider.setShowTickLabels(true);
+        dataSlider.setMajorTickUnit(10);
+        dataSlider.setMinorTickCount(0);
+        dataSlider.setSnapToTicks(true);
+
+        Label dataLabel = new Label("Train set percentage.");
+
         GridPane rightSideGrid = new GridPane();
         rightSideGrid.setHgap(10);
         rightSideGrid.setVgap(10);
         rightSideGrid.add(start, 1, 0);
         rightSideGrid.add(predict, 1, 1);
-
         rightSide.getChildren().add(rightSideGrid);
 
         grid.add(neural, 0, 0);
@@ -115,13 +122,14 @@ public class NeuralNetworkUI {
         grid.add(table, 0, 2);
         grid.add(line, 1, 0, 3, 3);
         grid.add(rightSide, 1, 4);
+        grid.add(dataSlider, 0, 4);
 
         parent.getChildren().add(grid);
     }
 
     private EventHandler<ActionEvent> changeArchitectureAction(ComboBox arch) {
         return event -> {
-            if(arch.getSelectionModel().getSelectedItem().equals("<none>")) return;
+            if (arch.getSelectionModel().getSelectedItem().equals("<none>")) return;
             System.out.println(arch.getValue());
             Stage changeArch = new Stage();
             changeArch.initOwner(data.getPrimaryStage());
@@ -132,21 +140,33 @@ public class NeuralNetworkUI {
 
             Label inputLayer = new Label("Input layer:");
             TextField input = new TextField();
+            Label inputLayerActivation = new Label("Input layer activation:");
+            ComboBox<String> inputActivation = new ComboBox<>(FXCollections.observableArrayList(
+                    "Sigmoid", "Binary Step", "Identity", "ReLU", "TanH"));
+            inputActivation.getSelectionModel().select(0);
 
             Label hiddenLayers = new Label("Hidden layers:");
             TextField hidden = new TextField();
             hidden.setTooltip(new Tooltip("Split number of nodes for each hidden layer with a comma"));
+            Label hiddenLayerActivation = new Label("Hidden layers activations:");
+            ComboBox<String> hiddenActivation = new ComboBox<>(FXCollections.observableArrayList(
+                    "Sigmoid", "Binary Step", "Identity", "ReLU", "TanH"));
+            hiddenActivation.getSelectionModel().select(0);
 
             Label outputLayer = new Label("Output layer:");
             TextField output = new TextField();
+            Label outputLayerActivation = new Label("Output layer activation:");
+            ComboBox<String> outputActivation = new ComboBox<>(FXCollections.observableArrayList(
+                    "Sigmoid", "Binary Step", "Identity", "ReLU", "TanH"));
+            outputActivation.getSelectionModel().select(0);
 
-            if(architecture != null){
+            if (architecture != null) {
                 input.setText(architecture[0] + "");
                 output.setText(architecture[architecture.length - 1] + "");
                 StringBuilder sb = new StringBuilder();
-                for(int i = 1; i < architecture.length - 1; i++){
+                for (int i = 1; i < architecture.length - 1; i++) {
                     sb.append(architecture[i]);
-                    if(i != architecture.length - 2) sb.append(", ");
+                    if (i != architecture.length - 2) sb.append(", ");
                 }
                 hidden.setText(sb.toString());
             }
@@ -161,18 +181,18 @@ public class NeuralNetworkUI {
 
             HBox invalidBox = new HBox(invalidInput);
             invalidBox.setAlignment(Pos.CENTER);
-            ok.setOnAction((e) ->{
-                try{
+            ok.setOnAction((e) -> {
+                try {
                     String[] hiddens = hidden.getText().split(",");
                     architecture = new int[hiddens.length + 2];
                     architecture[0] = Integer.parseInt(input.getText());
                     architecture[architecture.length - 1] = Integer.parseInt(output.getText());
-                    for(int i = 1; i < architecture.length - 1; i++){
+                    for (int i = 1; i < architecture.length - 1; i++) {
                         architecture[i] = Integer.parseInt(hiddens[i - 1]);
                     }
                     System.out.println(Arrays.toString(architecture));
                     changeArch.hide();
-                }catch(NumberFormatException nfe){
+                } catch (NumberFormatException nfe) {
                     invalidInput.setVisible(true);
                 }
             });
@@ -183,13 +203,22 @@ public class NeuralNetworkUI {
             gridPane.setVgap(10);
 
             gridPane.add(inputLayer, 0, 0);
-            gridPane.add(input, 1 , 0);
-            gridPane.add(hiddenLayers, 0, 1);
-            gridPane.add(hidden, 1, 1 );
-            gridPane.add(outputLayer, 0, 2);
-            gridPane.add(output, 1, 2);
-            gridPane.add(invalidBox, 0, 3, 2, 1);
-            gridPane.add(okBox, 0, 4, 2, 1);
+            gridPane.add(input, 1, 0);
+            gridPane.add(inputLayerActivation, 0, 1);
+            gridPane.add(inputActivation, 1, 1);
+
+            gridPane.add(hiddenLayers, 0, 2);
+            gridPane.add(hidden, 1, 2);
+            gridPane.add(hiddenLayerActivation, 0, 3);
+            gridPane.add(hiddenActivation, 1, 3);
+
+            gridPane.add(outputLayer, 0, 4);
+            gridPane.add(output, 1, 4);
+            gridPane.add(outputLayerActivation, 0, 5);
+            gridPane.add(outputActivation, 1, 5);
+
+            gridPane.add(invalidBox, 0, 6, 2, 1);
+            gridPane.add(okBox, 0, 7, 2, 1);
 
             Scene gridScene = new Scene(gridPane);
             changeArch.setScene(gridScene);

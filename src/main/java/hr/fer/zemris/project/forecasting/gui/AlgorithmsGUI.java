@@ -21,8 +21,9 @@ public abstract class AlgorithmsGUI {
         return e -> {
             if (comboBox.getValue().equals("Genetic")) genetic(metaheuristic, neuralNetwork, primaryStage);
             else if (comboBox.getValue().equals("OSGA")) OSGA(metaheuristic, neuralNetwork, primaryStage);
-            else if(comboBox.getValue().equals("SA")) SA(metaheuristic, neuralNetwork, primaryStage);
-            else if((comboBox.getValue().equals("PSO"))) PSO(metaheuristic, neuralNetwork, primaryStage);
+            else if (comboBox.getValue().equals("SA")) SA(metaheuristic, neuralNetwork, primaryStage);
+            else if ((comboBox.getValue().equals("PSO"))) PSO(metaheuristic, neuralNetwork, primaryStage);
+            else if ((comboBox.getValue().equals("Backpropagation"))) backpropagation(neuralNetwork, primaryStage);
         };
     }
 
@@ -274,7 +275,7 @@ public abstract class AlgorithmsGUI {
         Label minSpeed = new Label("Min velocity:");
         TextField minV = new TextField();
 
-        Label maxSpeed  = new Label("Max velocity:");
+        Label maxSpeed = new Label("Max velocity:");
         TextField maxV = new TextField();
 
         Label invalidInput = new Label("Invalid input.");
@@ -306,6 +307,68 @@ public abstract class AlgorithmsGUI {
 
         grid.add(invalidBox, 0, 2, 4, 1);
         grid.add(okBox, 0, 3, 4, 1);
+
+        Scene scene = new Scene(grid);
+        SAStage.setScene(scene);
+        SAStage.show();
+    }
+
+    private static void backpropagation(INeuralNetwork neuralNetwork,
+                                        Stage primaryStage) {
+        Stage SAStage = new Stage();
+        SAStage.initOwner(primaryStage);
+        SAStage.initModality(Modality.WINDOW_MODAL);
+        SAStage.setTitle("Backpropagaation");
+
+        Label maxIterations = new Label("Max iterations:");
+        TextField iteration = new TextField();
+
+        Label batch = new Label("Batch size:");
+        TextField batchSize = new TextField();
+
+        Label learning = new Label("Learning rate:");
+        TextField learningRate = new TextField();
+
+        Label desiredErr = new Label("Desired error:");
+        TextField desiredError = new TextField();
+
+        Label precision = new Label("Desired precision:");
+        TextField desiredPrecision = new TextField();
+
+        Label invalidInput = new Label("Invalid input.");
+        invalidInput.setTextFill(Color.RED);
+        invalidInput.setVisible(false);
+
+        Button ok = new Button("OK");
+
+        GridPane grid = new GridPane();
+        grid.setVgap(15);
+        grid.setHgap(10);
+        grid.setPadding(new Insets(20, 20, 20, 20));
+
+        grid.add(maxIterations, 0, 0);
+        grid.add(iteration, 1, 0);
+
+        grid.add(batch, 2, 0);
+        grid.add(batchSize, 3, 0);
+
+        grid.add(learning, 0, 1);
+        grid.add(learningRate, 1, 1);
+
+        grid.add(desiredErr, 2, 1);
+        grid.add(desiredError, 3, 1);
+
+        grid.add(precision, 0, 2);
+        grid.add(desiredPrecision, 1, 2);
+
+        HBox invalidBox = new HBox(invalidInput);
+        invalidBox.setAlignment(Pos.CENTER);
+
+        HBox okBox = new HBox(ok);
+        okBox.setAlignment(Pos.CENTER);
+
+        grid.add(invalidBox, 0, 3, 4, 1);
+        grid.add(okBox, 0, 3, 5, 1);
 
         Scene scene = new Scene(grid);
         SAStage.setScene(scene);

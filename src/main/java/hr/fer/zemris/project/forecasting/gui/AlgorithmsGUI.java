@@ -1,12 +1,21 @@
 package hr.fer.zemris.project.forecasting.gui;
 
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.IMetaheuristic;
-import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.ga.SimpleOSGA;
+import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.ga.SimpleGA;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.pso.BasicPSO;
-import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.sa.SimpleSA;
+import com.dosilovic.hermanzvonimir.ecfjava.models.crossovers.BLXAlphaCrossover;
+import com.dosilovic.hermanzvonimir.ecfjava.models.crossovers.ICrossover;
+import com.dosilovic.hermanzvonimir.ecfjava.models.mutations.IMutation;
+import com.dosilovic.hermanzvonimir.ecfjava.models.mutations.RealVectorGaussianMutation;
+import com.dosilovic.hermanzvonimir.ecfjava.models.problems.FunctionMinimizationProblem;
+import com.dosilovic.hermanzvonimir.ecfjava.models.problems.IProblem;
+import com.dosilovic.hermanzvonimir.ecfjava.models.selections.ISelection;
+import com.dosilovic.hermanzvonimir.ecfjava.models.selections.TournamentSelection;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
+import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 import com.dosilovic.hermanzvonimir.ecfjava.util.RealVector;
 import hr.fer.zemris.project.forecasting.nn.Backpropagation;
+import hr.fer.zemris.project.forecasting.nn.functions.MSEFunction;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -19,23 +28,26 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.util.List;
+
 public abstract class AlgorithmsGUI {
 
     public static IMetaheuristic metaheuristic;
 
     //TODO dodati DE i backPropagation
-    public static EventHandler<ActionEvent> chooseAlgorithmAction(ComboBox<String> comboBox, IMetaheuristic metaheuristic,
+    public static EventHandler<ActionEvent> chooseAlgorithmAction(ComboBox<String> comboBox, List<DatasetEntry> dataset,
                                                                   INeuralNetwork neuralNetwork, Stage primaryStage) {
         return e -> {
-            if (comboBox.getValue().equals("Genetic")) genetic(metaheuristic, neuralNetwork, primaryStage);
-            else if (comboBox.getValue().equals("OSGA")) OSGA(metaheuristic, neuralNetwork, primaryStage);
-            else if (comboBox.getValue().equals("SA")) SA(metaheuristic, neuralNetwork, primaryStage);
-            else if ((comboBox.getValue().equals("PSO"))) PSO(metaheuristic, neuralNetwork, primaryStage);
-            else if ((comboBox.getValue().equals("Backpropagation"))) backpropagation(neuralNetwork, primaryStage);
+            if (comboBox.getValue().equals("Genetic")) genetic(dataset, neuralNetwork, primaryStage);
+            else if (comboBox.getValue().equals("OSGA")) OSGA(dataset, neuralNetwork, primaryStage);
+            else if (comboBox.getValue().equals("SA")) SA(dataset, neuralNetwork, primaryStage);
+            else if ((comboBox.getValue().equals("PSO"))) PSO(dataset, neuralNetwork, primaryStage);
+            else if ((comboBox.getValue().equals("Backpropagation")))
+                backpropagation(dataset, neuralNetwork, primaryStage);
         };
     }
 
-    private static void genetic(IMetaheuristic metaheuristic, INeuralNetwork neuralNetwork, Stage primaryStage) {
+    private static void genetic(List<DatasetEntry> dataset, INeuralNetwork neuralNetwork, Stage primaryStage) {
         Stage geneticStage = new Stage();
         geneticStage.initOwner(primaryStage);
         geneticStage.initModality(Modality.WINDOW_MODAL);
@@ -58,6 +70,12 @@ public abstract class AlgorithmsGUI {
 
         Label sigma = new Label("Sigma:");
         TextField s = new TextField();
+
+        Label desiredFit = new Label("Desired fittnes:");
+        TextField desiredFitness = new TextField();
+
+        Label precision = new Label("Desired precision:");
+        TextField desiredPrecision = new TextField();
 
         CheckBox useElitism = new CheckBox("Use elitism?");
         CheckBox allowRepeat = new CheckBox("Allow repeat?");
@@ -89,6 +107,11 @@ public abstract class AlgorithmsGUI {
         grid.add(sigma, 2, 2);
         grid.add(s, 3, 2);
 
+        grid.add(desiredFit, 0, 3);
+        grid.add(desiredFitness, 1, 3);
+        grid.add(precision, 2, 3);
+        grid.add(desiredPrecision, 3, 3);
+
         HBox invalidBox = new HBox(invalidInput);
         invalidBox.setAlignment(Pos.CENTER);
 
@@ -99,9 +122,9 @@ public abstract class AlgorithmsGUI {
         boxes.setSpacing(10);
         boxes.setAlignment(Pos.CENTER);
 
-        grid.add(boxes, 0, 3, 4, 1);
-        grid.add(invalidBox, 0, 4, 4, 1);
-        grid.add(okBox, 0, 5, 4, 1);
+        grid.add(boxes, 0, 4, 4, 1);
+        grid.add(invalidBox, 0, 5, 4, 1);
+        grid.add(okBox, 0, 6, 4, 1);
 
         Scene scene = new Scene(grid);
         geneticStage.setScene(scene);
@@ -110,17 +133,36 @@ public abstract class AlgorithmsGUI {
         EventHandler<ActionEvent> buttonHandler = new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                long populationSize = Long.parseLong(population.getText());
-                long generationSize = Long.parseLong(generations.getText());
-                long tournamentSize = Long.parseLong(tournament.getText());
-                double alpha = Double.parseDouble(a.getText());
-                double mutationP = Double.parseDouble(mutation.getText());
-                double sigma = Double.parseDouble(s.getText());
-                boolean forceMutations = forceMutation.isSelected();
-                boolean elitism = useElitism.isSelected();
-                boolean repeat = allowRepeat.isSelected();
+                try {
+                    long populationSize = Long.parseLong(population.getText());
+                    int generationSize = Integer.parseInt(generations.getText());
+                    int tournamentSize = Integer.parseInt(tournament.getText());
+                    double alpha = Double.parseDouble(a.getText());
+                    double mutationP = Double.parseDouble(mutation.getText());
+                    double sigma = Double.parseDouble(s.getText());
+                    boolean forceMutations = forceMutation.isSelected();
+                    boolean elitism = useElitism.isSelected();
+                    boolean repeat = allowRepeat.isSelected();
+                    double desiredFittnes = Double.parseDouble(desiredFitness.getText());
+                    double desiredPrec = Double.parseDouble(desiredFitness.getText());
 
-//                SimpleGA<double[]> osga = new SimpleGA<>();
+                    IProblem<RealVector> problem = new FunctionMinimizationProblem<>(new MSEFunction<>(neuralNetwork, dataset));
+                    ISelection<RealVector> selection = new TournamentSelection<>(
+                            tournamentSize,
+                            repeat
+                    );
+                    ICrossover<RealVector> crossover = new BLXAlphaCrossover<>(alpha);
+                    IMutation<RealVector> mutation = new RealVectorGaussianMutation<>(
+                            mutationP,
+                            forceMutations,
+                            sigma
+                    );
+                    SimpleGA<RealVector> simpleGA = new SimpleGA<>(elitism, generationSize, desiredFittnes, desiredPrec, problem, selection, crossover, mutation);
+                    metaheuristic = simpleGA;
+                    geneticStage.hide();
+                } catch (RuntimeException ex) {
+                    invalidInput.setText("Invalid input");
+                }
                 event.consume();
             }
         };
@@ -128,7 +170,7 @@ public abstract class AlgorithmsGUI {
 
     }
 
-    private static void OSGA(IMetaheuristic metaheuristic, INeuralNetwork neuralNetwork, Stage primaryStage) {
+    private static void OSGA(List<DatasetEntry> dataset, INeuralNetwork neuralNetwork, Stage primaryStage) {
         Stage OSGAStage = new Stage();
         OSGAStage.initOwner(primaryStage);
         OSGAStage.initModality(Modality.WINDOW_MODAL);
@@ -240,7 +282,7 @@ public abstract class AlgorithmsGUI {
         ok.setOnAction(buttonHandler);
     }
 
-    private static void SA(IMetaheuristic metaheuristic, INeuralNetwork neuralNetwork, Stage primaryStage) {
+    private static void SA(List<DatasetEntry> dataset, INeuralNetwork neuralNetwork, Stage primaryStage) {
         Stage SAStage = new Stage();
         SAStage.initOwner(primaryStage);
         SAStage.initModality(Modality.WINDOW_MODAL);
@@ -327,7 +369,7 @@ public abstract class AlgorithmsGUI {
         ok.setOnAction(buttonHandler);
     }
 
-    private static void PSO(IMetaheuristic metaheuristic, INeuralNetwork neuralNetwork, Stage primaryStage) {
+    private static void PSO(List<DatasetEntry> dataset, INeuralNetwork neuralNetwork, Stage primaryStage) {
         Stage SAStage = new Stage();
         SAStage.initOwner(primaryStage);
         SAStage.initModality(Modality.WINDOW_MODAL);
@@ -394,7 +436,7 @@ public abstract class AlgorithmsGUI {
         ok.setOnAction(buttonHandler);
     }
 
-    private static void backpropagation(INeuralNetwork neuralNetwork,
+    private static void backpropagation(List<DatasetEntry> dataset, INeuralNetwork neuralNetwork,
                                         Stage primaryStage) {
         Stage SAStage = new Stage();
         SAStage.initOwner(primaryStage);

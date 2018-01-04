@@ -2,6 +2,7 @@ package hr.fer.zemris.project.forecasting.gui;
 
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.IMetaheuristic;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
+import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 import com.dosilovic.hermanzvonimir.ecfjava.util.RealVector;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -22,7 +23,9 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static hr.fer.zemris.project.forecasting.gui.Data.*;
 
@@ -57,11 +60,12 @@ public class NeuralNetworkUI {
         //choose algorithm
         ComboBox<String> chooseAlgorithm = new ComboBox<>(FXCollections.observableArrayList(
                 "<none>", "Genetic", "OSGA", "SA", "DE", "PSO", "Backpropagation"));
+        List<DatasetEntry> dataset = DatasetValue.getTrainingData(data.getDatasetValues(), nn.getInputSize(), nn.getOutputSize());
         chooseAlgorithm.getSelectionModel().select(0);
-        chooseAlgorithm.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, metaheuristic, nn, data.getPrimaryStage()));
+        chooseAlgorithm.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, nn, data.getPrimaryStage()));
         //change algorithm parameters
         Button changeParams = new Button("Change parameters");
-        changeParams.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, metaheuristic, nn, data.getPrimaryStage()));
+        changeParams.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, nn, data.getPrimaryStage()));
         HBox params = new HBox(chooseAlgorithm, changeParams);
 
         //Immutable dataset

@@ -1,8 +1,12 @@
 package hr.fer.zemris.project.forecasting.gui;
 
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.IMetaheuristic;
+import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.ga.SimpleOSGA;
+import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.pso.BasicPSO;
+import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.sa.SimpleSA;
+import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
+import com.dosilovic.hermanzvonimir.ecfjava.util.RealVector;
 import hr.fer.zemris.project.forecasting.nn.Backpropagation;
-import hr.fer.zemris.project.forecasting.nn.INeuralNetwork;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -16,6 +20,9 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public abstract class AlgorithmsGUI {
+
+    public static IMetaheuristic metaheuristic;
+
     //TODO dodati DE i backPropagation
     public static EventHandler<ActionEvent> chooseAlgorithmAction(ComboBox<String> comboBox, IMetaheuristic metaheuristic,
                                                                   INeuralNetwork neuralNetwork, Stage primaryStage) {
@@ -99,6 +106,26 @@ public abstract class AlgorithmsGUI {
         Scene scene = new Scene(grid);
         geneticStage.setScene(scene);
         geneticStage.show();
+
+        EventHandler<ActionEvent> buttonHandler = new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                long populationSize = Long.parseLong(population.getText());
+                long generationSize = Long.parseLong(generations.getText());
+                long tournamentSize = Long.parseLong(tournament.getText());
+                double alpha = Double.parseDouble(a.getText());
+                double mutationP = Double.parseDouble(mutation.getText());
+                double sigma = Double.parseDouble(s.getText());
+                boolean forceMutations = forceMutation.isSelected();
+                boolean elitism = useElitism.isSelected();
+                boolean repeat = allowRepeat.isSelected();
+
+//                SimpleGA<double[]> osga = new SimpleGA<>();
+                event.consume();
+            }
+        };
+        ok.setOnAction(buttonHandler);
+
     }
 
     private static void OSGA(IMetaheuristic metaheuristic, INeuralNetwork neuralNetwork, Stage primaryStage) {
@@ -189,6 +216,28 @@ public abstract class AlgorithmsGUI {
         Scene scene = new Scene(grid);
         OSGAStage.setScene(scene);
         OSGAStage.show();
+
+        EventHandler<ActionEvent> buttonHandler = new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                long populationSize = Long.parseLong(population.getText());
+                long generationSize = Long.parseLong(generations.getText());
+                long tournamentSize = Long.parseLong(tournament.getText());
+                double alpha = Double.parseDouble(a.getText());
+                double mutationP = Double.parseDouble(mutation.getText());
+                double sigma = Double.parseDouble(s.getText());
+                double maxP = Double.parseDouble(maxPressure.getText());
+                double minSuccessRatio = Double.parseDouble(minSuccess.getText());
+                double minComparisonRatio = Double.parseDouble(minComparison.getText());
+                boolean forceMutations = forceMutation.isSelected();
+                boolean elitism = useElitism.isSelected();
+                boolean repeat = allowRepeat.isSelected();
+
+//                SimpleOSGA<double[]> osga = new SimpleOSGA<>();
+                event.consume();
+            }
+        };
+        ok.setOnAction(buttonHandler);
     }
 
     private static void SA(IMetaheuristic metaheuristic, INeuralNetwork neuralNetwork, Stage primaryStage) {
@@ -259,6 +308,23 @@ public abstract class AlgorithmsGUI {
         Scene scene = new Scene(grid);
         SAStage.setScene(scene);
         SAStage.show();
+
+        EventHandler<ActionEvent> buttonHandler = new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                long outerIteration = Long.parseLong(outerIter.getText());
+                long innerIteration = Long.parseLong(innerIter.getText());
+                double outerTemperature = Double.parseDouble(outerTemp.getText());
+                double innerTemperature = Double.parseDouble(innerTemp.getText());
+                double mutationP = Double.parseDouble(mutation.getText());
+                double sigma = Double.parseDouble(s.getText());
+                boolean forceMutations = forceMutation.isSelected();
+
+//                SimpleSA<double[]> pso = new SimpleSA<>();
+                event.consume();
+            }
+        };
+        ok.setOnAction(buttonHandler);
     }
 
     private static void PSO(IMetaheuristic metaheuristic, INeuralNetwork neuralNetwork, Stage primaryStage) {
@@ -312,6 +378,20 @@ public abstract class AlgorithmsGUI {
         Scene scene = new Scene(grid);
         SAStage.setScene(scene);
         SAStage.show();
+
+        EventHandler<ActionEvent> buttonHandler = new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                long maxIter = Long.parseLong(iteration.getText());
+                long particlesNum = Long.parseLong(particles.getText());
+                double minSpeed = Double.parseDouble(minV.getText());
+                double maxSpeed = Double.parseDouble(maxV.getText());
+
+                BasicPSO<RealVector> pso = null;
+                event.consume();
+            }
+        };
+        ok.setOnAction(buttonHandler);
     }
 
     private static void backpropagation(INeuralNetwork neuralNetwork,
@@ -341,11 +421,6 @@ public abstract class AlgorithmsGUI {
         invalidInput.setVisible(false);
 
         Button ok = new Button("OK");
-
-
-//        Backpropagation backpropagation = new Backpropagation()
-//        b
-
 
         GridPane grid = new GridPane();
         grid.setVgap(15);
@@ -379,6 +454,21 @@ public abstract class AlgorithmsGUI {
         Scene scene = new Scene(grid);
         SAStage.setScene(scene);
         SAStage.show();
-    }
 
+        EventHandler<ActionEvent> buttonHandler = new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                long maxIter = Long.parseLong(iteration.getText());
+                double learningRate = Double.parseDouble(learning.getText());
+                double desiredErr = Double.parseDouble(desiredError.getText());
+                double desiredPrec = Double.parseDouble(desiredPrecision.getText());
+                int batch = Integer.parseInt(batchSize.getText());
+
+                Backpropagation bp = new Backpropagation(null, null, learningRate, maxIter, desiredErr, desiredPrec, neuralNetwork, batch);
+                metaheuristic = bp;
+                event.consume();
+            }
+        };
+        ok.setOnAction(buttonHandler);
+    }
 }

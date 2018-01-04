@@ -1,7 +1,10 @@
 package hr.fer.zemris.project.forecasting.gui;
 
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.IMetaheuristic;
+import com.dosilovic.hermanzvonimir.ecfjava.neural.ElmanNN;
+import com.dosilovic.hermanzvonimir.ecfjava.neural.FeedForwardANN;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
+import com.dosilovic.hermanzvonimir.ecfjava.neural.activations.*;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 import com.dosilovic.hermanzvonimir.ecfjava.util.RealVector;
 import javafx.collections.FXCollections;
@@ -23,7 +26,6 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -35,6 +37,10 @@ public class NeuralNetworkUI {
     private int[] architecture;
     private INeuralNetwork nn;
     private IMetaheuristic<RealVector> metaheuristic;
+    private IActivation[] activations;
+    private List<DatasetEntry> dataset;
+    private ComboBox<String> chooseNetwork;
+    private HBox params;
 
     public NeuralNetworkUI(Data data) {
         this.data = data;
@@ -47,7 +53,7 @@ public class NeuralNetworkUI {
         grid.setHgap(10);
         grid.setPadding(new Insets(30, 30, 30, 30));
         //choose neural network button
-        ComboBox<String> chooseNetwork = new ComboBox<>(FXCollections.observableArrayList("<none>", "TDNN", "Elman ANN"));
+        chooseNetwork = new ComboBox<>(FXCollections.observableArrayList("<none>", "TDNN", "Elman ANN"));
         chooseNetwork.getSelectionModel().select(0);
 
         chooseNetwork.setOnAction(changeArchitectureAction(chooseNetwork));
@@ -60,13 +66,13 @@ public class NeuralNetworkUI {
         //choose algorithm
         ComboBox<String> chooseAlgorithm = new ComboBox<>(FXCollections.observableArrayList(
                 "<none>", "Genetic", "OSGA", "SA", "DE", "PSO", "Backpropagation"));
-        List<DatasetEntry> dataset = DatasetValue.getTrainingData(data.getDatasetValues(), nn.getInputSize(), nn.getOutputSize());
         chooseAlgorithm.getSelectionModel().select(0);
         chooseAlgorithm.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, nn, data.getPrimaryStage()));
         //change algorithm parameters
         Button changeParams = new Button("Change parameters");
         changeParams.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, nn, data.getPrimaryStage()));
         HBox params = new HBox(chooseAlgorithm, changeParams);
+//        params.setDisable(true);
 
         //Immutable dataset
         TableView table = new TableView();
@@ -86,6 +92,17 @@ public class NeuralNetworkUI {
 
         //start button
         Button start = new Button("Start training");
+        start.setOnAction(a -> {
+            Runnable runnable = new Runnable() {
+                @Override
+                public void run() {
+                    metaheuristic.run();
+                    System.out.println("Gotovo!!");
+                }
+            };
+            new Thread(runnable).start();
+
+        });
 
         //Button predict
         Button predict = new Button("Predict future values");
@@ -124,8 +141,6 @@ public class NeuralNetworkUI {
             changeArch.initOwner(data.getPrimaryStage());
             changeArch.initModality(Modality.WINDOW_MODAL);
             changeArch.setTitle("Change!");
-
-//            Label numberOfNodes = new Label("Enter the number of nodes wanted in each layer respectively.");
 
             Label inputLayer = new Label("Input layer:");
             TextField input = new TextField();
@@ -189,6 +204,22 @@ public class NeuralNetworkUI {
                         architecture[i] = Integer.parseInt(hiddens[i - 1]);
                     }
                     System.out.println(Arrays.toString(architecture));
+
+                    activations = new IActivation[architecture.length];
+                    activations[0] = extractActivation(inputActivation.getValue());
+                    for (int i = 1; i < activations.length - 2; ++i) {
+                        activations[i] = extractActivation(hiddenActivation.getValue());
+                    }
+                    activations[activations.length - 1] = extractActivation(outputActivation.getValue());
+                    if (chooseNetwork.getValue().equals("Elman ANN")) {
+                        nn = new ElmanNN(architecture, activations);
+                        dataset = DatasetValue.getTrainingData(data.getDatasetValues(), nn.getInputSize(), nn.getOutputSize());
+                    } else if (chooseNetwork.getValue().equals("TDNN")) {
+                        nn = new FeedForwardANN(architecture, activations);
+                        dataset = DatasetValue.getTrainingData(data.getDatasetValues(), nn.getInputSize(), nn.getOutputSize());
+                    } else {
+                        //TODO: a sta tu
+                    }
                     changeArch.hide();
                 } catch (NumberFormatException nfe) {
                     invalidInput.setVisible(true);
@@ -227,4 +258,21 @@ public class NeuralNetworkUI {
         };
     }
 
+    private static IActivation extractActivation(String activation) {
+        //"Sigmoid", "Binary Step", "Identity", "ReLU", "TanH"
+        switch (activation) {
+            case "Sigmoid":
+                return SigmoidActivation.getInstance();
+            case "Binary Step":
+                return BinaryStepActivation.getInstance();
+            case "Identity":
+                return IdentityActivation.getInstance();
+            case "ReLU":
+                return ReLUActivation.getInstance();
+            case "TanH":
+                return TanHActivation.getInstance();
+            default:
+                return null;
+        }
+    }
 }

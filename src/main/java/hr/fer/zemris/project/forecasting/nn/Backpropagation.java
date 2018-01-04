@@ -1,8 +1,11 @@
 package hr.fer.zemris.project.forecasting.nn;
 
+import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.IMetaheuristic;
+import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.util.IObserver;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.activations.IActivation;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
+import com.dosilovic.hermanzvonimir.ecfjava.util.Solution;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -14,7 +17,7 @@ import java.util.List;
 
 import static hr.fer.zemris.project.forecasting.nn.util.BackpropagationUtil.*;
 
-public class Backpropagation {
+public class Backpropagation implements IMetaheuristic<double[]> {
 
     private List<DatasetEntry> trainingSet;
     private List<DatasetEntry> validationSet;
@@ -25,20 +28,26 @@ public class Backpropagation {
     private long currentIteration;
     private double trainingMSE;
     private double validationMSE;
+    private Solution<double[]> solution;
+    private INeuralNetwork neuralNetwork;
+    private int batchSize;
+    private List<IObserver<double[]>> observers = new ArrayList<>();
 
-    private List<BackpropagationObserver> observers = new ArrayList<>();
-
-    public Backpropagation(List<DatasetEntry> trainingSet, List<DatasetEntry> validationSet, double learningRate,
-                           long maxIteration, double desiredError, double desiredPrecision) {
+    public Backpropagation(List<DatasetEntry> trainingSet, List<DatasetEntry> validationSet,
+                           double learningRate, long maxIteration, double desiredError,
+                           double desiredPrecision, INeuralNetwork neuralNetwork, int batchSize) {
         this.trainingSet = trainingSet;
         this.validationSet = validationSet;
         this.learningRate = learningRate;
         this.maxIteration = maxIteration;
         this.desiredError = desiredError;
         this.desiredPrecision = desiredPrecision;
+        this.neuralNetwork = neuralNetwork;
+        this.batchSize = batchSize;
     }
 
-    public void train(INeuralNetwork neuralNetwork, int batchSize) {
+    @Override
+    public double[] run() {
         List<DatasetEntry>[] batches = createBatches(batchSize, trainingSet);
         RealMatrix[] layerOutputs = new RealMatrix[neuralNetwork.getNumberOfLayers()];
 
@@ -79,6 +88,7 @@ public class Backpropagation {
                 doBackpropagation(neuralNetwork, outputDeltaMatrix, layerOutputs);
             }
             trainingMSE = trainingMse.dotProduct(trainingMse) / trainingSet.size();
+            solution.setFitness(trainingMSE);
 
             RealVector validationMse = new ArrayRealVector(neuralNetwork.getOutputSize());
             for (DatasetEntry entry : validationSet) {
@@ -89,14 +99,16 @@ public class Backpropagation {
             double validationSetMse = validationMSE;
             validationMSE = validationMse.dotProduct(validationMse) / validationSet.size();
 
-            notifyObservers();
             System.err.println("iteration: " + currentIteration + " training set mse: " + trainingMSE
                     + " validation set mse: " + validationMSE);
             if ((validationSetMse < validationMSE && currentIteration > maxIteration / 2)
                     || Math.abs(trainingMSE - desiredError) < desiredPrecision) {
                 break;
             }
+
+            notifyObservers(solution);
         }
+        return solution.getRepresentative();
     }
 
     private void doBackpropagation(INeuralNetwork neuralNetwork, RealMatrix outputDeltaMatrix, RealMatrix[] allLayerOutputs) {
@@ -153,9 +165,29 @@ public class Backpropagation {
             }
         }
         double[] weights = extractWeights(layerWeights, neuralNetwork.getNumberOfWeights());
+        solution = new Solution<>(weights);
         neuralNetwork.setWeights(weights);
     }
 
+    @Override
+    public Solution<double[]> getBestSolution() {
+        return solution;
+    }
+
+    @Override
+    public void attachObserver(IObserver observer) {
+        observers.add(observer);
+    }
+
+    @Override
+    public void detachObserver(IObserver observer) {
+        observers.remove(observer);
+    }
+
+    @Override
+    public void notifyObservers(Solution<double[]> solution) {
+        observers.forEach(o -> o.update(solution));
+    }
 
     public List<DatasetEntry> getTrainingSet() {
         return trainingSet;
@@ -193,15 +225,4 @@ public class Backpropagation {
         return validationMSE;
     }
 
-    private void notifyObservers() {
-        observers.forEach(o -> o.update(this));
-    }
-
-    public void addObserver(BackpropagationObserver observer) {
-        observers.add(observer);
-    }
-
-    public void removeObserver(BackpropagationObserver observer) {
-        observers.remove(observer);
-    }
 }

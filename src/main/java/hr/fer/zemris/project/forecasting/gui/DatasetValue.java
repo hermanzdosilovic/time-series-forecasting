@@ -1,5 +1,7 @@
 package hr.fer.zemris.project.forecasting.gui;
 
+import hr.fer.zemris.project.forecasting.nn.util.DataEntry;
+import hr.fer.zemris.project.forecasting.nn.util.NeuralNetworkUtil;
 import hr.fer.zemris.project.forecasting.util.ArraysUtil;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -70,14 +72,18 @@ public class DatasetValue implements Comparable<DatasetValue>{
         return observableList;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if(obj instanceof DatasetValue){
-            DatasetValue d = (DatasetValue) obj;
-            return Double.compare(d.getValue(), value) == 0;
-        }
-        return false;
+    public static List<DataEntry> getTrainingData(List<DatasetValue> datasetValues, int inputSize, int outputSize){
+        return NeuralNetworkUtil.createTDNNDateset(getDoubleArray(datasetValues), inputSize, outputSize);
     }
+
+//    @Override
+//    public boolean equals(Object obj) {
+//        if(obj instanceof DatasetValue){
+//            DatasetValue d = (DatasetValue) obj;
+//            return Double.compare(d.getValue(), value) == 0;
+//        }
+//        return false;
+//    }
 
     @Override
     public int compareTo(DatasetValue o) {

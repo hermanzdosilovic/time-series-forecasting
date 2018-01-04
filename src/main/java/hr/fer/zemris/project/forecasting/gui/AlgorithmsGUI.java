@@ -1,6 +1,7 @@
 package hr.fer.zemris.project.forecasting.gui;
 
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.IMetaheuristic;
+import hr.fer.zemris.project.forecasting.nn.Backpropagation;
 import hr.fer.zemris.project.forecasting.nn.INeuralNetwork;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -340,6 +341,10 @@ public abstract class AlgorithmsGUI {
         invalidInput.setVisible(false);
 
         Button ok = new Button("OK");
+
+
+//        Backpropagation backpropagation = new Backpropagation()
+
 
         GridPane grid = new GridPane();
         grid.setVgap(15);

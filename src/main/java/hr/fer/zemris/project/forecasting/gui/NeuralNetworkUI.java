@@ -47,7 +47,6 @@ public class NeuralNetworkUI {
         grid.setVgap(10);
         grid.setHgap(10);
         grid.setPadding(new Insets(30, 30, 30, 30));
-        //TODO dodati izbor aktivacijske funkcije i splitanja dataseta
         //choose neural network button
         ComboBox<String> chooseNetwork = new ComboBox<>(FXCollections.observableArrayList("<none>", "TDNN", "Elman ANN"));
         chooseNetwork.getSelectionModel().select(0);

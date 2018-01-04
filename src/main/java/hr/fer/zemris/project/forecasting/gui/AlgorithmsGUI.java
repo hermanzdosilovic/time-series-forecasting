@@ -374,4 +374,5 @@ public abstract class AlgorithmsGUI {
         SAStage.setScene(scene);
         SAStage.show();
     }
+
 }

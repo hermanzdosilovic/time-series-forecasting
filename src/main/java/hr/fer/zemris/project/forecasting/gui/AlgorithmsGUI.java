@@ -344,6 +344,7 @@ public abstract class AlgorithmsGUI {
 
 
 //        Backpropagation backpropagation = new Backpropagation()
+//        b
 
 
         GridPane grid = new GridPane();

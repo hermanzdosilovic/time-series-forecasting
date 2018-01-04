@@ -1,0 +1,7 @@
+pandoc \
+  -s \
+  --template=template.html \
+  --katex \
+  --highlight-style kate \
+  -t html5 -o index.html \
+  -f markdown docs.md

@@ -1,6 +1,6 @@
 package hr.fer.zemris.project.forecasting.gui;
 
-import hr.fer.zemris.project.forecasting.nn.util.DataEntry;
+import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 import hr.fer.zemris.project.forecasting.nn.util.NeuralNetworkUtil;
 import hr.fer.zemris.project.forecasting.util.ArraysUtil;
 import javafx.collections.FXCollections;
@@ -72,7 +72,7 @@ public class DatasetValue implements Comparable<DatasetValue>{
         return observableList;
     }
 
-    public static List<DataEntry> getTrainingData(List<DatasetValue> datasetValues, int inputSize, int outputSize){
+    public static List<DatasetEntry> getTrainingData(List<DatasetValue> datasetValues, int inputSize, int outputSize){
         return NeuralNetworkUtil.createTDNNDateset(getDoubleArray(datasetValues), inputSize, outputSize);
     }
 

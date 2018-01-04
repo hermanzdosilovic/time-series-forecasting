@@ -2,6 +2,7 @@ package hr.fer.zemris.project.forecasting.nn.functions;
 
 import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
 import com.dosilovic.hermanzvonimir.ecfjava.numeric.IFunction;
+import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 import com.dosilovic.hermanzvonimir.ecfjava.util.RealVector;
 import hr.fer.zemris.project.forecasting.nn.util.DataEntry;
 import hr.fer.zemris.project.forecasting.nn.util.NeuralNetworkUtil;
@@ -14,9 +15,9 @@ public class MPEFunction<T extends RealVector> implements IFunction<T>, IErrorFu
 
 
     private INeuralNetwork neuralNetwork;
-    private List<DataEntry> dataset;
+    private List<DatasetEntry> dataset;
 
-    public MPEFunction(INeuralNetwork neuralNetwork, List<DataEntry> dataset) {
+    public MPEFunction(INeuralNetwork neuralNetwork, List<DatasetEntry> dataset) {
         this.neuralNetwork = neuralNetwork;
         this.dataset = dataset;
     }
@@ -28,7 +29,7 @@ public class MPEFunction<T extends RealVector> implements IFunction<T>, IErrorFu
 
 
     @Override
-    public double getError(com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork neuralNetwork, List<DataEntry> dataset) {
+    public double getError(INeuralNetwork neuralNetwork, List<DatasetEntry> dataset) {
         return 0;
     }
 }

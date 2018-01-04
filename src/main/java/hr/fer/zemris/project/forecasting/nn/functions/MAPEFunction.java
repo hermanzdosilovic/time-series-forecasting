@@ -1,6 +1,7 @@
 package hr.fer.zemris.project.forecasting.nn.functions;
 
 import com.dosilovic.hermanzvonimir.ecfjava.numeric.IFunction;
+import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 import com.dosilovic.hermanzvonimir.ecfjava.util.RealVector;
 
 import hr.fer.zemris.project.forecasting.nn.util.DataEntry;
@@ -13,9 +14,9 @@ import java.util.List;
 public class MAPEFunction<T extends RealVector> implements IFunction<T>, IErrorFunction {
 
     private INeuralNetwork neuralNetwork;
-    private List<DataEntry> dataset;
+    private List<DatasetEntry> dataset;
 
-    public MAPEFunction(INeuralNetwork neuralNetwork, List<DataEntry> dataset) {
+    public MAPEFunction(INeuralNetwork neuralNetwork, List<DatasetEntry> dataset) {
         this.neuralNetwork = neuralNetwork;
         this.dataset = dataset;
     }
@@ -26,7 +27,7 @@ public class MAPEFunction<T extends RealVector> implements IFunction<T>, IErrorF
     }
 
     @Override public double getError(
-            INeuralNetwork neuralNetwork, List<DataEntry> dataset
+            INeuralNetwork neuralNetwork, List<DatasetEntry> dataset
     ) {
         double[] forecast = NeuralNetworkUtil.forward(neuralNetwork, dataset);
         double[] actual   = NeuralNetworkUtil.joinExpectedValues(dataset);

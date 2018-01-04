@@ -41,9 +41,9 @@ public final class TDNNBackpropagationExample {
         trainSet.forEach(t -> train.add(new DatasetEntry(t.getInput(), t.getExpectedOutput())));
         List<DatasetEntry> test = new ArrayList<>();
         testSet.forEach(t -> test.add(new DatasetEntry(t.getInput(), t.getExpectedOutput())));
-        Backpropagation bp = new Backpropagation(train, test, 1E-8, 300_000, 1E-12, 1E-15);
+        Backpropagation bp = new Backpropagation(train, test, 1E-8, 300_000, 1E-12, 1E-15,tdnn, 32);
         double startTime = System.currentTimeMillis();
-        bp.train(tdnn, 32);
+        bp.run();
         double endTime = System.currentTimeMillis();
         double deltaTime = (endTime - startTime) / 1000.;
         System.err.println("Time: " + deltaTime + " s");

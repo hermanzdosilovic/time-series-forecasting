@@ -1,9 +1,8 @@
 package hr.fer.zemris.project.forecasting.gui;
 
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.IMetaheuristic;
+import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
 import com.dosilovic.hermanzvonimir.ecfjava.util.RealVector;
-import hr.fer.zemris.project.forecasting.nn.INeuralNetwork;
-import hr.fer.zemris.project.forecasting.util.ArraysUtil;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -23,12 +22,9 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.text.spi.NumberFormatProvider;
 import java.util.Arrays;
 
-import static hr.fer.zemris.project.forecasting.gui.Data.MAX_TABLE_WIDTH;
-import static hr.fer.zemris.project.forecasting.gui.Data.lineChart;
-import static hr.fer.zemris.project.forecasting.gui.Data.updateSeriesOnListChangeListener;
+import static hr.fer.zemris.project.forecasting.gui.Data.*;
 
 public class NeuralNetworkUI {
 

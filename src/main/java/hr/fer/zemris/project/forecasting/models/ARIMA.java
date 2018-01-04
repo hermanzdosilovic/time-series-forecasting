@@ -19,10 +19,10 @@ public class ARIMA extends AModel {
 
     private void setModel(int p, int q, List<Double> dataset) throws IllegalArgumentException{
         boolean differenced = stat.getOrder() > 0;
-        if (p == 0) {
-            model = new ARMA(0, q, ArraysUtil.toPrimitiveArray(dataset), differenced);
-        } else if (q == 0) {
+        if (q == 0) {
             model = new AR(p, dataset);
+        } else if (p == 0) {
+            model = new ARMA(0, q, ArraysUtil.toPrimitiveArray(dataset), differenced);
         } else {
             throw new IllegalArgumentException("ARMA model currently not supported.");
         }

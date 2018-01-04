@@ -16,6 +16,8 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -28,6 +30,7 @@ import javafx.util.StringConverter;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.Key;
 import java.util.Collections;
 
 
@@ -39,7 +42,7 @@ public class Data{
     private Stage primaryStage;
     private TableView table;
 
-    private static ObservableList<DatasetValue> getList(String path){
+   private static ObservableList<DatasetValue> getList(String path){
       try{
          return FXCollections.observableArrayList(DatasetValue.
                  encapsulateDoubleArray(DataReaderUtil.readDataset(path)));
@@ -104,8 +107,15 @@ public class Data{
 
        values.setCellFactory(TextFieldTableCell.forTableColumn(new MyDoubleStringConverter()));
 
-       values.setOnEditCommit((e) ->{
-          e.getTableView().getItems().set(e.getTablePosition().getRow(), new DatasetValue(e.getNewValue()));
+       values.setOnEditCommit((e) ->
+               e.getTableView().getItems().set(e.getTablePosition().getRow(), new DatasetValue(e.getNewValue())));
+
+       table.setOnKeyPressed(event -> {
+          if(event.getCode() == KeyCode.PLUS){
+             addRow();
+          }else if(event.getCode() == KeyCode.MINUS){
+             removeRow();
+          }
        });
 
 
@@ -145,26 +155,37 @@ public class Data{
 
    }
 
-//   private void addRow() {
-//
-//      // get current position
-//      TablePosition pos = table.getFocusModel().getFocusedCell();
-//
-//      // clear current selection
-//      table.getSelectionModel().clearSelection();
-//
-//      // create new record and add it to the model
-//      DatasetValue data = new DatasetValue(Double.NaN);
-//      table.getItems().add(data);
-//
-//      // get last row
-//      int row = table.getItems().size() - 1;
-//      table.getSelectionModel().select( row, pos.getTableColumn());
-//
-//      // scroll to new row
-//      table.scrollTo( data);
-//
-//   }
+   private void addRow() {
+
+      // get current position
+      int row = table.getSelectionModel().getSelectedIndex();
+      TableColumn selectedColumn = table.getFocusModel().getFocusedCell().getTableColumn();
+
+      // clear current selection
+      table.getSelectionModel().clearSelection();
+
+      // create new record and add it to the model
+      DatasetValue data = new DatasetValue(0.0);
+      if(row < table.getItems().size() - 1)table.getItems().add(row + 1, data);
+      else table.getItems().add(data);
+
+      table.getSelectionModel().select(row + 1, selectedColumn);
+
+      //edit cell
+      table.getFocusModel().focus(row + 1, selectedColumn);
+      table.edit(row + 1, selectedColumn);
+
+      // scroll to new row
+      table.scrollTo(row + 1);
+
+   }
+
+
+   private void removeRow() {
+      if(table.getItems().size() == 0) return;
+      int row = table.getSelectionModel().getSelectedIndex();
+      datasetValues.remove(row);
+   }
 
    public static LineChart<Number, Number> lineChart(XYChart.Series series, String lineChartName){
       final NumberAxis xAxis = new NumberAxis();
@@ -180,18 +201,30 @@ public class Data{
       return lineChart;
    }
 
+   //TODO debugat tako da nema problema s brisanjem i pisanjem
    public static void updateSeriesOnListChangeListener(ObservableList<DatasetValue> datasetValues,
                                                        XYChart.Series<Integer, Double> series){
       datasetValues.addListener((ListChangeListener<DatasetValue>) c -> {
          while(c.next()) {
-            if(c.wasAdded()){
+            if(c.wasReplaced()){
                for(int i = c.getFrom(); i < c.getTo(); i++){
                   XYChart.Data<Integer, Double> nextAddition = new XYChart.Data<>(i, datasetValues.get(i).getValue());
                   nextAddition.setNode(new DatasetValue.HoveredThresholdNode(
                           nextAddition.getXValue(), nextAddition.getYValue()));
-                  if(i < series.getData().size()) series.getData().set(i, nextAddition);
+                  series.getData().set(i, nextAddition);
+               }
+            }
+            else if(c.wasAdded()){
+               for(int i = c.getFrom(); i < c.getTo(); i++){
+                  XYChart.Data<Integer, Double> nextAddition = new XYChart.Data<>(i, datasetValues.get(i).getValue());
+                  nextAddition.setNode(new DatasetValue.HoveredThresholdNode(
+                          nextAddition.getXValue(), nextAddition.getYValue()));
+                  if(i < series.getData().size()) series.getData().add(i, nextAddition);
                   else series.getData().add(nextAddition);
                }
+            }
+            else if(c.wasRemoved()){
+               series.getData().remove(c.getFrom());
             }
          }
       });

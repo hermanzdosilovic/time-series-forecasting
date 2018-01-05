@@ -26,6 +26,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -42,6 +43,7 @@ import java.util.Collection;
 import java.util.List;
 
 import static hr.fer.zemris.project.forecasting.gui.Data.*;
+import static hr.fer.zemris.project.forecasting.gui.DatasetValue.getChartData;
 
 public class NeuralNetworkUI {
 
@@ -82,6 +84,7 @@ public class NeuralNetworkUI {
         chooseAlgorithm = new ComboBox<>(FXCollections.observableArrayList(
                 "<none>", "Genetic", "OSGA", "SA", "DE", "PSO", "Backpropagation"));
         chooseAlgorithm.getSelectionModel().select(0);
+
         changeParams = new Button("Change parameters");
         HBox params = new HBox(chooseAlgorithm, changeParams);
 
@@ -153,11 +156,11 @@ public class NeuralNetworkUI {
                             "<none>", "Genetic", "OSGA", "SA", "DE", "PSO", "Backpropagation"));
                 }
                 chooseAlgorithm.getSelectionModel().select(0);
-                chooseAlgorithm.setDisable(false);
-                changeParams.setDisable(false);
+//                chooseAlgorithm.setDisable(false);
+//                changeParams.setDisable(false);
             } else {
-                chooseAlgorithm.setDisable(true);
-                changeParams.setDisable(true);
+//                chooseAlgorithm.setDisable(true);
+//                changeParams.setDisable(true);
             }
         });
 //        chooseAlgorithm.setDisable(true);
@@ -397,5 +400,86 @@ public class NeuralNetworkUI {
         public void update(Solution<RealVector> solution) {
             graphObserver.update(new Solution<>(solution.getRepresentative().toArray()));
         }
+    }
+
+    private EventHandler<ActionEvent> predictAction() {
+        return event -> {
+            Stage predictStage = new Stage();
+            predictStage.setTitle("Predict!");
+            predictStage.initOwner(data.getPrimaryStage());
+            predictStage.initModality(Modality.WINDOW_MODAL);
+
+            Label numberOfPredictions = new Label("Number of predictions: ");
+            TextField predicts = new TextField();
+
+            Label invalidInput = new Label("Invalid input");
+            invalidInput.setTextFill(Color.RED);
+            invalidInput.setVisible(false);
+
+            Button ok = new Button("OK");
+
+            HBox okBox = new HBox(ok);
+            okBox.setAlignment(Pos.CENTER);
+
+            VBox predictBox = new VBox(numberOfPredictions, predicts, invalidInput, okBox);
+            predictBox.setSpacing(10);
+            predictBox.setPadding(new Insets(20, 20, 20, 20));
+
+            Scene predictScene = new Scene(predictBox);
+            predictStage.setScene(predictScene);
+            predictStage.show();
+
+            ok.setOnAction((e) -> {
+                try {
+                    int howManyPredictions = Integer.parseInt(predicts.getText());
+                    if (howManyPredictions < 1) {
+                        invalidInput.setVisible(true);
+                        return;
+                    }
+                    new Thread(() -> {
+                        int nnInputSize = neuralNetwork.get().getInputSize();
+                        double[] predictions = new double[nnInputSize + howManyPredictions];
+                        System.arraycopy(dataset.get(dataset.size() - 1).getInput(), 0,
+                                predictions, 0, nnInputSize);
+                        for (int i = 0; i < predictions.length-nnInputSize; ++i) {
+                            double[] input = Arrays.copyOfRange(predictions,i,i+nnInputSize);
+                             double[] expected = neuralNetwork.get().forward(input);
+                            predictions[i+nnInputSize+1] = expected[0];
+                        }
+//                        double[] predictions = arima.computeNextValues(howManyPredictions);
+                        ObservableList<DatasetValue> observableList = FXCollections.observableList(
+                                DatasetValue.encapsulateDoubleArray(Arrays.copyOfRange(predictions,nnInputSize,predictions.length)));
+                        Platform.runLater(() -> {
+                            Stage stage = new Stage();
+                            stage.setTitle("Predictions");
+                            stage.initOwner(data.getPrimaryStage());
+                            stage.initModality(Modality.WINDOW_MODAL);
+
+                            NumberAxis xAxis = new NumberAxis();
+                            xAxis.setLabel("Sample number");
+
+                            NumberAxis yAxis = new NumberAxis();
+                            yAxis.setLabel("Predicted value");
+
+                            XYChart.Series series = new XYChart.Series();
+                            series.setName("Prediction");
+
+                            series.setData(getChartData(observableList));
+
+                            LineChart line = new LineChart(xAxis, yAxis);
+                            line.getData().add(series);
+
+                            Scene scene = new Scene(line);
+                            stage.setScene(scene);
+
+                            stage.show();
+                            predictStage.hide();
+                        });
+                    }).run();
+                } catch (Exception e1) {
+                    invalidInput.setVisible(true);
+                }
+            });
+        };
     }
 }

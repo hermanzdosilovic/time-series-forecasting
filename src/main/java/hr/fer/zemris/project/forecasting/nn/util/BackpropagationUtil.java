@@ -45,7 +45,7 @@ public class BackpropagationUtil {
                 batches[i] = trainingSet.subList(i * batchSize, (i + 1) * batchSize);
             } else {
                 int len = trainingSet.size() % batchSize;
-                len = len == 0 ? 32 : len;
+                len = len == 0 ? batchSize : len;
                 batches[i] = trainingSet.subList(i * batchSize, i * batchSize + len);
             }
         }

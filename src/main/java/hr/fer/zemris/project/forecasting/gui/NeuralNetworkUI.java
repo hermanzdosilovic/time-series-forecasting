@@ -5,15 +5,17 @@ import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.ga.SimpleGA;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.ga.SimpleOSGA;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.pso.BasicPSO;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.pso.Particle;
-import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.sa.ISimulatedAnnealing;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.sa.SimpleSA;
+import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.util.IObserver;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.ElmanNN;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.FeedForwardANN;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.activations.*;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 import com.dosilovic.hermanzvonimir.ecfjava.util.RealVector;
+import com.dosilovic.hermanzvonimir.ecfjava.util.Solution;
 import hr.fer.zemris.project.forecasting.nn.Backpropagation;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -33,7 +35,6 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -48,7 +49,10 @@ public class NeuralNetworkUI {
     private IActivation[] activations;
     private List<DatasetEntry> dataset;
     private ComboBox<String> chooseNetwork;
+    private ComboBox<String> chooseAlgorithm;
+    private Button changeParams;
     private double trainPercentage;
+    private LineChart line;
 
     public NeuralNetworkUI(Data data) {
         this.data = data;
@@ -72,14 +76,10 @@ public class NeuralNetworkUI {
         HBox neural = new HBox(chooseNetwork, changeArch);
 
         //choose algorithm
-        ComboBox<String> chooseAlgorithm = new ComboBox<>(FXCollections.observableArrayList(
+        chooseAlgorithm = new ComboBox<>(FXCollections.observableArrayList(
                 "<none>", "Genetic", "OSGA", "SA", "DE", "PSO", "Backpropagation"));
         chooseAlgorithm.getSelectionModel().select(0);
-        chooseAlgorithm.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
-                nn, data.getPrimaryStage()));
-        Button changeParams = new Button("Change parameters");
-        changeParams.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
-                nn, data.getPrimaryStage()));
+        changeParams = new Button("Change parameters");
         HBox params = new HBox(chooseAlgorithm, changeParams);
 
         //Immutable dataset
@@ -105,22 +105,26 @@ public class NeuralNetworkUI {
                 @Override
                 public void run() {
                     IMetaheuristic metaheuristic = AlgorithmsGUI.metaheuristic;
-                    if(metaheuristic instanceof SimpleSA){
+                    if (metaheuristic instanceof SimpleSA) {
                         RealVector metaheuristicRequirement = (RealVector) AlgorithmsGUI.metaheuristicRequirement;
-                        ((SimpleSA)metaheuristic).run(metaheuristicRequirement);
-                    }else if(metaheuristic instanceof BasicPSO) {
+                        ((SimpleSA) metaheuristic).attachObserver(new GraphRealVectorObserver(nn));
+                        ((SimpleSA) metaheuristic).run(metaheuristicRequirement);
+                    } else if (metaheuristic instanceof BasicPSO) {
                         Collection<Particle<RealVector>> metaheuristicRequirement = (Collection<Particle<RealVector>>) AlgorithmsGUI.metaheuristicRequirement;
-                        ((BasicPSO)metaheuristic).run(metaheuristicRequirement);
-                    }else if(metaheuristic instanceof Backpropagation) {
-                        ((Backpropagation)metaheuristic).run();
-                    }else if(metaheuristic instanceof SimpleOSGA){
+                        ((BasicPSO) metaheuristic).attachObserver(new GraphRealVectorObserver(nn));
+                        ((BasicPSO) metaheuristic).run(metaheuristicRequirement);
+                    } else if (metaheuristic instanceof Backpropagation) {
+                        ((Backpropagation) metaheuristic).attachObserver(new GraphObserver(nn));
+                        ((Backpropagation) metaheuristic).run();
+                    } else if (metaheuristic instanceof SimpleOSGA) {
                         Collection<RealVector> metaheuristicRequirement = (Collection<RealVector>) AlgorithmsGUI.metaheuristicRequirement;
-                        ((SimpleOSGA)metaheuristic).run(metaheuristicRequirement);
-                    }else if(metaheuristic instanceof SimpleGA){
+                        ((SimpleOSGA) metaheuristic).attachObserver(new GraphRealVectorObserver(nn));
+                        ((SimpleOSGA) metaheuristic).run(metaheuristicRequirement);
+                    } else if (metaheuristic instanceof SimpleGA) {
                         Collection<RealVector> metaheuristicRequirement = (Collection<RealVector>) AlgorithmsGUI.metaheuristicRequirement;
-                        ((SimpleGA)metaheuristic).run(metaheuristicRequirement);
-                    }else {
-                        //invalid
+                        ((SimpleGA) metaheuristic).attachObserver(new GraphRealVectorObserver(nn));
+                        ((SimpleGA) metaheuristic).run(metaheuristicRequirement);
+                    } else {
                         System.err.println("wrong metaheurstic");
                     }
                     System.out.println("Gotovo!!");
@@ -141,7 +145,7 @@ public class NeuralNetworkUI {
         ObservableList<XYChart.Data<Integer, Double>> observableList = DatasetValue.getChartData(data.getDatasetValues());
         series.setData(observableList);
         updateSeriesOnListChangeListener(data.getDatasetValues(), series);
-        LineChart line = lineChart(series, "Data");
+        line = lineChart(series, "Data");
 
         GridPane rightSideGrid = new GridPane();
         rightSideGrid.setHgap(10);
@@ -235,7 +239,7 @@ public class NeuralNetworkUI {
 
                     activations = new IActivation[architecture.length];
                     activations[0] = extractActivation(inputActivation.getValue());
-                    for (int i = 1; i < activations.length - 2; ++i) {
+                    for (int i = 1; i < activations.length - 1; ++i) {
                         activations[i] = extractActivation(hiddenActivation.getValue());
                     }
                     activations[activations.length - 1] = extractActivation(outputActivation.getValue());
@@ -248,6 +252,11 @@ public class NeuralNetworkUI {
                     } else {
                         //TODO: a sta tu
                     }
+                    chooseAlgorithm.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
+                            nn, data.getPrimaryStage()));
+                    changeParams.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
+                            nn, data.getPrimaryStage()));
+
                     changeArch.hide();
                 } catch (NumberFormatException nfe) {
                     invalidInput.setVisible(true);
@@ -301,6 +310,64 @@ public class NeuralNetworkUI {
                 return TanHActivation.getInstance();
             default:
                 return null;
+        }
+    }
+
+    private class GraphObserver implements IObserver<double[]> {
+        private INeuralNetwork nn;
+        private XYChart.Series<Integer, Double> series;
+        private long iteration;
+
+        public GraphObserver(INeuralNetwork nn) {
+            this.nn = nn instanceof ElmanNN ? new ElmanNN(nn.getArchitecture(), nn.getLayerActivations()) :
+                    new FeedForwardANN(nn.getArchitecture(), nn.getLayerActivations());
+        }
+
+        @Override
+        public void update(Solution<double[]> solution) {
+            ++GraphObserver.this.iteration;
+            if (iteration % 10 != 0) {
+                return;
+            }
+            Runnable plot = new Runnable() {
+                @Override
+                public void run() {
+                    if (GraphObserver.this.series == null) {
+                        GraphObserver.this.series = new XYChart.Series();
+                        GraphObserver.this.series.setName("Forecast");
+                        line.getData().add(GraphObserver.this.series);
+                    }
+                    double[] weights = solution.getRepresentative();
+                    nn.setWeights(weights);
+
+                    ObservableList<XYChart.Data<Integer, Double>> observableList = FXCollections.observableArrayList();
+                    for (int i = 0; i < dataset.size(); i++) {
+                        double[] forecast = nn.forward(dataset.get(i).getInput());
+                        observableList.add(new XYChart.Data<>(i + 1, forecast[0]));
+                        observableList.get(i).setNode(new DatasetValue.HoveredThresholdNode(
+                                observableList.get(i).getXValue(), observableList.get(i).getYValue()
+                        ));
+                    }
+                    GraphObserver.this.series.setData(observableList);
+                }
+            };
+            Platform.runLater(plot);
+
+
+        }
+    }
+
+    private class GraphRealVectorObserver implements IObserver<RealVector> {
+
+        IObserver<double[]> graphObserver;
+
+        private GraphRealVectorObserver(INeuralNetwork nn){
+            graphObserver = new GraphObserver(nn);
+        }
+
+        @Override
+        public void update(Solution<RealVector> solution) {
+            graphObserver.update(new Solution<>(solution.getRepresentative().toArray()));
         }
     }
 }

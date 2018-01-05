@@ -1,12 +1,19 @@
 package hr.fer.zemris.project.forecasting.gui;
 
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.IMetaheuristic;
+import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.ga.SimpleGA;
+import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.ga.SimpleOSGA;
+import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.pso.BasicPSO;
+import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.pso.Particle;
+import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.sa.ISimulatedAnnealing;
+import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.sa.SimpleSA;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.ElmanNN;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.FeedForwardANN;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.activations.*;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 import com.dosilovic.hermanzvonimir.ecfjava.util.RealVector;
+import hr.fer.zemris.project.forecasting.nn.Backpropagation;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -26,7 +33,9 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import static hr.fer.zemris.project.forecasting.gui.Data.*;
@@ -35,12 +44,11 @@ public class NeuralNetworkUI {
 
     private Data data;
     private int[] architecture;
-    private INeuralNetwork nn;
-    private IMetaheuristic<RealVector> metaheuristic;
+    private INeuralNetwork nn = new FeedForwardANN(3,2,1);
     private IActivation[] activations;
-    private List<DatasetEntry> dataset;
+    private List<DatasetEntry> dataset = new ArrayList<>();
     private ComboBox<String> chooseNetwork;
-    private HBox params;
+    private double trainPercentage = 0.9;
 
     public NeuralNetworkUI(Data data) {
         this.data = data;
@@ -67,12 +75,12 @@ public class NeuralNetworkUI {
         ComboBox<String> chooseAlgorithm = new ComboBox<>(FXCollections.observableArrayList(
                 "<none>", "Genetic", "OSGA", "SA", "DE", "PSO", "Backpropagation"));
         chooseAlgorithm.getSelectionModel().select(0);
-        chooseAlgorithm.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, nn, data.getPrimaryStage()));
-        //change algorithm parameters
+        chooseAlgorithm.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
+                nn, data.getPrimaryStage()));
         Button changeParams = new Button("Change parameters");
-        changeParams.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, nn, data.getPrimaryStage()));
+        changeParams.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
+                nn, data.getPrimaryStage()));
         HBox params = new HBox(chooseAlgorithm, changeParams);
-//        params.setDisable(true);
 
         //Immutable dataset
         TableView table = new TableView();
@@ -96,7 +104,25 @@ public class NeuralNetworkUI {
             Runnable runnable = new Runnable() {
                 @Override
                 public void run() {
-                    metaheuristic.run();
+                    IMetaheuristic metaheuristic = AlgorithmsGUI.metaheuristic;
+                    if(metaheuristic instanceof SimpleSA){
+                        RealVector metaheuristicRequirement = (RealVector) AlgorithmsGUI.metaheuristicRequirement;
+                        ((SimpleSA)metaheuristic).run(metaheuristicRequirement);
+                    }else if(metaheuristic instanceof BasicPSO) {
+                        Collection<Particle<RealVector>> metaheuristicRequirement = (Collection<Particle<RealVector>>) AlgorithmsGUI.metaheuristicRequirement;
+                        ((BasicPSO)metaheuristic).run(metaheuristicRequirement);
+                    }else if(metaheuristic instanceof Backpropagation) {
+                        ((Backpropagation)metaheuristic).run();
+                    }else if(metaheuristic instanceof SimpleOSGA){
+                        Collection<RealVector> metaheuristicRequirement = (Collection<RealVector>) AlgorithmsGUI.metaheuristicRequirement;
+                        ((SimpleOSGA)metaheuristic).run(metaheuristicRequirement);
+                    }else if(metaheuristic instanceof SimpleGA){
+                        Collection<RealVector> metaheuristicRequirement = (Collection<RealVector>) AlgorithmsGUI.metaheuristicRequirement;
+                        ((SimpleGA)metaheuristic).run(metaheuristicRequirement);
+                    }else {
+                        //invalid
+                        System.err.println("wrong metaheurstic");
+                    }
                     System.out.println("Gotovo!!");
                 }
             };
@@ -204,6 +230,8 @@ public class NeuralNetworkUI {
                         architecture[i] = Integer.parseInt(hiddens[i - 1]);
                     }
                     System.out.println(Arrays.toString(architecture));
+
+                    trainPercentage = dataSlider.getValue() / 100.;
 
                     activations = new IActivation[architecture.length];
                     activations[0] = extractActivation(inputActivation.getValue());

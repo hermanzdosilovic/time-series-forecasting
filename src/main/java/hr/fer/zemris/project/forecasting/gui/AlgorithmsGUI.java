@@ -46,17 +46,19 @@ import java.util.List;
 public abstract class AlgorithmsGUI {
 
     public static IMetaheuristic metaheuristic;
+    public static Object metaheuristicRequirement;
 
     //TODO dodati DE i backPropagation
     public static EventHandler<ActionEvent> chooseAlgorithmAction(ComboBox<String> comboBox, List<DatasetEntry> dataset,
-                                                                  INeuralNetwork neuralNetwork, Stage primaryStage) {
+                                                                  double trainPercentage, INeuralNetwork neuralNetwork,
+                                                                  Stage primaryStage) {
         return e -> {
             if (comboBox.getValue().equals("Genetic")) genetic(dataset, neuralNetwork, primaryStage);
             else if (comboBox.getValue().equals("OSGA")) OSGA(dataset, neuralNetwork, primaryStage);
             else if (comboBox.getValue().equals("SA")) SA(dataset, neuralNetwork, primaryStage);
             else if ((comboBox.getValue().equals("PSO"))) PSO(dataset, neuralNetwork, primaryStage);
             else if ((comboBox.getValue().equals("Backpropagation")))
-                backpropagation(dataset, neuralNetwork, primaryStage);
+                backpropagation(dataset, trainPercentage, neuralNetwork, primaryStage);
         };
     }
 
@@ -89,6 +91,12 @@ public abstract class AlgorithmsGUI {
 
         Label precision = new Label("Desired precision:");
         TextField desiredPrecision = new TextField();
+
+        Label minComp = new Label("Min component value:");
+        TextField minCompValue = new TextField();
+
+        Label maxComp = new Label("Max component value:");
+        TextField maxCompValue = new TextField();
 
         CheckBox useElitism = new CheckBox("Use elitism?");
         CheckBox allowRepeat = new CheckBox("Allow repeat?");
@@ -125,6 +133,11 @@ public abstract class AlgorithmsGUI {
         grid.add(precision, 2, 3);
         grid.add(desiredPrecision, 3, 3);
 
+        grid.add(minComp, 0, 4);
+        grid.add(minCompValue, 1, 4);
+        grid.add(maxComp, 2, 4);
+        grid.add(maxCompValue, 3, 4);
+
         HBox invalidBox = new HBox(invalidInput);
         invalidBox.setAlignment(Pos.CENTER);
 
@@ -135,9 +148,9 @@ public abstract class AlgorithmsGUI {
         boxes.setSpacing(10);
         boxes.setAlignment(Pos.CENTER);
 
-        grid.add(boxes, 0, 4, 4, 1);
-        grid.add(invalidBox, 0, 5, 4, 1);
-        grid.add(okBox, 0, 6, 4, 1);
+        grid.add(boxes, 0, 5, 4, 1);
+        grid.add(invalidBox, 0, 6, 4, 1);
+        grid.add(okBox, 0, 7, 4, 1);
 
         Scene scene = new Scene(grid);
         geneticStage.setScene(scene);
@@ -147,7 +160,7 @@ public abstract class AlgorithmsGUI {
             @Override
             public void handle(ActionEvent event) {
                 try {
-                    long populationSize = Long.parseLong(population.getText());
+                    int populationSize = Integer.parseInt(population.getText());
                     int generationSize = Integer.parseInt(generations.getText());
                     int tournamentSize = Integer.parseInt(tournament.getText());
                     double alpha = Double.parseDouble(a.getText());
@@ -158,7 +171,8 @@ public abstract class AlgorithmsGUI {
                     boolean repeat = allowRepeat.isSelected();
                     double desiredFittnes = Double.parseDouble(desiredFitness.getText());
                     double desiredPrec = Double.parseDouble(desiredFitness.getText());
-
+                    double minComponentValue = Double.parseDouble(minCompValue.getText());
+                    double maxComponentValue = Double.parseDouble(maxCompValue.getText());
                     IProblem<RealVector> problem = new FunctionMinimizationProblem<>(new MSEFunction<>(neuralNetwork, dataset));
                     ISelection<RealVector> selection = new TournamentSelection<>(
                             tournamentSize,
@@ -172,8 +186,16 @@ public abstract class AlgorithmsGUI {
                     );
                     SimpleGA<RealVector> simpleGA = new SimpleGA<>(elitism, generationSize, desiredFittnes, desiredPrec, problem, selection, crossover, mutation);
                     metaheuristic = simpleGA;
+                    metaheuristicRequirement = RealVector.createCollection(
+                            populationSize,
+                            neuralNetwork.getNumberOfWeights(),
+                            minComponentValue,
+                            maxComponentValue
+                    );
+
                     geneticStage.hide();
                 } catch (RuntimeException ex) {
+                    ex.printStackTrace();
                     invalidInput.setVisible(true);
                 }
                 event.consume();
@@ -226,6 +248,13 @@ public abstract class AlgorithmsGUI {
         Label precision = new Label("Desired precision:");
         TextField desiredPrecision = new TextField();
 
+        Label minComp = new Label("Min component value:");
+        TextField minCompValue = new TextField();
+
+        Label maxComp = new Label("Max component value:");
+        TextField maxCompValue = new TextField();
+
+
         CheckBox useElitism = new CheckBox("Use elitism?");
         CheckBox allowRepeat = new CheckBox("Allow repeat?");
         CheckBox forceMutation = new CheckBox("Force mutation?");
@@ -273,6 +302,11 @@ public abstract class AlgorithmsGUI {
 
         grid.add(precision, 0, 6);
         grid.add(desiredPrecision, 1, 6);
+        grid.add(minComp, 2, 6);
+        grid.add(minCompValue, 3, 6);
+
+        grid.add(maxComp, 1, 7);
+        grid.add(maxCompValue, 2, 7);
 
         HBox invalidBox = new HBox(invalidInput);
         invalidBox.setAlignment(Pos.CENTER);
@@ -284,9 +318,9 @@ public abstract class AlgorithmsGUI {
         boxes.setSpacing(10);
         boxes.setAlignment(Pos.CENTER);
 
-        grid.add(boxes, 0, 7, 4, 1);
-        grid.add(invalidBox, 0, 8, 4, 1);
-        grid.add(okBox, 0, 9, 4, 1);
+        grid.add(boxes, 0, 8, 4, 1);
+        grid.add(invalidBox, 0, 9, 4, 1);
+        grid.add(okBox, 0, 10, 4, 1);
 
         Scene scene = new Scene(grid);
         OSGAStage.setScene(scene);
@@ -296,7 +330,7 @@ public abstract class AlgorithmsGUI {
             @Override
             public void handle(ActionEvent event) {
                 try {
-                    long populationSize = Long.parseLong(population.getText());
+                    int populationSize = Integer.parseInt(population.getText());
                     int generationSize = Integer.parseInt(generations.getText());
                     int tournamentSize = Integer.parseInt(tournament.getText());
                     double alpha = Double.parseDouble(a.getText());
@@ -312,6 +346,8 @@ public abstract class AlgorithmsGUI {
                     boolean doRepeat = allowRepeat.isSelected();
                     double desiredFittnes = Double.parseDouble(desiredFitness.getText());
                     double desiredPrec = Double.parseDouble(desiredFitness.getText());
+                    double minComponentValue = Double.parseDouble(minCompValue.getText());
+                    double maxComponentValue = Double.parseDouble(maxCompValue.getText());
 
                     IFunction<RealVector> function = new MSEFunction<>(neuralNetwork, dataset);
                     IProblem<RealVector> problem = new FunctionMinimizationProblem<>(function);
@@ -350,8 +386,16 @@ public abstract class AlgorithmsGUI {
                     );
 
                     metaheuristic = geneticAlgorithm;
+                    metaheuristicRequirement = RealVector.createCollection(
+                            populationSize,
+                            neuralNetwork.getNumberOfWeights(),
+                            minComponentValue,
+                            maxComponentValue
+                    );
+
                     OSGAStage.hide();
                 } catch (RuntimeException ex) {
+                    ex.printStackTrace();
                     invalidInput.setVisible(true);
                 }
             }
@@ -394,6 +438,12 @@ public abstract class AlgorithmsGUI {
         Label precision = new Label("Desired precision:");
         TextField desiredPrecision = new TextField();
 
+        Label minComp = new Label("Min component value:");
+        TextField minCompValue = new TextField();
+
+        Label maxComp = new Label("Max component value:");
+        TextField maxCompValue = new TextField();
+
         CheckBox forceMutation = new CheckBox("Force mutation?");
 
         Label invalidInput = new Label("Invalid input.");
@@ -432,6 +482,11 @@ public abstract class AlgorithmsGUI {
         grid.add(precision, 2, 4);
         grid.add(desiredPrecision, 3, 4);
 
+        grid.add(minComp, 0, 5);
+        grid.add(minCompValue, 1, 5);
+        grid.add(maxComp, 2, 5);
+        grid.add(maxCompValue, 3, 5);
+
         HBox invalidBox = new HBox(invalidInput);
         invalidBox.setAlignment(Pos.CENTER);
 
@@ -441,9 +496,9 @@ public abstract class AlgorithmsGUI {
         HBox forceMutBox = new HBox(forceMutation);
         forceMutBox.setAlignment(Pos.CENTER);
 
-        grid.add(forceMutBox, 0, 5, 4, 1);
-        grid.add(invalidBox, 0, 6, 4, 1);
-        grid.add(okBox, 0, 7, 4, 1);
+        grid.add(forceMutBox, 0, 6, 4, 1);
+        grid.add(invalidBox, 0, 7, 4, 1);
+        grid.add(okBox, 0, 8, 4, 1);
 
         Scene scene = new Scene(grid);
         SAStage.setScene(scene);
@@ -464,6 +519,8 @@ public abstract class AlgorithmsGUI {
                     boolean forceMutations = forceMutation.isSelected();
                     double desiredFittnes = Double.parseDouble(desiredFitness.getText());
                     double desiredPrec = Double.parseDouble(desiredFitness.getText());
+                    double minComponentValue = Double.parseDouble(minCompValue.getText());
+                    double maxComponentValue = Double.parseDouble(maxCompValue.getText());
 
                     IFunction<RealVector> function = new MSEFunction<>(neuralNetwork, dataset);
                     IProblem<RealVector> problem = new FunctionMinimizationProblem<>(function);
@@ -487,8 +544,14 @@ public abstract class AlgorithmsGUI {
                             innerCoolingSchedule
                     );
                     metaheuristic = simulatedAnnealing;
+                    metaheuristicRequirement = new RealVector(
+                            neuralNetwork.getNumberOfWeights(),
+                            minComponentValue,
+                            maxComponentValue
+                    );
                     SAStage.hide();
                 } catch (RuntimeException ex) {
+                    ex.printStackTrace();
                     invalidInput.setVisible(true);
                 }
             }
@@ -609,7 +672,7 @@ public abstract class AlgorithmsGUI {
                                 new RealVector(neuralNetwork.getNumberOfWeights(), minSpeed, maxSpeed)
                         ));
                     }
-                    IParticleSwarmOptimization<RealVector> particleSwarmOptimization = new BasicPSO<RealVector>(
+                    IParticleSwarmOptimization<RealVector> particleSwarmOptimization = new BasicPSO<>(
                             maxIter,
                             desiredFittnes,
                             desiredPrec,
@@ -625,8 +688,10 @@ public abstract class AlgorithmsGUI {
                     );
 
                     metaheuristic = particleSwarmOptimization;
+                    metaheuristicRequirement = initialParticles;
                     PSOStage.hide();
                 } catch (RuntimeException ex) {
+                    ex.printStackTrace();
                     invalidInput.setText("Invalid input");
                 }
             }
@@ -634,7 +699,7 @@ public abstract class AlgorithmsGUI {
         ok.setOnAction(buttonHandler);
     }
 
-    private static void backpropagation(List<DatasetEntry> dataset, INeuralNetwork neuralNetwork,
+    private static void backpropagation(List<DatasetEntry> dataset, double trainPercentage, INeuralNetwork neuralNetwork,
                                         Stage primaryStage) {
         Stage BPStage = new Stage();
         BPStage.initOwner(primaryStage);
@@ -679,8 +744,8 @@ public abstract class AlgorithmsGUI {
         grid.add(desiredErr, 2, 1);
         grid.add(desiredError, 3, 1);
 
-        grid.add(precision, 0, 2);
-        grid.add(desiredPrecision, 1, 2);
+        grid.add(precision, 1, 2);
+        grid.add(desiredPrecision, 2, 2);
 
         HBox invalidBox = new HBox(invalidInput);
         invalidBox.setAlignment(Pos.CENTER);
@@ -700,15 +765,18 @@ public abstract class AlgorithmsGUI {
             public void handle(ActionEvent event) {
                 try {
                     long maxIter = Long.parseLong(iteration.getText());
-                    double learningRate = Double.parseDouble(learning.getText());
+                    double learningRt = Double.parseDouble(learningRate.getText());
                     double desiredErr = Double.parseDouble(desiredError.getText());
                     double desiredPrec = Double.parseDouble(desiredPrecision.getText());
                     int batch = Integer.parseInt(batchSize.getText());
-
-                    Backpropagation bp = new Backpropagation(null, null, learningRate, maxIter, desiredErr, desiredPrec, neuralNetwork, batch);
+                    int index = (int) Math.ceil(dataset.size() * trainPercentage);
+                    Backpropagation bp = new Backpropagation(dataset.subList(0, index),
+                            dataset.subList(index, dataset.size()), learningRt, maxIter,
+                            desiredErr, desiredPrec, neuralNetwork, batch);
                     metaheuristic = bp;
                     BPStage.hide();
                 } catch (RuntimeException ex) {
+                    ex.printStackTrace();
                     invalidInput.setVisible(true);
                 }
             }

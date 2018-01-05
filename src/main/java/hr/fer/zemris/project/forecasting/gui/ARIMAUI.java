@@ -127,6 +127,7 @@ public class ARIMAUI {
         //TODO promijeniti seriju koju se dobije s novim datasetom
         start.setOnAction(
                 event -> {
+                    if(ar.getValue() == 0 && ma.getValue() == 0) return;
                     new Thread(() -> {
                             arima = new ARIMA((int) ar.getValue(), (int) ma.getValue(),
                                     DatasetValue.getDoubleList(data.getDatasetValues()));
@@ -236,7 +237,7 @@ public class ARIMAUI {
                             predictStage.hide();
                         });
                     }).run();
-                }catch(IllegalArgumentException iae){
+                }catch(Exception e1){
                     invalidInput.setVisible(true);
                 }
             });

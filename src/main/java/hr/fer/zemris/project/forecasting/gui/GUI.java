@@ -1,6 +1,8 @@
 package hr.fer.zemris.project.forecasting.gui;
 
 import javafx.application.Application;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -26,6 +28,7 @@ public class GUI extends Application {
         ARIMAUI arimaTab = new ARIMAUI(dataTab);
         arimaTab.createUI(arimaContent);
         arima.setContent(arimaContent);
+        arima.setDisable(true);
 
         Tab neuralNetwork = new Tab("ANN");
         neuralNetwork.setClosable(false);
@@ -33,9 +36,27 @@ public class GUI extends Application {
         NeuralNetworkUI neuralNetworkTab = new NeuralNetworkUI(dataTab);
         neuralNetworkTab.createUI(neuralContent);
         neuralNetwork.setContent(neuralContent);
+        neuralNetwork.setDisable(true);
 
         Tab geneticProgramming = new Tab("GP");
         geneticProgramming.setClosable(false);
+        geneticProgramming.setDisable(true);
+
+        ObservableList dataset = dataTab.getDatasetValues();
+        dataset.addListener((ListChangeListener) c -> {
+            while(c.next()){
+                if(dataset.size() == 0){
+                    arima.setDisable(true);
+                    neuralNetwork.setDisable(true);
+                    geneticProgramming.setDisable(true);
+                }
+                else{
+                    arima.setDisable(false);
+                    neuralNetwork.setDisable(false);
+                    geneticProgramming.setDisable(false);
+                }
+            }
+        });
 
         TabPane tabs = new TabPane(data, arima, neuralNetwork, geneticProgramming);
         Scene mainScene = new Scene(tabs);

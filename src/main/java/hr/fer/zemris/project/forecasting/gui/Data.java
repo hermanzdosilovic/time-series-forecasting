@@ -36,7 +36,6 @@ import java.util.Collections;
 
 public class Data{
    //TODO popraviti klikanje na hover
-   //TODO napraviti dataset editabilnim
     private ObservableList<DatasetValue> datasetValues;
     private XYChart.Series series;
     private Stage primaryStage;
@@ -132,7 +131,6 @@ public class Data{
 
        //line chart
        LineChart line = lineChart(series, "Data");
-       updateSeriesOnListChangeListener(datasetValues, series);
 
        grid.add(line, 1, 0, 3, 3);
 
@@ -201,7 +199,6 @@ public class Data{
       return lineChart;
    }
 
-   //TODO debugat tako da nema problema s brisanjem i pisanjem
    public static void updateSeriesOnListChangeListener(ObservableList<DatasetValue> datasetValues,
                                                        XYChart.Series<Integer, Double> series){
       datasetValues.addListener((ListChangeListener<DatasetValue>) c -> {
@@ -219,12 +216,26 @@ public class Data{
                   XYChart.Data<Integer, Double> nextAddition = new XYChart.Data<>(i, datasetValues.get(i).getValue());
                   nextAddition.setNode(new DatasetValue.HoveredThresholdNode(
                           nextAddition.getXValue(), nextAddition.getYValue()));
-                  if(i < series.getData().size()) series.getData().add(i, nextAddition);
+                  if(i < series.getData().size()) {
+                     series.getData().add(i, nextAddition);
+                     for (int j = i + 1; j < series.getData().size(); j++) {
+                        XYChart.Data<Integer, Double> after = new XYChart.Data<>(j, datasetValues.get(j).getValue());
+                        after.setNode(new DatasetValue.HoveredThresholdNode(
+                                after.getXValue(), after.getYValue()));
+                        series.getData().set(j, after);
+                     }
+                  }
                   else series.getData().add(nextAddition);
                }
             }
             else if(c.wasRemoved()){
                series.getData().remove(c.getFrom());
+               for(int j = c.getFrom(); j < series.getData().size(); j++){
+                  XYChart.Data<Integer, Double> after = new XYChart.Data<>(j, datasetValues.get(j).getValue());
+                  after.setNode(new DatasetValue.HoveredThresholdNode(
+                          after.getXValue(), after.getYValue()));
+                  series.getData().set(j, after);
+               }
             }
          }
       });

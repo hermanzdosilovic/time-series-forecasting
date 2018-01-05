@@ -5,7 +5,6 @@ import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.ga.SimpleGA;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.ga.SimpleOSGA;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.pso.BasicPSO;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.pso.Particle;
-import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.sa.ISimulatedAnnealing;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.sa.SimpleSA;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.ElmanNN;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.FeedForwardANN;
@@ -33,7 +32,6 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -48,6 +46,8 @@ public class NeuralNetworkUI {
     private IActivation[] activations;
     private List<DatasetEntry> dataset;
     private ComboBox<String> chooseNetwork;
+    private ComboBox<String> chooseAlgorithm;
+    private Button changeParams;
     private double trainPercentage;
 
     public NeuralNetworkUI(Data data) {
@@ -72,14 +72,14 @@ public class NeuralNetworkUI {
         HBox neural = new HBox(chooseNetwork, changeArch);
 
         //choose algorithm
-        ComboBox<String> chooseAlgorithm = new ComboBox<>(FXCollections.observableArrayList(
+        chooseAlgorithm = new ComboBox<>(FXCollections.observableArrayList(
                 "<none>", "Genetic", "OSGA", "SA", "DE", "PSO", "Backpropagation"));
         chooseAlgorithm.getSelectionModel().select(0);
-        chooseAlgorithm.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
-                nn, data.getPrimaryStage()));
-        Button changeParams = new Button("Change parameters");
-        changeParams.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
-                nn, data.getPrimaryStage()));
+//        chooseAlgorithm.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
+//                nn, data.getPrimaryStage()));
+        changeParams = new Button("Change parameters");
+//        changeParams.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
+//                nn, data.getPrimaryStage()));
         HBox params = new HBox(chooseAlgorithm, changeParams);
 
         //Immutable dataset
@@ -105,22 +105,21 @@ public class NeuralNetworkUI {
                 @Override
                 public void run() {
                     IMetaheuristic metaheuristic = AlgorithmsGUI.metaheuristic;
-                    if(metaheuristic instanceof SimpleSA){
+                    if (metaheuristic instanceof SimpleSA) {
                         RealVector metaheuristicRequirement = (RealVector) AlgorithmsGUI.metaheuristicRequirement;
-                        ((SimpleSA)metaheuristic).run(metaheuristicRequirement);
-                    }else if(metaheuristic instanceof BasicPSO) {
+                        ((SimpleSA) metaheuristic).run(metaheuristicRequirement);
+                    } else if (metaheuristic instanceof BasicPSO) {
                         Collection<Particle<RealVector>> metaheuristicRequirement = (Collection<Particle<RealVector>>) AlgorithmsGUI.metaheuristicRequirement;
-                        ((BasicPSO)metaheuristic).run(metaheuristicRequirement);
-                    }else if(metaheuristic instanceof Backpropagation) {
-                        ((Backpropagation)metaheuristic).run();
-                    }else if(metaheuristic instanceof SimpleOSGA){
+                        ((BasicPSO) metaheuristic).run(metaheuristicRequirement);
+                    } else if (metaheuristic instanceof Backpropagation) {
+                        ((Backpropagation) metaheuristic).run();
+                    } else if (metaheuristic instanceof SimpleOSGA) {
                         Collection<RealVector> metaheuristicRequirement = (Collection<RealVector>) AlgorithmsGUI.metaheuristicRequirement;
-                        ((SimpleOSGA)metaheuristic).run(metaheuristicRequirement);
-                    }else if(metaheuristic instanceof SimpleGA){
+                        ((SimpleOSGA) metaheuristic).run(metaheuristicRequirement);
+                    } else if (metaheuristic instanceof SimpleGA) {
                         Collection<RealVector> metaheuristicRequirement = (Collection<RealVector>) AlgorithmsGUI.metaheuristicRequirement;
-                        ((SimpleGA)metaheuristic).run(metaheuristicRequirement);
-                    }else {
-                        //invalid
+                        ((SimpleGA) metaheuristic).run(metaheuristicRequirement);
+                    } else {
                         System.err.println("wrong metaheurstic");
                     }
                     System.out.println("Gotovo!!");
@@ -235,7 +234,7 @@ public class NeuralNetworkUI {
 
                     activations = new IActivation[architecture.length];
                     activations[0] = extractActivation(inputActivation.getValue());
-                    for (int i = 1; i < activations.length - 2; ++i) {
+                    for (int i = 1; i < activations.length - 1; ++i) {
                         activations[i] = extractActivation(hiddenActivation.getValue());
                     }
                     activations[activations.length - 1] = extractActivation(outputActivation.getValue());
@@ -248,6 +247,11 @@ public class NeuralNetworkUI {
                     } else {
                         //TODO: a sta tu
                     }
+                    chooseAlgorithm.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
+                            nn, data.getPrimaryStage()));
+                    changeParams.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
+                            nn, data.getPrimaryStage()));
+
                     changeArch.hide();
                 } catch (NumberFormatException nfe) {
                     invalidInput.setVisible(true);

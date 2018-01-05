@@ -160,8 +160,8 @@ public class NeuralNetworkUI {
                 changeParams.setDisable(true);
             }
         });
-        chooseAlgorithm.setDisable(true);
-        changeParams.setDisable(true);
+//        chooseAlgorithm.setDisable(true);
+//        changeParams.setDisable(true);
 
         //Button predict
         Button predict = new Button("Predict future values");

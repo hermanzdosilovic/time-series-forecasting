@@ -51,8 +51,13 @@ public class ARIMAUI {
         grid.setPadding(new Insets(30, 30, 30, 30));
 
         //AR slider
+        Label arOrder = new Label("AR order");
         Slider ar = new Slider(0, MAX_ORDER, 0);
-        grid.add(ar, 0, 0);
+
+        VBox arBox = new VBox(arOrder, ar);
+        arBox.setSpacing(10);
+
+        grid.add(arBox, 0, 0);
         ar.setShowTickMarks(true);
         ar.setShowTickLabels(true);
         ar.setMajorTickUnit(1);
@@ -61,8 +66,13 @@ public class ARIMAUI {
 
 
         //MA slider
+        Label maOrder = new Label("MA order");
         Slider ma = new Slider(0, MAX_ORDER, 0);
-        grid.add(ma, 0, 1);
+
+        VBox maBox = new VBox(maOrder, ma);
+        maBox.setSpacing(10);
+
+        grid.add(maBox, 0, 1);
         ma.setShowTickMarks(true);
         ma.setShowTickLabels(true);
         ma.setMajorTickUnit(1);
@@ -116,6 +126,7 @@ public class ARIMAUI {
         start.setDisable(true);
         enableButtonWhenDatasetExistsListener(data.getDatasetValues(), start);
         allowOneSeriesUponDatasetChangeListener(data.getDatasetValues(), line);
+        start.setTooltip(new Tooltip("If both AR order and MA order are zero, this button does nothing."));
 
         //predict button
         Button predict = new Button("Predict future values");
@@ -150,15 +161,6 @@ public class ARIMAUI {
                                     });
                                 }
                             }
-//
-//                            ObservableList<DatasetValue> sim = FXCollections.observableArrayList
-//                                    (DatasetValue.encapsulateDoubleArray(arima.testDataset()));
-//                            Platform.runLater(() ->{
-//                                XYChart.Series<Integer, Double> simSeries = new XYChart.Series();
-//                                simSeries.setName("ARIMA produced");
-//                                simSeries.setData(getChartData(sim));
-//                                line.getData().add(simSeries);
-//                            });
 
                         predict.setDisable(false);
                     }).run();

@@ -107,15 +107,18 @@ public class NeuralNetworkUI {
                     IMetaheuristic metaheuristic = AlgorithmsGUI.metaheuristic;
                     if (metaheuristic instanceof SimpleSA) {
                         RealVector metaheuristicRequirement = (RealVector) AlgorithmsGUI.metaheuristicRequirement;
+                        ((SimpleSA) metaheuristic).attachObserver(new GraphRealVectorObserver(nn));
                         ((SimpleSA) metaheuristic).run(metaheuristicRequirement);
                     } else if (metaheuristic instanceof BasicPSO) {
                         Collection<Particle<RealVector>> metaheuristicRequirement = (Collection<Particle<RealVector>>) AlgorithmsGUI.metaheuristicRequirement;
+                        ((BasicPSO) metaheuristic).attachObserver(new GraphRealVectorObserver(nn));
                         ((BasicPSO) metaheuristic).run(metaheuristicRequirement);
                     } else if (metaheuristic instanceof Backpropagation) {
                         ((Backpropagation) metaheuristic).attachObserver(new GraphObserver(nn));
                         ((Backpropagation) metaheuristic).run();
                     } else if (metaheuristic instanceof SimpleOSGA) {
                         Collection<RealVector> metaheuristicRequirement = (Collection<RealVector>) AlgorithmsGUI.metaheuristicRequirement;
+                        ((SimpleOSGA) metaheuristic).attachObserver(new GraphRealVectorObserver(nn));
                         ((SimpleOSGA) metaheuristic).run(metaheuristicRequirement);
                     } else if (metaheuristic instanceof SimpleGA) {
                         Collection<RealVector> metaheuristicRequirement = (Collection<RealVector>) AlgorithmsGUI.metaheuristicRequirement;

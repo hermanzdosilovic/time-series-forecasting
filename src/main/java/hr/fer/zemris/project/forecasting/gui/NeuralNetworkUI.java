@@ -84,7 +84,6 @@ public class NeuralNetworkUI {
         chooseAlgorithm = new ComboBox<>(FXCollections.observableArrayList(
                 "<none>", "Genetic", "OSGA", "SA", "DE", "PSO", "Backpropagation"));
         chooseAlgorithm.getSelectionModel().select(0);
-
         changeParams = new Button("Change parameters");
         HBox params = new HBox(chooseAlgorithm, changeParams);
 
@@ -147,6 +146,11 @@ public class NeuralNetworkUI {
         });
 
         neuralNetwork.addListener((t, u, v) -> {
+            dataset = DatasetValue.getTrainingData(data.getDatasetValues(),neuralNetwork.get().getInputSize(),neuralNetwork.get().getOutputSize());
+            chooseAlgorithm.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
+                    neuralNetwork.get(), data.getPrimaryStage()));
+            changeParams.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
+                    neuralNetwork.get(), data.getPrimaryStage()));
             if (v != null) {
                 if (v instanceof ElmanNN) {
                     chooseAlgorithm = new ComboBox<>(FXCollections.observableArrayList(
@@ -156,6 +160,7 @@ public class NeuralNetworkUI {
                             "<none>", "Genetic", "OSGA", "SA", "DE", "PSO", "Backpropagation"));
                 }
                 chooseAlgorithm.getSelectionModel().select(0);
+
 //                chooseAlgorithm.setDisable(false);
 //                changeParams.setDisable(false);
             } else {
@@ -168,6 +173,7 @@ public class NeuralNetworkUI {
 
         //Button predict
         Button predict = new Button("Predict future values");
+        predict.setOnAction(predictAction());
 
         VBox rightSide = new VBox();
 
@@ -286,10 +292,10 @@ public class NeuralNetworkUI {
                     } else {
                         //TODO: a sta tu
                     }
-                    chooseAlgorithm.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
-                            neuralNetwork.get(), data.getPrimaryStage()));
-                    changeParams.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
-                            neuralNetwork.get(), data.getPrimaryStage()));
+//                    chooseAlgorithm.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
+//                            neuralNetwork.get(), data.getPrimaryStage()));
+//                    changeParams.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
+//                            neuralNetwork.get(), data.getPrimaryStage()));
 
                     changeArch.hide();
                 } catch (NumberFormatException nfe) {
@@ -444,7 +450,7 @@ public class NeuralNetworkUI {
                         for (int i = 0; i < predictions.length-nnInputSize; ++i) {
                             double[] input = Arrays.copyOfRange(predictions,i,i+nnInputSize);
                              double[] expected = neuralNetwork.get().forward(input);
-                            predictions[i+nnInputSize+1] = expected[0];
+                            predictions[i+nnInputSize] = expected[0];
                         }
 //                        double[] predictions = arima.computeNextValues(howManyPredictions);
                         ObservableList<DatasetValue> observableList = FXCollections.observableList(

@@ -44,11 +44,11 @@ public class NeuralNetworkUI {
 
     private Data data;
     private int[] architecture;
-    private INeuralNetwork nn = new FeedForwardANN(3,2,1);
+    private INeuralNetwork nn;
     private IActivation[] activations;
-    private List<DatasetEntry> dataset = new ArrayList<>();
+    private List<DatasetEntry> dataset;
     private ComboBox<String> chooseNetwork;
-    private double trainPercentage = 0.9;
+    private double trainPercentage;
 
     public NeuralNetworkUI(Data data) {
         this.data = data;

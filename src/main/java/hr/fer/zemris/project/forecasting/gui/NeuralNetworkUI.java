@@ -242,7 +242,7 @@ public class NeuralNetworkUI {
                     "Sigmoid", "Binary Step", "Identity", "ReLU", "TanH"));
             inputActivation.getSelectionModel().select(0);
 
-            Label hiddenLayers = new Label("Hidden layers:");
+            Label hiddenLayers = new Label("Hidden layers(splited by comma):");
             TextField hidden = new TextField();
             hidden.setTooltip(new Tooltip("Split number of nodes for each hidden layer with a comma"));
             Label hiddenLayerActivation = new Label("Hidden layers activations:");

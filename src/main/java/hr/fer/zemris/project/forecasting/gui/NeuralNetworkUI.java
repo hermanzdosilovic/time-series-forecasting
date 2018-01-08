@@ -64,6 +64,7 @@ public class NeuralNetworkUI {
     private volatile AtomicBoolean stopTraining = new AtomicBoolean(false);
     private Button predict;
     private Button stop;
+    private Thread calculationThread;
 
     public NeuralNetworkUI(Data data) {
         this.data = data;
@@ -114,7 +115,7 @@ public class NeuralNetworkUI {
         predict.setDisable(true);
 
         stop = new Button("Stop training");
-        stop.setOnAction(a -> stopTraining.set(true));
+        stop.setOnAction(a -> calculationThread.interrupt());
         stop.setDisable(true);
         //start button
         Button start = new Button("Start training");
@@ -163,8 +164,8 @@ public class NeuralNetworkUI {
                     });
                 }
             };
-            new Thread(runnable).start();
-
+            calculationThread = new Thread(runnable);
+            calculationThread.start();
         });
 
         neuralNetwork.addListener((t, u, v) -> {
@@ -215,7 +216,7 @@ public class NeuralNetworkUI {
         rightSideGrid.add(start, 1, 0);
         rightSideGrid.add(predict, 1, 1);
         rightSideGrid.add(stop, 1, 2);
-        rightSideGrid.add(mseChart, 2, 0, 2, 3);
+        rightSideGrid.add(mseChart, 2, 0, 2, 4);
 
         rightSide.getChildren().add(rightSideGrid);
 
@@ -427,7 +428,7 @@ public class NeuralNetworkUI {
                     NeuralNetworkUI.this.series.setData(observableList);
                     msError += mse / dataset.size();
                     if (iteration % 100 == 0)
-                        mseObservableList.add(new XYChart.Data<>((int) iteration/100, msError));
+                        mseObservableList.add(new XYChart.Data<>((int) iteration / 100, msError));
                 }
             };
             Platform.runLater(plot);

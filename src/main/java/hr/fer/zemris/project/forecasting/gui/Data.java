@@ -202,8 +202,6 @@ public class Data{
    public static LineChart<Number, Number> mseLineChart(String lineChartName){
       final NumberAxis xAxis = new NumberAxis();
       final NumberAxis yAxis = new NumberAxis();
-      xAxis.setLabel("Sample Number");
-      yAxis.setLabel("Sample Value");
       final LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
       lineChart.setTitle(lineChartName);
       lineChart.setCreateSymbols(true);

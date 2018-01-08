@@ -171,29 +171,26 @@ public class NeuralNetworkUI {
         neuralNetwork.addListener((t, u, v) -> {
             stopTraining.set(false);
             dataset = DatasetValue.getTrainingData(data.getDatasetValues(), neuralNetwork.get().getInputSize(), neuralNetwork.get().getOutputSize());
+            if (v != null) {
+                if (v instanceof ElmanNN) {
+                    chooseAlgorithm.setItems(FXCollections.observableArrayList(
+                            "<none>", "Genetic", "OSGA", "SA", "DE", "PSO"));
+                } else {
+                    chooseAlgorithm.setItems(FXCollections.observableArrayList(
+                            "<none>", "Genetic", "OSGA", "SA", "DE", "PSO", "Backpropagation"));
+                }
+                chooseAlgorithm.getSelectionModel().select(0);
+                chooseAlgorithm.setDisable(false);
+                changeParams.setDisable(false);
+            }
             chooseAlgorithm.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
                     neuralNetwork.get(), data.getPrimaryStage()));
             changeParams.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
                     neuralNetwork.get(), data.getPrimaryStage()));
-            if (v != null) {
-                if (v instanceof ElmanNN) {
-                    chooseAlgorithm = new ComboBox<>(FXCollections.observableArrayList(
-                            "<none>", "Genetic", "OSGA", "SA", "DE", "PSO"));
-                } else {
-                    chooseAlgorithm = new ComboBox<>(FXCollections.observableArrayList(
-                            "<none>", "Genetic", "OSGA", "SA", "DE", "PSO", "Backpropagation"));
-                }
-                chooseAlgorithm.getSelectionModel().select(0);
-
-//                chooseAlgorithm.setDisable(false);
-//                changeParams.setDisable(false);
-            } else {
-//                chooseAlgorithm.setDisable(true);
-//                changeParams.setDisable(true);
-            }
         });
-//        chooseAlgorithm.setDisable(true);
-//        changeParams.setDisable(true);
+
+        chooseAlgorithm.setDisable(true);
+        changeParams.setDisable(true);
 
         //Button predict
 

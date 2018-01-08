@@ -199,6 +199,19 @@ public class Data{
       return lineChart;
    }
 
+   public static LineChart<Number, Number> mseLineChart(String lineChartName){
+      final NumberAxis xAxis = new NumberAxis();
+      final NumberAxis yAxis = new NumberAxis();
+      xAxis.setLabel("Sample Number");
+      yAxis.setLabel("Sample Value");
+      final LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
+      lineChart.setTitle(lineChartName);
+      lineChart.setCreateSymbols(true);
+      lineChart.setMaxSize(GraphUtil.MSE_DEFAULT_WIDTH, GraphUtil.MSE_DEFAULT_HEIGHT);
+      lineChart.setAnimated(false);
+      return lineChart;
+   }
+
    public static void updateSeriesOnListChangeListener(ObservableList<DatasetValue> datasetValues,
                                                        XYChart.Series<Integer, Double> series){
       datasetValues.addListener((ListChangeListener<DatasetValue>) c -> {

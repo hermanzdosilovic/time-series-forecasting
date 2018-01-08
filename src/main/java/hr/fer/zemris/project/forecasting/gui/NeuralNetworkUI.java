@@ -41,6 +41,7 @@ import javafx.stage.Stage;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static hr.fer.zemris.project.forecasting.gui.Data.*;
 import static hr.fer.zemris.project.forecasting.gui.DatasetValue.getChartData;
@@ -57,7 +58,12 @@ public class NeuralNetworkUI {
     private Button changeParams;
     private double trainPercentage;
     private LineChart line;
+    private LineChart mseChart;
     private XYChart.Series<Integer, Double> series;
+    private XYChart.Series<Integer, Double> mseSeries;
+    private volatile AtomicBoolean stopTraining = new AtomicBoolean(false);
+    private Button predict;
+    private Button stop;
 
     public NeuralNetworkUI(Data data) {
         this.data = data;
@@ -103,12 +109,23 @@ public class NeuralNetworkUI {
 
         table.getColumns().add(values);
 
+        predict = new Button("Predict future values");
+        predict.setOnAction(predictAction());
+        predict.setDisable(true);
+
+        stop = new Button("Stop training");
+        stop.setOnAction(a -> stopTraining.set(true));
+        stop.setDisable(true);
         //start button
         Button start = new Button("Start training");
         start.setOnAction(a -> {
             start.setDisable(true);
+            stop.setDisable(false);
+            predict.setDisable(true);
             line.getData().remove(series);
+            mseChart.getData().remove(mseSeries);
             series = null;
+            mseSeries = null;
             Runnable runnable = new Runnable() {
                 @Override
                 public void run() {
@@ -138,7 +155,12 @@ public class NeuralNetworkUI {
                     } else {
                         System.err.println("wrong metaheurstic");
                     }
-                    Platform.runLater(() -> start.setDisable(false));
+
+                    Platform.runLater(() -> {
+                        start.setDisable(false);
+                        predict.setDisable(false);
+                        stop.setDisable(true);
+                    });
                 }
             };
             new Thread(runnable).start();
@@ -146,7 +168,8 @@ public class NeuralNetworkUI {
         });
 
         neuralNetwork.addListener((t, u, v) -> {
-            dataset = DatasetValue.getTrainingData(data.getDatasetValues(),neuralNetwork.get().getInputSize(),neuralNetwork.get().getOutputSize());
+            stopTraining.set(false);
+            dataset = DatasetValue.getTrainingData(data.getDatasetValues(), neuralNetwork.get().getInputSize(), neuralNetwork.get().getOutputSize());
             chooseAlgorithm.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
                     neuralNetwork.get(), data.getPrimaryStage()));
             changeParams.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
@@ -172,8 +195,7 @@ public class NeuralNetworkUI {
 //        changeParams.setDisable(true);
 
         //Button predict
-        Button predict = new Button("Predict future values");
-        predict.setOnAction(predictAction());
+
 
         VBox rightSide = new VBox();
 
@@ -185,11 +207,16 @@ public class NeuralNetworkUI {
         updateSeriesOnListChangeListener(data.getDatasetValues(), series);
         line = lineChart(series, "Data");
 
+        //mseChart
+        mseChart = mseLineChart("MSE");
         GridPane rightSideGrid = new GridPane();
         rightSideGrid.setHgap(10);
         rightSideGrid.setVgap(10);
         rightSideGrid.add(start, 1, 0);
         rightSideGrid.add(predict, 1, 1);
+        rightSideGrid.add(stop, 1, 2);
+        rightSideGrid.add(mseChart, 2, 0, 2, 3);
+
         rightSide.getChildren().add(rightSideGrid);
 
         grid.add(neural, 0, 0);
@@ -354,8 +381,8 @@ public class NeuralNetworkUI {
 
     private class GraphObserver implements IObserver<double[]> {
         private INeuralNetwork nn;
-
         private long iteration;
+        private ObservableList<XYChart.Data<Integer, Double>> mseObservableList;
 
         public GraphObserver(INeuralNetwork nn) {
             this.nn = nn instanceof ElmanNN ? new ElmanNN(nn.getArchitecture(), nn.getLayerActivations()) :
@@ -376,18 +403,31 @@ public class NeuralNetworkUI {
                         NeuralNetworkUI.this.series.setName("Forecast");
                         line.getData().add(NeuralNetworkUI.this.series);
                     }
+                    if (NeuralNetworkUI.this.mseSeries == null) {
+                        NeuralNetworkUI.this.mseSeries = new XYChart.Series();
+                        NeuralNetworkUI.this.mseSeries.setName("mse");
+                        mseChart.getData().add(NeuralNetworkUI.this.mseSeries);
+                        mseObservableList = FXCollections.observableArrayList();
+                        NeuralNetworkUI.this.mseSeries.setData(mseObservableList);
+                    }
                     double[] weights = solution.getRepresentative();
                     nn.setWeights(weights);
 
                     ObservableList<XYChart.Data<Integer, Double>> observableList = FXCollections.observableArrayList();
+                    double msError = 0.;
+                    double mse = 0.;
                     for (int i = 0; i < dataset.size(); i++) {
                         double[] forecast = nn.forward(dataset.get(i).getInput());
                         observableList.add(new XYChart.Data<>(i + 1, forecast[0]));
                         observableList.get(i).setNode(new DatasetValue.HoveredThresholdNode(
                                 observableList.get(i).getXValue(), observableList.get(i).getYValue()
                         ));
+                        mse += Math.pow(forecast[0] - dataset.get(i).getOutput()[0], 2);
                     }
                     NeuralNetworkUI.this.series.setData(observableList);
+                    msError += mse / dataset.size();
+                    if (iteration % 100 == 0)
+                        mseObservableList.add(new XYChart.Data<>((int) iteration/100, msError));
                 }
             };
             Platform.runLater(plot);
@@ -447,14 +487,14 @@ public class NeuralNetworkUI {
                         double[] predictions = new double[nnInputSize + howManyPredictions];
                         System.arraycopy(dataset.get(dataset.size() - 1).getInput(), 0,
                                 predictions, 0, nnInputSize);
-                        for (int i = 0; i < predictions.length-nnInputSize; ++i) {
-                            double[] input = Arrays.copyOfRange(predictions,i,i+nnInputSize);
-                             double[] expected = neuralNetwork.get().forward(input);
-                            predictions[i+nnInputSize] = expected[0];
+                        for (int i = 0; i < predictions.length - nnInputSize; ++i) {
+                            double[] input = Arrays.copyOfRange(predictions, i, i + nnInputSize);
+                            double[] expected = neuralNetwork.get().forward(input);
+                            predictions[i + nnInputSize] = expected[0];
                         }
 //                        double[] predictions = arima.computeNextValues(howManyPredictions);
                         ObservableList<DatasetValue> observableList = FXCollections.observableList(
-                                DatasetValue.encapsulateDoubleArray(Arrays.copyOfRange(predictions,nnInputSize,predictions.length)));
+                                DatasetValue.encapsulateDoubleArray(Arrays.copyOfRange(predictions, nnInputSize, predictions.length)));
                         Platform.runLater(() -> {
                             Stage stage = new Stage();
                             stage.setTitle("Predictions");

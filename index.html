@@ -1,93 +1,79 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="hr" xml:lang="hr">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="generator" content="pandoc" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-
-          <meta name="author" content="Banović, Luka" />
-          <meta name="author" content="Došilović, Herman Zvonimir" />
-          <meta name="author" content="Grcić, Matej" />
-          <meta name="author" content="Sokol, Marin" />
-    
-    
-    
-    <title>Predviđanje Vremenskih Serija</title>
-
-    <style type="text/css">
-      body {
-        color: #444;
-        font-family: "Georgia", "Times New Roman", Times, serif !important;
-        font-size: 18px;
-        margin: 40px auto;
-        max-width: 700px;
-        padding: 0 10px;
-        text-align: left;
-      }
-      code {
-        white-space: pre-wrap;
-      }
-      span.smallcaps {
-        font-variant: small-caps;
-      }
-      div.line-block{
-        white-space: pre-line;
-      }
-      div.column {
-        display: inline-block;
-        vertical-align: top;
-        width: 50%;
-      }
-          </style>
-
-    
-    
-          <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.8.3/katex.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.8.3/contrib/auto-render.min.js"></script><script>document.addEventListener("DOMContentLoaded", function() {
-        renderMathInElement(document.body);
-      });</script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.8.3/katex.min.css" />
-    
-    <!--[if lt IE 9]>
-      <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-    <![endif]-->
-
-      </head>
-
-  <body>
-
-<h1 id="predviđanje-vremenskih-serija">Predviđanje Vremenskih Serija</h1>
-<p>Vremenska serija je poredani niz podataka <span class="math inline">\(x(t),\ t \geq 1\)</span> gdje je <span class="math inline">\(x(t)\)</span> tipično skalarna vrijednost.</p>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Predviđanje Vremenskih Serija</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      div.line-block{white-space: pre-line;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.8.3/katex.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.8.3/contrib/auto-render.min.js"></script><script>document.addEventListener("DOMContentLoaded", function() {
+    renderMathInElement(document.body);
+  });</script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.8.3/katex.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header>
+<h1 class="title">Predviđanje Vremenskih Serija</h1>
+</header>
+<div class="indent">
+<p>Projekt napravljen u sklopu predmeta <em>Projekt iz programske potpore</em> na 3. godini preddiplomskog studija na <a href="https://www.fer.unizg.hr/">Fakultetu elektrotehnike i računarstva</a> pod mentorstvom <a href="https://www.fer.unizg.hr/marko.cupic">doc. dr. sc. Marka Čupića</a> u akademskoj godini 2017./2018.</p>
+</div>
+<hr />
+<h2 id="opis-projekta">Opis Projekta</h2>
+<p>Vremenska serija poredani je niz podataka <span class="math inline">\(x(t),\ t \geq 1\)</span> gdje je <span class="math inline">\(x(t)\)</span> tipično skalarna vrijednost.</p>
 <p>Problem predikcije vremenske serije jest problem predviđanja jedne ili više sljedećih vrijednosti na temelju prethodno viđenih vrijednosti.</p>
-<p>U okviru ovog projekta razvili smo aplikaciju za predviđanje vremenskih serija koristeći <strong>statističke modele</strong>, modele temeljene na <strong>umjetnim neuronskim mrežama</strong> i model temeljen na <strong>genetskom programiranju</strong>.</p>
+<p>U okviru ovog projekta razvili smo aplikaciju za predviđanje vremenskih serija koristeći statističke modele, modele temeljene na umjetnim neuronskim mrežama i model temeljen na genetskom programiranju.</p>
 <h2 id="članovi-tima">Članovi Tima</h2>
-<ul>
-<li><a href="#">Banović, Luka</a>
-<ul>
-<li>statistički modeli, grafičko korisničko sučelje, dokumentacija</li>
-</ul></li>
-<li><a href="http://hermanz.dosilovic.com">Došilović, Herman Zvonimir</a>
-<ul>
-<li>evolucijski algoritmi, umjetne neuronske mreže, web stranica</li>
-</ul></li>
-<li><a href="#">Grcić, Matej</a>
-<ul>
-<li><em>backpropagation</em> algoritam, umjetne neuronske mreže, grafičko korisničko sučelje</li>
-</ul></li>
-<li><a href="#">Sokol, Marin</a>
-<ul>
-<li>statistički modeli, genetsko programiranje, grafičko korisničko sučelje</li>
-</ul></li>
-</ul>
-<h2 id="mentor">Mentor</h2>
-<ul>
-<li><a href="https://www.fer.unizg.hr/marko.cupic">Marko Čupić</a></li>
-</ul>
+<table style="width:15%;">
+<colgroup>
+<col style="width: 6%" />
+<col style="width: 8%" />
+</colgroup>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><a href="https://github.com/LBanovic">Luka Banović</a> (voditelj tima)</td>
+<td style="text-align: center;">statistički modeli, grafičko korisničko sučelje, dokumentacija</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="https://github.com/hermanzdosilovic">Herman Zvonimir Došilović</a></td>
+<td style="text-align: center;">evolucijski algoritmi, umjetne neuronske mreže, web stranica</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="https://github.com/matejgrcic">Matej Grcić</a></td>
+<td style="text-align: center;"><em>backpropagation</em> algoritam, umjetne neuronske mreže, grafičko korisničko sučelje</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="https://github.com/marinsokol5">Marin Sokol</a></td>
+<td style="text-align: center;">statistički modeli, genetsko programiranje, grafičko korisničko sučelje</td>
+</tr>
+</tbody>
+</table>
 <h2 id="preuzimanja">Preuzimanja</h2>
 <p><a href="https://github.com/hermanzdosilovic/time-series-forecasting">[Izvorni kôd]</a></p>
 <p><a href="">[Izvršni kôd]</a></p>
 <p><a href="">[Dokumentacija]</a></p>
 <h2 id="slike">Slike</h2>
-<p><img src="images/screenshot01.png" alt="Screenshot #1" width="100%"> <img src="images/screenshot02.png" alt="Screenshot #2" width="100%"> <img src="images/screenshot03.png" alt="Screenshot #3" width="100%"></p>
+<figure>
+<img src="images/screenshot01.png" alt="Slika 1: Učitavanje vremenske serije" /><figcaption>Slika 1: Učitavanje vremenske serije</figcaption>
+</figure>
+<figure>
+<img src="images/screenshot02.png" alt="Slika 2: Odabir statističke metode za predviđanje" /><figcaption>Slika 2: Odabir statističke metode za predviđanje</figcaption>
+</figure>
+<figure>
+<img src="images/screenshot03.png" alt="Slika 3: Odabir umjetne neuronske mreže za predviđanje" /><figcaption>Slika 3: Odabir umjetne neuronske mreže za predviđanje</figcaption>
+</figure>
+<p><br></p>
 <hr />
-<p><small>Fakultet elektrotehnike i računarstva, Sveučilište u Zagrebu.</small></p>
-  </body>
+<div class="center">
+<p>© 2018. <a href="https://www.fer.unizg.hr/">Fakultet elektrotehnike i računarstva</a>, <a href="http://www.unizg.hr/">Sveučilište u Zagrebu</a></p>
+</div>
+</body>
 </html>

@@ -1,0 +1,33 @@
+body {
+  font-family: "Georgia", "Times New Roman", Times, serif;
+  margin: 40px auto;
+  max-width: 768px;
+  padding: 0 10px;
+}
+
+img {
+  max-width: 100%;
+}
+
+figure > img + figcaption {
+  text-align: center;
+}
+
+table {
+    width: 100% !important;
+    border-collapse: collapse;
+}
+
+table th, 
+table td {
+    border-bottom: 1px solid black;
+    padding: 15px;
+}
+
+.center {
+  text-align: center;
+}
+
+.indent {
+  margin: 16px 40px;
+}

@@ -20,8 +20,14 @@
     <title>$if(title-prefix)$$title-prefix$ – $endif$$pagetitle$</title>
 
     <style type="text/css">
-      .ui.text.container {
-        font-family: sans-serif, serif !important;
+      body {
+        color: #444;
+        font-family: "Georgia", "Times New Roman", Times, serif !important;
+        font-size: 18px;
+        margin: 40px auto;
+        max-width: 700px;
+        padding: 0 10px;
+        text-align: left;
       }
       code {
         white-space: pre-wrap;
@@ -50,8 +56,6 @@
       </style>
     $endif$
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/components/container.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/components/segment.min.css">
     $for(css)$
       <link rel="stylesheet" href="$css$">
     $endfor$
@@ -79,13 +83,7 @@ $if(toc)$
 $table-of-contents$
 </nav>
 $endif$
-
-<div class="ui basic padded segment">
-<div class="ui text container">
 $body$
-</div>
-</div>
-
 $for(include-after)$
 $include-after$
 $endfor$

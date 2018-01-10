@@ -41,7 +41,7 @@
 //        trainSet.forEach(t -> train.add(new DatasetEntry(t.getInput(), t.getExpectedOutput())));
 //        List<DatasetEntry> test = new ArrayList<>();
 //        testSet.forEach(t -> test.add(new DatasetEntry(t.getInput(), t.getExpectedOutput())));
-//        Backpropagation bp = new Backpropagation(train, test, 1E-8, 300_000, 1E-12, 1E-15,tdnn, 32);
+//        Backpropagation bp = new Backpropagation(train, test, 1E-7, 300_000, 1E-12, 1E-15,tdnn, 32);
 //        double startTime = System.currentTimeMillis();
 //        bp.run();
 //        double endTime = System.currentTimeMillis();

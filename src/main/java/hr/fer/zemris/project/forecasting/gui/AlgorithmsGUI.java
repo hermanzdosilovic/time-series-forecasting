@@ -25,6 +25,7 @@ import com.dosilovic.hermanzvonimir.ecfjava.numeric.IFunction;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 import com.dosilovic.hermanzvonimir.ecfjava.util.RealVector;
 import com.dosilovic.hermanzvonimir.ecfjava.util.Solution;
+import hr.fer.zemris.project.forecasting.gui.forms.BackpropagationForm;
 import hr.fer.zemris.project.forecasting.nn.Backpropagation;
 import hr.fer.zemris.project.forecasting.nn.functions.MSEFunction;
 import javafx.event.ActionEvent;
@@ -701,6 +702,8 @@ public abstract class AlgorithmsGUI {
 
     private static void backpropagation(List<DatasetEntry> dataset, double trainPercentage, INeuralNetwork neuralNetwork,
                                         Stage primaryStage) {
+        BackpropagationForm backpropagationForm = BackpropagationForm.getInstance();
+
         Stage BPStage = new Stage();
         BPStage.initOwner(primaryStage);
         BPStage.initModality(Modality.WINDOW_MODAL);
@@ -708,18 +711,23 @@ public abstract class AlgorithmsGUI {
 
         Label maxIterations = new Label("Max iterations:");
         TextField iteration = new TextField();
+        iteration.setText(backpropagationForm.getMaxIteration());
 
         Label batch = new Label("Batch size:");
         TextField batchSize = new TextField();
+        batchSize.setText(backpropagationForm.getBatchSize());
 
         Label learning = new Label("Learning rate:");
         TextField learningRate = new TextField();
+        learningRate.setText(backpropagationForm.getLearningRate());
 
         Label desiredErr = new Label("Desired error:");
         TextField desiredError = new TextField();
+        desiredError.setText(backpropagationForm.getDesiredError());
 
         Label precision = new Label("Desired precision:");
         TextField desiredPrecision = new TextField();
+        desiredPrecision.setText(backpropagationForm.getDesiredPrecision());
 
         Label invalidInput = new Label("Invalid input.");
         invalidInput.setTextFill(Color.RED);
@@ -774,6 +782,13 @@ public abstract class AlgorithmsGUI {
                             dataset.subList(index, dataset.size()), learningRt, maxIter,
                             desiredErr, desiredPrec, neuralNetwork, batch);
                     metaheuristic = bp;
+
+                    backpropagationForm.setMaxIteration(iteration.getText());
+                    backpropagationForm.setLearningRate(learningRate.getText());
+                    backpropagationForm.setDesiredError(desiredError.getText());
+                    backpropagationForm.setDesiredPrecision(desiredPrecision.getText());
+                    backpropagationForm.setBatchSize(batchSize.getText());
+
                     BPStage.hide();
                 } catch (RuntimeException ex) {
                     ex.printStackTrace();

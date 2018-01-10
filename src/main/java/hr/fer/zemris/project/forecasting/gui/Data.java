@@ -17,7 +17,6 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -32,7 +31,6 @@ import org.codefx.libfx.listener.handle.ListenerHandles;
 
 import java.io.File;
 import java.io.IOException;
-import java.security.Key;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -206,6 +204,17 @@ public class Data {
         lineChart.getData().add(series);
         lineChart.setCreateSymbols(true);
         lineChart.setMaxSize(GraphUtil.DEFAULT_WIDTH, GraphUtil.DEFAULT_HEIGHT);
+        lineChart.setAnimated(false);
+        return lineChart;
+    }
+
+    public static LineChart<Number, Number> mseLineChart(String lineChartName){
+        final NumberAxis xAxis = new NumberAxis();
+        final NumberAxis yAxis = new NumberAxis();
+        final LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
+        lineChart.setTitle(lineChartName);
+        lineChart.setCreateSymbols(true);
+        lineChart.setMaxSize(GraphUtil.MSE_DEFAULT_WIDTH, GraphUtil.MSE_DEFAULT_HEIGHT);
         lineChart.setAnimated(false);
         return lineChart;
     }

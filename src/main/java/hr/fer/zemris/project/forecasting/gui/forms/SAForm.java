@@ -11,6 +11,7 @@ public class SAForm {
     private String innerFinalTemperature = "";
     private String desiredPenalty = "";
     private String desiredPrecision = "";
+    private String desiredFitness = "";
     private String minComponentValue = "";
     private String maxComponentValue = "";
     private String mutationProbability = "";
@@ -24,6 +25,10 @@ public class SAForm {
     }
 
     private SAForm() {
+    }
+
+    public void setDesiredFitness(String desiredFitness) {
+        this.desiredFitness = desiredFitness;
     }
 
     public void setOuterIterations(String outerIterations) {
@@ -128,5 +133,9 @@ public class SAForm {
 
     public boolean isForceMutation() {
         return forceMutation;
+    }
+
+    public String getDesiredFitness() {
+        return desiredFitness;
     }
 }

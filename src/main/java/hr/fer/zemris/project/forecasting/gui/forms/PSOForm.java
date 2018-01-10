@@ -12,6 +12,7 @@ public class PSOForm {
     private String maxValue = "";
     private String minSpeed = "";
     private String maxSpeed = "";
+    private boolean fullyFormed = false;
 
 
     private static PSOForm ourInstance = new PSOForm();
@@ -30,6 +31,10 @@ public class PSOForm {
 
     public void setDesiredFitness(String desiredFitness) {
         this.desiredFitness = desiredFitness;
+    }
+
+    public void setFullyFormed(boolean fullyFormed) {
+        this.fullyFormed = fullyFormed;
     }
 
     public void setDesiredPrecision(String desiredPrecision) {
@@ -98,5 +103,9 @@ public class PSOForm {
 
     public String getMaxSpeed() {
         return maxSpeed;
+    }
+
+    public boolean isFullyFormed() {
+        return fullyFormed;
     }
 }

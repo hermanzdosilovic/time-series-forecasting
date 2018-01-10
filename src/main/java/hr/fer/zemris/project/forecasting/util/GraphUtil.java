@@ -24,6 +24,8 @@ public final class GraphUtil {
 
     public static final  int    DEFAULT_WIDTH      = 640;
     public static final  int    DEFAULT_HEIGHT     = 480;
+    public static final  int    MSE_DEFAULT_WIDTH  = 300;
+    public static final  int    MSE_DEFAULT_HEIGHT = 120;
     public static final  String DEFAULT_GRAPH_NAME = "";
     private static final Random RAND               = new Random();
 

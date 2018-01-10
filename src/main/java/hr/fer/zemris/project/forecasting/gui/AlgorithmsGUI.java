@@ -25,6 +25,7 @@ import com.dosilovic.hermanzvonimir.ecfjava.numeric.IFunction;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 import com.dosilovic.hermanzvonimir.ecfjava.util.RealVector;
 import com.dosilovic.hermanzvonimir.ecfjava.util.Solution;
+import hr.fer.zemris.project.forecasting.gui.forms.*;
 import hr.fer.zemris.project.forecasting.nn.Backpropagation;
 import hr.fer.zemris.project.forecasting.nn.functions.MSEFunction;
 import javafx.event.ActionEvent;
@@ -68,39 +69,54 @@ public abstract class AlgorithmsGUI {
         geneticStage.initModality(Modality.WINDOW_MODAL);
         geneticStage.setTitle("Genetic algorithm");
 
+        GeneticForm geneticForm = GeneticForm.getInstance();
+
         Label populationSize = new Label("Population size:");
         TextField population = new TextField();
+        population.setText(geneticForm.getPopulationSize());
 
         Label maxGenerations = new Label("Max generations:");
         TextField generations = new TextField();
+        generations.setText(geneticForm.getMaxGenerations());
 
         Label tournamentSize = new Label("Tournament size:");
         TextField tournament = new TextField();
+        tournament.setText(geneticForm.getTournamentSize());
 
         Label alpha = new Label("Alpha:");
         TextField a = new TextField();
+        a.setText(geneticForm.getAlpha());
 
         Label mutationProbability = new Label("Probability of mutation:");
         TextField mutation = new TextField();
+        mutation.setText(geneticForm.getMutationProbability());
 
         Label sigma = new Label("Sigma:");
         TextField s = new TextField();
+        s.setText(geneticForm.getSigma());
 
         Label desiredFit = new Label("Desired fittnes:");
         TextField desiredFitness = new TextField();
+        desiredFitness.setText(geneticForm.getDesiredFitness());
 
         Label precision = new Label("Desired precision:");
         TextField desiredPrecision = new TextField();
+        desiredPrecision.setText(geneticForm.getDesiredPrecision());
 
         Label minComp = new Label("Min component value:");
         TextField minCompValue = new TextField();
+        minCompValue.setText(geneticForm.getMinComponentValue());
 
         Label maxComp = new Label("Max component value:");
         TextField maxCompValue = new TextField();
+        maxCompValue.setText(geneticForm.getMaxComponentValue());
 
         CheckBox useElitism = new CheckBox("Use elitism?");
+        useElitism.setSelected(geneticForm.isUseElitism());
         CheckBox allowRepeat = new CheckBox("Allow repeat?");
+        allowRepeat.setSelected(geneticForm.isAllowRepeat());
         CheckBox forceMutation = new CheckBox("Force mutation?");
+        forceMutation.setSelected(geneticForm.isForeceMutation());
 
         Label invalidInput = new Label("Invalid input.");
         invalidInput.setTextFill(Color.RED);
@@ -170,21 +186,23 @@ public abstract class AlgorithmsGUI {
                     boolean elitism = useElitism.isSelected();
                     boolean repeat = allowRepeat.isSelected();
                     double desiredFittnes = Double.parseDouble(desiredFitness.getText());
-                    double desiredPrec = Double.parseDouble(desiredFitness.getText());
+                    double desiredPrec = Double.parseDouble(desiredPrecision.getText());
                     double minComponentValue = Double.parseDouble(minCompValue.getText());
                     double maxComponentValue = Double.parseDouble(maxCompValue.getText());
+
                     IProblem<RealVector> problem = new FunctionMinimizationProblem<>(new MSEFunction<>(neuralNetwork, dataset));
                     ISelection<RealVector> selection = new TournamentSelection<>(
                             tournamentSize,
                             repeat
                     );
                     ICrossover<RealVector> crossover = new BLXAlphaCrossover<>(alpha);
-                    IMutation<RealVector> mutation = new RealVectorGaussianMutation<>(
+                    IMutation<RealVector> mutationValue = new RealVectorGaussianMutation<>(
                             mutationP,
                             forceMutations,
                             sigma
                     );
-                    SimpleGA<RealVector> simpleGA = new SimpleGA<>(elitism, generationSize, desiredFittnes, desiredPrec, problem, selection, crossover, mutation);
+                    SimpleGA<RealVector> simpleGA = new SimpleGA<>(elitism, generationSize, desiredFittnes, desiredPrec,
+                            problem, selection, crossover, mutationValue);
                     metaheuristic = simpleGA;
                     metaheuristicRequirement = RealVector.createCollection(
                             populationSize,
@@ -192,6 +210,20 @@ public abstract class AlgorithmsGUI {
                             minComponentValue,
                             maxComponentValue
                     );
+
+                    geneticForm.setPopulationSize(population.getText());
+                    geneticForm.setMaxGenerations(generations.getText());
+                    geneticForm.setTournamentSize(tournament.getText());
+                    geneticForm.setAlpha(a.getText());
+                    geneticForm.setMutationProbability(mutation.getText());
+                    geneticForm.setSigma(s.getText());
+                    geneticForm.setForeceMutation(forceMutation.isSelected());
+                    geneticForm.setUseElitism(useElitism.isSelected());
+                    geneticForm.setAllowRepeat(allowRepeat.isSelected());
+                    geneticForm.setDesiredFitness(desiredFitness.getText());
+                    geneticForm.setDesiredPrecision(desiredPrecision.getText());
+                    geneticForm.setMinComponentValue(minCompValue.getText());
+                    geneticForm.setMaxComponentValue(maxCompValue.getText());
 
                     geneticStage.hide();
                 } catch (RuntimeException ex) {
@@ -211,53 +243,76 @@ public abstract class AlgorithmsGUI {
         OSGAStage.initModality(Modality.WINDOW_MODAL);
         OSGAStage.setTitle("OSGA");
 
+        OSGAForm osgaForm = OSGAForm.getInstance();
+
         Label populationSize = new Label("Population size:");
         TextField population = new TextField();
+        population.setText(osgaForm.getPopulationSize());
 
         Label maxGenerations = new Label("Max generations:");
         TextField generations = new TextField();
+        generations.setText(osgaForm.getMaxGenerations());
 
         Label tournamentSize = new Label("Tournament size:");
         TextField tournament = new TextField();
+        tournament.setText(osgaForm.getTournamentSize());
 
         Label alpha = new Label("Alpha:");
         TextField a = new TextField();
+        a.setText(osgaForm.getAlpha());
 
         Label mutationProbability = new Label("Probability of mutation:");
         TextField mutation = new TextField();
+        mutation.setText(osgaForm.getMutationProbability());
 
         Label sigma = new Label("Sigma:");
         TextField s = new TextField();
+        s.setText(osgaForm.getSigma());
 
         Label maxSelectionPressure = new Label("Max selection pressure:");
         TextField maxPressure = new TextField();
+        maxPressure.setText(osgaForm.getMaxSelectionPressure());
 
         Label minSuccessRatio = new Label("Min success ratio:");
         TextField minSuccess = new TextField();
+        minSuccess.setText(osgaForm.getMinSuccessRatio());
+
         Label maxSuccessRatio = new Label("Max success ratio:");
         TextField maxSuccess = new TextField();
+        maxSuccess.setText(osgaForm.getMaxSuccessRatio());
 
         Label minComparisonFactor = new Label("Min comparison factor:");
         TextField minComparison = new TextField();
+        minComparison.setText(osgaForm.getMinComparisionFactor());
+
         Label maxComparisonFactor = new Label("Max comparison factor:");
         TextField maxComparison = new TextField();
+        maxComparison.setText(osgaForm.getMaxComparisionFactor());
 
         Label desiredFit = new Label("Desired fittnes:");
         TextField desiredFitness = new TextField();
+        desiredFitness.setText(osgaForm.getDesiredFitness());
 
         Label precision = new Label("Desired precision:");
         TextField desiredPrecision = new TextField();
+        desiredPrecision.setText(osgaForm.getDesiredPrecision());
 
         Label minComp = new Label("Min component value:");
         TextField minCompValue = new TextField();
+        minCompValue.setText(osgaForm.getMinComponentValue());
 
         Label maxComp = new Label("Max component value:");
         TextField maxCompValue = new TextField();
-
+        maxCompValue.setText(osgaForm.getMaxComponentValue());
 
         CheckBox useElitism = new CheckBox("Use elitism?");
+        useElitism.setSelected(osgaForm.isUseElitism());
+
         CheckBox allowRepeat = new CheckBox("Allow repeat?");
+        allowRepeat.setSelected(osgaForm.isAllowRepeat());
+
         CheckBox forceMutation = new CheckBox("Force mutation?");
+        forceMutation.setSelected(osgaForm.isForceMutation());
 
         Label invalidInput = new Label("Invalid input.");
         invalidInput.setTextFill(Color.RED);
@@ -345,7 +400,7 @@ public abstract class AlgorithmsGUI {
                     boolean elitism = useElitism.isSelected();
                     boolean doRepeat = allowRepeat.isSelected();
                     double desiredFittnes = Double.parseDouble(desiredFitness.getText());
-                    double desiredPrec = Double.parseDouble(desiredFitness.getText());
+                    double desiredPrec = Double.parseDouble(desiredPrecision.getText());
                     double minComponentValue = Double.parseDouble(minCompValue.getText());
                     double maxComponentValue = Double.parseDouble(maxCompValue.getText());
 
@@ -356,7 +411,7 @@ public abstract class AlgorithmsGUI {
                             doRepeat
                     );
                     ICrossover<RealVector> crossover = new BLXAlphaCrossover<>(alpha);
-                    IMutation<RealVector> mutation = new RealVectorGaussianMutation<>(
+                    IMutation<RealVector> mutationValue = new RealVectorGaussianMutation<>(
                             mutationP,
                             forceMutations,
                             sigma
@@ -382,7 +437,7 @@ public abstract class AlgorithmsGUI {
                             problem,
                             selection,
                             crossover,
-                            mutation
+                            mutationValue
                     );
 
                     metaheuristic = geneticAlgorithm;
@@ -392,6 +447,25 @@ public abstract class AlgorithmsGUI {
                             minComponentValue,
                             maxComponentValue
                     );
+
+                    osgaForm.setPopulationSize(population.getText());
+                    osgaForm.setMaxGenerations(generations.getText());
+                    osgaForm.setTournamentSize(tournament.getText());
+                    osgaForm.setAlpha(a.getText());
+                    osgaForm.setMutationProbability(mutation.getText());
+                    osgaForm.setSigma(s.getText());
+                    osgaForm.setMaxSelectionPressure(maxPressure.getText());
+                    osgaForm.setMinSuccessRatio(minSuccess.getText());
+                    osgaForm.setMaxSuccessRatio(maxSuccess.getText());
+                    osgaForm.setMinComparisionFactor(minComparison.getText());
+                    osgaForm.setMaxComparisionFactor(maxComparison.getText());
+                    osgaForm.setForceMutation(forceMutation.isSelected());
+                    osgaForm.setUseElitism(useElitism.isSelected());
+                    osgaForm.setAllowRepeat(allowRepeat.isSelected());
+                    osgaForm.setDesiredFitness(desiredFitness.getText());
+                    osgaForm.setDesiredPrecision(desiredPrecision.getText());
+                    osgaForm.setMinComponentValue(minCompValue.getText());
+                    osgaForm.setMaxComponentValue(maxCompValue.getText());
 
                     OSGAStage.hide();
                 } catch (RuntimeException ex) {
@@ -409,42 +483,58 @@ public abstract class AlgorithmsGUI {
         SAStage.initModality(Modality.WINDOW_MODAL);
         SAStage.setTitle("SA");
 
+        SAForm saForm = SAForm.getInstance();
+
         Label outerIterations = new Label("Outer iterations:");
         TextField outerIter = new TextField();
+        outerIter.setText(saForm.getOuterIterations());
 
         Label outerInitialTemp = new Label("Outer initial temperature:");
         TextField outerTemp = new TextField();
+        outerTemp.setText(saForm.getOuterInitialTemperature());
+
         Label outerFinalTemp = new Label("Outer final temperature:");
         TextField outerFinalTemperature = new TextField();
-
+        outerFinalTemperature.setText(saForm.getOuterFinalTemperature());
 
         Label innerIterations = new Label("Inner iterations:");
         TextField innerIter = new TextField();
+        innerIter.setText(saForm.getInnerIterations());
 
         Label innerInitialTemp = new Label("Inner initial temperature:");
         TextField innerTemp = new TextField();
+        innerTemp.setText(saForm.getInnerInitialTemperature());
+
         Label innerFinalTemp = new Label("Inner final temperature:");
         TextField innerFinalTemperature = new TextField();
+        innerFinalTemperature.setText(saForm.getInnerFinalTemperature());
 
         Label mutationProbability = new Label("Mutation probability:");
         TextField mutation = new TextField();
+        mutation.setText(saForm.getMutationProbability());
 
         Label sigma = new Label("Sigma:");
         TextField s = new TextField();
+        s.setText(saForm.getSigma());
 
         Label desiredFit = new Label("Desired fittnes:");
         TextField desiredFitness = new TextField();
+        desiredFitness.setText(saForm.getDesiredFitness());
 
         Label precision = new Label("Desired precision:");
         TextField desiredPrecision = new TextField();
+        desiredPrecision.setText(saForm.getDesiredPrecision());
 
         Label minComp = new Label("Min component value:");
         TextField minCompValue = new TextField();
+        minCompValue.setText(saForm.getMinComponentValue());
 
         Label maxComp = new Label("Max component value:");
         TextField maxCompValue = new TextField();
+        maxCompValue.setText(saForm.getMaxComponentValue());
 
         CheckBox forceMutation = new CheckBox("Force mutation?");
+        forceMutation.setSelected(saForm.isForceMutation());
 
         Label invalidInput = new Label("Invalid input.");
         invalidInput.setTextFill(Color.RED);
@@ -511,14 +601,14 @@ public abstract class AlgorithmsGUI {
                     int outerIteration = Integer.parseInt(outerIter.getText());
                     int innerIteration = Integer.parseInt(innerIter.getText());
                     double outerTemperature = Double.parseDouble(outerTemp.getText());
-                    double outerFinalTemperature = 0;
+                    double outerFinalTemp = Double.parseDouble(outerFinalTemperature.getText());
                     double innerTemperature = Double.parseDouble(innerTemp.getText());
-                    double innerFinalTemperature = 0;
+                    double innerFinalTemp = Double.parseDouble(innerFinalTemperature.getText());
                     double mutationP = Double.parseDouble(mutation.getText());
                     double sigma = Double.parseDouble(s.getText());
                     boolean forceMutations = forceMutation.isSelected();
                     double desiredFittnes = Double.parseDouble(desiredFitness.getText());
-                    double desiredPrec = Double.parseDouble(desiredFitness.getText());
+                    double desiredPrec = Double.parseDouble(desiredPrecision.getText());
                     double minComponentValue = Double.parseDouble(minCompValue.getText());
                     double maxComponentValue = Double.parseDouble(maxCompValue.getText());
 
@@ -527,19 +617,19 @@ public abstract class AlgorithmsGUI {
                     ICoolingSchedule outerCoolingSchedule = new GeometricCoolingSchedule(
                             outerIteration,
                             outerTemperature,
-                            outerFinalTemperature
+                            outerFinalTemp
                     );
                     ICoolingSchedule innerCoolingSchedule = new GeometricCoolingSchedule(
                             innerIteration,
                             innerTemperature,
-                            innerFinalTemperature
+                            innerFinalTemp
                     );
-                    IMutation<RealVector> mutation = new RealVectorGaussianMutation<>(mutationP, forceMutations, sigma);
+                    IMutation<RealVector> mutationValue = new RealVectorGaussianMutation<>(mutationP, forceMutations, sigma);
                     ISimulatedAnnealing<RealVector> simulatedAnnealing = new SimpleSA<>(
                             desiredPrec,
                             desiredFittnes,
                             problem,
-                            mutation,
+                            mutationValue,
                             outerCoolingSchedule,
                             innerCoolingSchedule
                     );
@@ -549,6 +639,21 @@ public abstract class AlgorithmsGUI {
                             minComponentValue,
                             maxComponentValue
                     );
+
+                    saForm.setOuterIterations(outerIter.getText());
+                    saForm.setInnerIterations(innerIter.getText());
+                    saForm.setOuterInitialTemperature(outerTemp.getText());
+                    saForm.setOuterFinalTemperature(outerFinalTemperature.getText());
+                    saForm.setInnerInitialTemperature(innerTemp.getText());
+                    saForm.setInnerFinalTemperature(innerFinalTemperature.getText());
+                    saForm.setMutationProbability(mutation.getText());
+                    saForm.setSigma(s.getText());
+                    saForm.setForceMutation(forceMutation.isSelected());
+                    saForm.setDesiredFitness(desiredFitness.getText());
+                    saForm.setDesiredPrecision(desiredPrecision.getText());
+                    saForm.setMinComponentValue(minCompValue.getText());
+                    saForm.setMaxComponentValue(maxCompValue.getText());
+
                     SAStage.hide();
                 } catch (RuntimeException ex) {
                     ex.printStackTrace();
@@ -565,37 +670,50 @@ public abstract class AlgorithmsGUI {
         PSOStage.initModality(Modality.WINDOW_MODAL);
         PSOStage.setTitle("PSO");
 
+        PSOForm psoForm = PSOForm.getInstance();
+
         Label numberOfParticles = new Label("Number of particles:");
         TextField particles = new TextField();
+        particles.setText(psoForm.getNumberOfParticles());
 
         Label maxIterations = new Label("Max iterations:");
         TextField iteration = new TextField();
+        iteration.setText(psoForm.getMaxIteration());
 
         Label minSpeed = new Label("Min velocity:");
         TextField minV = new TextField();
+        minV.setText(psoForm.getMinSpeed());
 
         Label maxSpeed = new Label("Max velocity:");
         TextField maxV = new TextField();
+        maxV.setText(psoForm.getMaxSpeed());
 
         Label maxValue = new Label("Max value:");
         TextField maxVal = new TextField();
+        maxVal.setText(psoForm.getMaxValue());
 
         Label minValue = new Label("Min value:");
         TextField minVal = new TextField();
+        minVal.setText(psoForm.getMinValue());
 
         Label individualLabel = new Label("Individual factor:");
         TextField individualFactor = new TextField();
+        individualFactor.setText(psoForm.getIndividualFactor());
 
         Label socialLabel = new Label("Social factor:");
         TextField socialFactor = new TextField();
+        socialFactor.setText(psoForm.getSocialFactor());
 
         Label desiredFit = new Label("Desired fittnes:");
         TextField desiredFitness = new TextField();
+        desiredFitness.setText(psoForm.getDesiredFitness());
 
         Label precision = new Label("Desired precision:");
         TextField desiredPrecision = new TextField();
+        desiredPrecision.setText(psoForm.getDesiredPrecision());
 
         CheckBox isInformed = new CheckBox("Fully formed?");
+        isInformed.setSelected(psoForm.isFullyFormed());
 
         Label invalidInput = new Label("Invalid input.");
         invalidInput.setTextFill(Color.RED);
@@ -661,7 +779,7 @@ public abstract class AlgorithmsGUI {
                     double individualFact = Double.parseDouble(individualFactor.getText());
                     double socialFact = Double.parseDouble(socialFactor.getText());
                     double desiredFittnes = Double.parseDouble(desiredFitness.getText());
-                    double desiredPrec = Double.parseDouble(desiredFitness.getText());
+                    double desiredPrec = Double.parseDouble(desiredPrecision.getText());
                     boolean isFullyInformed = isInformed.isSelected();
 
                     IProblem<RealVector> problem = new FunctionMinimizationProblem<>(new MSEFunction<>(neuralNetwork, dataset));
@@ -689,6 +807,19 @@ public abstract class AlgorithmsGUI {
 
                     metaheuristic = particleSwarmOptimization;
                     metaheuristicRequirement = initialParticles;
+
+                    psoForm.setMaxIteration(iteration.getText());
+                    psoForm.setNumberOfParticles(particles.getText());
+                    psoForm.setMinSpeed(minV.getText());
+                    psoForm.setMaxSpeed(maxV.getText());
+                    psoForm.setMinValue(minVal.getText());
+                    psoForm.setMaxValue(maxVal.getText());
+                    psoForm.setIndividualFactor(individualFactor.getText());
+                    psoForm.setSocialFactor(socialFactor.getText());
+                    psoForm.setDesiredFitness(desiredFitness.getText());
+                    psoForm.setDesiredPrecision(desiredPrecision.getText());
+                    psoForm.setFullyFormed(isInformed.isSelected());
+
                     PSOStage.hide();
                 } catch (RuntimeException ex) {
                     ex.printStackTrace();
@@ -701,6 +832,8 @@ public abstract class AlgorithmsGUI {
 
     private static void backpropagation(List<DatasetEntry> dataset, double trainPercentage, INeuralNetwork neuralNetwork,
                                         Stage primaryStage) {
+        BackpropagationForm backpropagationForm = BackpropagationForm.getInstance();
+
         Stage BPStage = new Stage();
         BPStage.initOwner(primaryStage);
         BPStage.initModality(Modality.WINDOW_MODAL);
@@ -708,18 +841,23 @@ public abstract class AlgorithmsGUI {
 
         Label maxIterations = new Label("Max iterations:");
         TextField iteration = new TextField();
+        iteration.setText(backpropagationForm.getMaxIteration());
 
         Label batch = new Label("Batch size:");
         TextField batchSize = new TextField();
+        batchSize.setText(backpropagationForm.getBatchSize());
 
         Label learning = new Label("Learning rate:");
         TextField learningRate = new TextField();
+        learningRate.setText(backpropagationForm.getLearningRate());
 
         Label desiredErr = new Label("Desired error:");
         TextField desiredError = new TextField();
+        desiredError.setText(backpropagationForm.getDesiredError());
 
         Label precision = new Label("Desired precision:");
         TextField desiredPrecision = new TextField();
+        desiredPrecision.setText(backpropagationForm.getDesiredPrecision());
 
         Label invalidInput = new Label("Invalid input.");
         invalidInput.setTextFill(Color.RED);
@@ -774,6 +912,13 @@ public abstract class AlgorithmsGUI {
                             dataset.subList(index, dataset.size()), learningRt, maxIter,
                             desiredErr, desiredPrec, neuralNetwork, batch);
                     metaheuristic = bp;
+
+                    backpropagationForm.setMaxIteration(iteration.getText());
+                    backpropagationForm.setLearningRate(learningRate.getText());
+                    backpropagationForm.setDesiredError(desiredError.getText());
+                    backpropagationForm.setDesiredPrecision(desiredPrecision.getText());
+                    backpropagationForm.setBatchSize(batchSize.getText());
+
                     BPStage.hide();
                 } catch (RuntimeException ex) {
                     ex.printStackTrace();

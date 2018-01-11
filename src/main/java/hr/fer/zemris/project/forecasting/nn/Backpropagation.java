@@ -94,7 +94,7 @@ public class Backpropagation implements IMetaheuristic<double[]> {
                 doBackpropagation(neuralNetwork, outputDeltaMatrix, layerOutputs);
             }
             trainingMSE = trainingMse.dotProduct(trainingMse) / trainingSet.size();
-            solution.setFitness(trainingMSE);
+
 
             RealVector validationMse = new ArrayRealVector(neuralNetwork.getOutputSize());
             for (DatasetEntry entry : validationSet) {
@@ -105,8 +105,8 @@ public class Backpropagation implements IMetaheuristic<double[]> {
             double validationSetMse = validationMSE;
             validationMSE = validationMse.dotProduct(validationMse) / validationSet.size();
 
-
             double datasetError = NNErrorUtil.meanSquaredError(neuralNetwork,datasetArray);
+            solution.setFitness(datasetError);
             System.err.println("iteration: " + currentIteration + " training mse: " + trainingMSE
                     + " validation mse: " + validationMSE+ " dataset mse: "+datasetError);
             if ((validationSetMse < validationMSE && currentIteration > maxIteration / 2)

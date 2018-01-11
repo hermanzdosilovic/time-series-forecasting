@@ -14,6 +14,9 @@ public class BackpropagationForm {
         return ourInstance;
     }
 
+    private BackpropagationForm() {
+    }
+
     public void setMaxIteration(String maxIteration) {
         this.maxIteration = maxIteration;
     }

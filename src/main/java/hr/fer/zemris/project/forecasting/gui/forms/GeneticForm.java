@@ -22,6 +22,9 @@ public class GeneticForm {
         return ourInstance;
     }
 
+    private GeneticForm(){
+    }
+
     public String getPopulationSize() {
         return populationSize;
     }

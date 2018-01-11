@@ -91,7 +91,14 @@ public class DatasetValue implements Comparable<DatasetValue>{
     }
 
     public static class HoveredThresholdNode extends StackPane{
+
+        private int priorValue;
+        private double value;
+
         HoveredThresholdNode(int priorValue, double value) {
+            this.priorValue = priorValue;
+            this.value = value;
+
             setPrefSize(7, 7);
             setOpacity(0);
 
@@ -126,6 +133,14 @@ public class DatasetValue implements Comparable<DatasetValue>{
             b.setSpacing(2);
             b.getStyleClass().addAll("default-color0", "chart-line-symbol", "chart-series-line");
             return b;
+        }
+
+        public void setPriorValue(int priorValue) {
+            this.priorValue = priorValue;
+        }
+
+        public void setValue(double value) {
+            this.value = value;
         }
     }
 }

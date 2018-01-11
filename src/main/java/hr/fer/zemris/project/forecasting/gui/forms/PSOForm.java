@@ -21,6 +21,9 @@ public class PSOForm {
         return ourInstance;
     }
 
+    private PSOForm(){
+    }
+
     public void setNumberOfParticles(String numberOfParticles) {
         this.numberOfParticles = numberOfParticles;
     }

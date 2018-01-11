@@ -28,6 +28,7 @@ import com.dosilovic.hermanzvonimir.ecfjava.util.Solution;
 import hr.fer.zemris.project.forecasting.gui.forms.*;
 import hr.fer.zemris.project.forecasting.nn.Backpropagation;
 import hr.fer.zemris.project.forecasting.nn.functions.MSEFunction;
+import javafx.beans.property.ObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -52,18 +53,20 @@ public abstract class AlgorithmsGUI {
     //TODO dodati DE i backPropagation
     public static EventHandler<ActionEvent> chooseAlgorithmAction(ComboBox<String> comboBox, List<DatasetEntry> dataset,
                                                                   double trainPercentage, INeuralNetwork neuralNetwork,
-                                                                  Stage primaryStage) {
+                                                                  Stage primaryStage,
+                                                                  ObjectProperty<IMetaheuristic> metaheuristicProperty) {
         return e -> {
-            if (comboBox.getValue().equals("Genetic")) genetic(dataset, neuralNetwork, primaryStage);
-            else if (comboBox.getValue().equals("OSGA")) OSGA(dataset, neuralNetwork, primaryStage);
-            else if (comboBox.getValue().equals("SA")) SA(dataset, neuralNetwork, primaryStage);
-            else if ((comboBox.getValue().equals("PSO"))) PSO(dataset, neuralNetwork, primaryStage);
+            if (comboBox.getValue().equals("Genetic")) genetic(dataset, neuralNetwork, primaryStage, metaheuristicProperty);
+            else if (comboBox.getValue().equals("OSGA")) OSGA(dataset, neuralNetwork, primaryStage, metaheuristicProperty);
+            else if (comboBox.getValue().equals("SA")) SA(dataset, neuralNetwork, primaryStage,metaheuristicProperty);
+            else if ((comboBox.getValue().equals("PSO"))) PSO(dataset, neuralNetwork, primaryStage, metaheuristicProperty);
             else if ((comboBox.getValue().equals("Backpropagation")))
-                backpropagation(dataset, trainPercentage, neuralNetwork, primaryStage);
+                backpropagation(dataset, trainPercentage, neuralNetwork, primaryStage, metaheuristicProperty);
         };
     }
 
-    private static void genetic(List<DatasetEntry> dataset, INeuralNetwork neuralNetwork, Stage primaryStage) {
+    private static void genetic(List<DatasetEntry> dataset, INeuralNetwork neuralNetwork, Stage primaryStage,
+                                ObjectProperty<IMetaheuristic> metaheuristicProperty) {
         Stage geneticStage = new Stage();
         geneticStage.initOwner(primaryStage);
         geneticStage.initModality(Modality.WINDOW_MODAL);
@@ -204,6 +207,7 @@ public abstract class AlgorithmsGUI {
                     SimpleGA<RealVector> simpleGA = new SimpleGA<>(elitism, generationSize, desiredFittnes, desiredPrec,
                             problem, selection, crossover, mutationValue);
                     metaheuristic = simpleGA;
+                    metaheuristicProperty.setValue(metaheuristic);
                     metaheuristicRequirement = RealVector.createCollection(
                             populationSize,
                             neuralNetwork.getNumberOfWeights(),
@@ -227,7 +231,6 @@ public abstract class AlgorithmsGUI {
 
                     geneticStage.hide();
                 } catch (RuntimeException ex) {
-                    ex.printStackTrace();
                     invalidInput.setVisible(true);
                 }
                 event.consume();
@@ -237,7 +240,8 @@ public abstract class AlgorithmsGUI {
 
     }
 
-    private static void OSGA(List<DatasetEntry> dataset, INeuralNetwork neuralNetwork, Stage primaryStage) {
+    private static void OSGA(List<DatasetEntry> dataset, INeuralNetwork neuralNetwork, Stage primaryStage,
+                             ObjectProperty<IMetaheuristic> metaheuristicProperty) {
         Stage OSGAStage = new Stage();
         OSGAStage.initOwner(primaryStage);
         OSGAStage.initModality(Modality.WINDOW_MODAL);
@@ -441,6 +445,7 @@ public abstract class AlgorithmsGUI {
                     );
 
                     metaheuristic = geneticAlgorithm;
+                    metaheuristicProperty.setValue(metaheuristic);
                     metaheuristicRequirement = RealVector.createCollection(
                             populationSize,
                             neuralNetwork.getNumberOfWeights(),
@@ -469,7 +474,6 @@ public abstract class AlgorithmsGUI {
 
                     OSGAStage.hide();
                 } catch (RuntimeException ex) {
-                    ex.printStackTrace();
                     invalidInput.setVisible(true);
                 }
             }
@@ -477,7 +481,8 @@ public abstract class AlgorithmsGUI {
         ok.setOnAction(buttonHandler);
     }
 
-    private static void SA(List<DatasetEntry> dataset, INeuralNetwork neuralNetwork, Stage primaryStage) {
+    private static void SA(List<DatasetEntry> dataset, INeuralNetwork neuralNetwork, Stage primaryStage,
+                           ObjectProperty<IMetaheuristic> metaheuristicProperty) {
         Stage SAStage = new Stage();
         SAStage.initOwner(primaryStage);
         SAStage.initModality(Modality.WINDOW_MODAL);
@@ -634,6 +639,7 @@ public abstract class AlgorithmsGUI {
                             innerCoolingSchedule
                     );
                     metaheuristic = simulatedAnnealing;
+                    metaheuristicProperty.setValue(metaheuristic);
                     metaheuristicRequirement = new RealVector(
                             neuralNetwork.getNumberOfWeights(),
                             minComponentValue,
@@ -656,7 +662,6 @@ public abstract class AlgorithmsGUI {
 
                     SAStage.hide();
                 } catch (RuntimeException ex) {
-                    ex.printStackTrace();
                     invalidInput.setVisible(true);
                 }
             }
@@ -664,7 +669,8 @@ public abstract class AlgorithmsGUI {
         ok.setOnAction(buttonHandler);
     }
 
-    private static void PSO(List<DatasetEntry> dataset, INeuralNetwork neuralNetwork, Stage primaryStage) {
+    private static void PSO(List<DatasetEntry> dataset, INeuralNetwork neuralNetwork, Stage primaryStage,
+                            ObjectProperty<IMetaheuristic> metaheuristicProperty) {
         Stage PSOStage = new Stage();
         PSOStage.initOwner(primaryStage);
         PSOStage.initModality(Modality.WINDOW_MODAL);
@@ -806,6 +812,7 @@ public abstract class AlgorithmsGUI {
                     );
 
                     metaheuristic = particleSwarmOptimization;
+                    metaheuristicProperty.setValue(metaheuristic);
                     metaheuristicRequirement = initialParticles;
 
                     psoForm.setMaxIteration(iteration.getText());
@@ -822,7 +829,6 @@ public abstract class AlgorithmsGUI {
 
                     PSOStage.hide();
                 } catch (RuntimeException ex) {
-                    ex.printStackTrace();
                     invalidInput.setText("Invalid input");
                 }
             }
@@ -831,7 +837,7 @@ public abstract class AlgorithmsGUI {
     }
 
     private static void backpropagation(List<DatasetEntry> dataset, double trainPercentage, INeuralNetwork neuralNetwork,
-                                        Stage primaryStage) {
+                                        Stage primaryStage, ObjectProperty<IMetaheuristic> metaheuristicProperty) {
         BackpropagationForm backpropagationForm = BackpropagationForm.getInstance();
 
         Stage BPStage = new Stage();
@@ -912,6 +918,7 @@ public abstract class AlgorithmsGUI {
                             dataset.subList(index, dataset.size()), learningRt, maxIter,
                             desiredErr, desiredPrec, neuralNetwork, batch);
                     metaheuristic = bp;
+                    metaheuristicProperty.setValue(metaheuristic);
 
                     backpropagationForm.setMaxIteration(iteration.getText());
                     backpropagationForm.setLearningRate(learningRate.getText());
@@ -921,7 +928,6 @@ public abstract class AlgorithmsGUI {
 
                     BPStage.hide();
                 } catch (RuntimeException ex) {
-                    ex.printStackTrace();
                     invalidInput.setVisible(true);
                 }
             }

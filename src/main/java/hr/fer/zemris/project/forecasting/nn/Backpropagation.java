@@ -4,6 +4,7 @@ import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.IMetaheuristic;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.util.IObserver;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.activations.IActivation;
+import com.dosilovic.hermanzvonimir.ecfjava.neural.errors.NNErrorUtil;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 import com.dosilovic.hermanzvonimir.ecfjava.util.Solution;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
@@ -32,6 +33,7 @@ public class Backpropagation implements IMetaheuristic<double[]> {
     private INeuralNetwork neuralNetwork;
     private int batchSize;
     private List<IObserver<double[]>> observers = new ArrayList<>();
+    private DatasetEntry[] datasetArray;
 
     public Backpropagation(List<DatasetEntry> trainingSet, List<DatasetEntry> validationSet,
                            double learningRate, long maxIteration, double desiredError,
@@ -44,6 +46,10 @@ public class Backpropagation implements IMetaheuristic<double[]> {
         this.desiredPrecision = desiredPrecision;
         this.neuralNetwork = neuralNetwork;
         this.batchSize = batchSize;
+        datasetArray = new DatasetEntry[trainingSet.size()+validationSet.size()];
+        List<DatasetEntry> dataset = new ArrayList<>(trainingSet);
+        dataset.addAll(trainingSet);
+        datasetArray = dataset.toArray(datasetArray);
     }
 
     @Override
@@ -99,8 +105,10 @@ public class Backpropagation implements IMetaheuristic<double[]> {
             double validationSetMse = validationMSE;
             validationMSE = validationMse.dotProduct(validationMse) / validationSet.size();
 
-            System.err.println("iteration: " + currentIteration + " training set mse: " + trainingMSE
-                    + " validation set mse: " + validationMSE);
+
+            double datasetError = NNErrorUtil.meanSquaredError(neuralNetwork,datasetArray);
+            System.err.println("iteration: " + currentIteration + " training mse: " + trainingMSE
+                    + " validation mse: " + validationMSE+ " dataset mse: "+datasetError);
             if ((validationSetMse < validationMSE && currentIteration > maxIteration / 2)
                     || Math.abs(trainingMSE - desiredError) < desiredPrecision) {
                 break;

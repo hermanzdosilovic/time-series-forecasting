@@ -28,10 +28,6 @@ public class ARIMA extends AModel {
         }
     }
 
-    public void setModel(AModel model){
-        this.model = model;
-    }
-
     public AModel getModel() {
         return model;
     }
@@ -64,7 +60,20 @@ public class ARIMA extends AModel {
     @Override
     public double[] testDataset() {
         if(stat.getOrder() == 0) return model.testDataset();
-        return null;
+        else{
+            double[] differentiated = model.testDataset();
+            double[] oneUp = stat.getDataset();
+            for(int i = 0; i < stat.getOrder(); i++){
+                double[] oldDifferentiated = differentiated;
+                differentiated = Arrays.copyOf(differentiated, differentiated.length + 1);
+                oneUp = stat.computeOneBefore(stat.getFirstValues().get(i), oneUp);
+                for(int j = 0; j < differentiated.length; j++){
+                    if(j > 0) differentiated[j] = oneUp[j - 1] + oldDifferentiated[j - 1];
+                    else differentiated[j] = oneUp[j];
+                }
+            }
+            return differentiated;
+        }
     }
 
 

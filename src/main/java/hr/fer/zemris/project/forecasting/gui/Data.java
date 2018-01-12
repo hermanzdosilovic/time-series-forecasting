@@ -196,6 +196,8 @@ public class Data {
 
     public static LineChart<Number, Number> lineChart(XYChart.Series series, String lineChartName) {
         final NumberAxis xAxis = new NumberAxis();
+        xAxis.setMinorTickVisible(false);
+
         final NumberAxis yAxis = new NumberAxis();
         xAxis.setLabel("Sample Number");
         yAxis.setLabel("Sample Value");

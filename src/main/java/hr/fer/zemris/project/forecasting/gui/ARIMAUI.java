@@ -24,10 +24,10 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-
-import java.util.List;
 
 import static hr.fer.zemris.project.forecasting.gui.Data.*;
 import static hr.fer.zemris.project.forecasting.gui.DatasetValue.getChartData;
@@ -79,19 +79,52 @@ public class ARIMAUI {
         ma.setMinorTickCount(0);
         ma.setSnapToTicks(true);
 
+
+        Label currentFormula = new Label();
+
         ar.valueProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                if(Math.abs((Double) newValue - 0) < 1) ma.setDisable(false);
-                else ma.setDisable(true);
+                if (Math.abs((Double) newValue - 0) < 1) {
+
+                    currentFormula.setText("");
+                    ma.setDisable(false);
+                } else {
+
+                    String latexString = "y_t = ";
+
+                    for (int i = 1; i <= newValue.intValue(); i++) {
+                        latexString += "c_" + i + " * " + "y_t-" + i + " + ";
+                    }
+
+                    latexString += "a_t";
+
+                    currentFormula.setText(latexString);
+                    ma.setDisable(true);
+                }
             }
         });
 
         ma.valueProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                if(Math.abs((Double) newValue - 0) < 1) ar.setDisable(false);
-                else ar.setDisable(true);
+                if (Math.abs((Double) newValue - 0) < 1){
+                    ar.setDisable(false);
+                    currentFormula.setText("");
+                }
+                else{
+                    ar.setDisable(true);
+
+                    String latexString = "y_t = E(y) + a_t - ";
+
+                    for (int i = 1; i <= newValue.intValue(); i++) {
+                        latexString += "c_" + i + " * " + "a_t-" + i;
+                        if(i != newValue.intValue()) latexString += " - ";
+                    }
+
+                    currentFormula.setText(latexString);
+                    ar.setDisable(true);
+                }
             }
         });
 
@@ -118,7 +151,15 @@ public class ARIMAUI {
         series.setData(observableList);
         updateSeriesOnListChangeListener(data.getDatasetValues(), series);
         LineChart line = lineChart(series, "Data");
-        grid.add(line, 1, 0, 3, 3);
+
+        currentFormula.setMaxWidth(line.getMaxWidth());
+        currentFormula.setWrapText(true);
+
+        HBox label = new HBox(currentFormula);
+        label.setAlignment(Pos.TOP_CENTER);
+        currentFormula.setFont(Font.font("Verdana", FontWeight.BOLD, 14));
+        grid.add(label,1, 0, 5, 1);
+        grid.add(line, 1, 1, 3, 3);
 
         //start button
         Button start = new Button("Start");
@@ -135,36 +176,36 @@ public class ARIMAUI {
 
         predict.setOnAction(predictAction());
 
-        //TODO promijeniti seriju koju se dobije s novim datasetom
         start.setOnAction(
                 event -> {
-                    if(ar.getValue() == 0 && ma.getValue() == 0) return;
+                    if (ar.getValue() == 0 && ma.getValue() == 0) return;
                     new Thread(() -> {
+                        try {
                             arima = new ARIMA((int) ar.getValue(), (int) ma.getValue(),
                                     DatasetValue.getDoubleList(data.getDatasetValues()));
                             AModel am = arima.getModel();
-                            if(am instanceof  ARMA) {
+                            if (am instanceof ARMA) {
                                 if (!ARMA.invertibleCheck(arima.getCoeffs())) {
-                                    Platform.runLater(() -> {
-                                        Stage notInvertible = new Stage();
-                                        notInvertible.initOwner(data.getPrimaryStage());
-                                        notInvertible.initModality(Modality.WINDOW_MODAL);
-
-                                        Label l = new Label("Could not compute an invertible model. Using " +
-                                                "starting values instead.");
-
-                                        l.setPadding(new Insets(30, 30, 30, 30));
-
-                                        Scene scene = new Scene(l);
-                                        notInvertible.setScene(scene);
-                                        notInvertible.show();
-                                    });
+                                    showErrorMessage("Could not compute an invertible MA model. " +
+                                            "Using starting values instead.");
                                 }
                             }
-
-                        predict.setDisable(false);
+                            predict.setDisable(false);
+                            double[] test = arima.testDataset();
+                            XYChart.Series calculated = new XYChart.Series();
+                            calculated.setName("Calculated");
+                            calculated.setData(getChartData(
+                                    FXCollections.observableArrayList(DatasetValue.encapsulateDoubleArray(test))));
+                            Platform.runLater(() -> {
+                                if (line.getData().size() > 1) line.getData().remove(1);
+                                line.getData().add(calculated);
+                            });
+                        } catch (RuntimeException r) {
+                            showErrorMessage("Unable to compute the given model:" +
+                                    " matrix for the given dataset is singular.");
+                        }
                     }).run();
-                    if(line.getData().size() > 1) line.getData().remove(1);
+
                 });
 
         grid.add(table, 0, 2);
@@ -174,11 +215,11 @@ public class ARIMAUI {
 
     private static void allowOneSeriesUponDatasetChangeListener(ObservableList<DatasetValue> datasetValues, LineChart line) {
         datasetValues.addListener((ListChangeListener<DatasetValue>) c -> {
-            if(line.getData().size() > 1) line.getData().remove(1);
+            if (line.getData().size() > 1) line.getData().remove(1);
         });
     }
 
-    private EventHandler<ActionEvent> predictAction(){
+    private EventHandler<ActionEvent> predictAction() {
         return event -> {
             Stage predictStage = new Stage();
             predictStage.setTitle("Predict!");
@@ -205,18 +246,18 @@ public class ARIMAUI {
             predictStage.setScene(predictScene);
             predictStage.show();
 
-            ok.setOnAction((e) ->{
-                try{
+            ok.setOnAction((e) -> {
+                try {
                     int howManyPredictions = Integer.parseInt(predicts.getText());
                     new Thread(() -> {
                         double[] predictions = arima.computeNextValues(howManyPredictions);
                         ObservableList<DatasetValue> observableList = FXCollections.observableList(
                                 DatasetValue.encapsulateDoubleArray(predictions));
-                        Platform.runLater(() ->{
-                                Stage stage = new Stage();
-                                stage.setTitle("Predictions");
-                                stage.initOwner(data.getPrimaryStage());
-                                stage.initModality(Modality.WINDOW_MODAL);
+                        Platform.runLater(() -> {
+                            Stage stage = new Stage();
+                            stage.setTitle("Predictions");
+                            stage.initOwner(data.getPrimaryStage());
+                            stage.initModality(Modality.WINDOW_MODAL);
 
                             NumberAxis xAxis = new NumberAxis();
                             xAxis.setLabel("Sample number");
@@ -239,11 +280,26 @@ public class ARIMAUI {
                             predictStage.hide();
                         });
                     }).run();
-                }catch(Exception e1){
+                } catch (Exception e1) {
                     invalidInput.setVisible(true);
                 }
             });
         };
     }
 
+    private void showErrorMessage(String message) {
+        Platform.runLater(() -> {
+            Stage notInvertible = new Stage();
+            notInvertible.initOwner(data.getPrimaryStage());
+            notInvertible.initModality(Modality.WINDOW_MODAL);
+
+            Label l = new Label(message);
+
+            l.setPadding(new Insets(30, 30, 30, 30));
+
+            Scene scene = new Scene(l);
+            notInvertible.setScene(scene);
+            notInvertible.show();
+        });
+    }
 }

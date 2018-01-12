@@ -14,6 +14,8 @@ public class Stationary {
 
     private int order;
 
+    public Stationary(){ }
+
     public Stationary(double[] dataset) {
         this.dataset = dataset;
         order = 0;
@@ -67,7 +69,7 @@ public class Stationary {
         return ArraysUtil.toList(accumulate(ArraysUtil.toPrimitiveArray(data)));
     }
 
-    private double[] computeOneBefore(double first, double[] tmp) {
+    public double[] computeOneBefore(double first, double[] tmp) {
         double[] result = new double[tmp.length + 1];
         for (int i = 0; i < result.length; i++) {
             result[i] = first + sumOfAllBefore(tmp, i);
@@ -116,5 +118,21 @@ public class Stationary {
 
     public static List<Double> differentiate(List<Double> data) {
         return ArraysUtil.toList(differentiate(ArraysUtil.toPrimitiveArray(data)));
+    }
+
+    public List<Double> getFirstValues() {
+        return firstValues;
+    }
+
+    public void setFirstValues(List<Double> firstValues) {
+        this.firstValues = firstValues;
+    }
+
+    public void setDataset(double[] dataset) {
+        this.dataset = dataset;
+    }
+
+    public void setOrder(int order) {
+        this.order = order;
     }
 }

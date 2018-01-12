@@ -292,37 +292,20 @@ public class ARMA extends AModel {
     @Override
     public double[] testDataset() {
         double[] test = new double[dataset.getDataset().length];
-        for(int k = q; k < test.length; k++){
-            Dataset dataset = new Dataset(Arrays.copyOfRange(this.dataset.getDataset(), 0, k),
-                    differenced);
-            double forecastedValue = dataset.getMean();
-            if(invertibleCheck(betaCoeffs)){
-                for (int i = 0; i < p; i++) {
-                    forecastedValue +=
-                            betaCoeffs[i] * dataset.getDataset()[dataset.getDataset().length - 1 - i];
-                }
-            }
-            else{
-                for (int i = 0; i < p; i++) {
-                    forecastedValue +=
-                            startingValues[i] * dataset.getDataset()[dataset.getDataset().length - 1 - i];
-                }
-            }
-
-            forecastedValue += a.getMean();
-
-            if(invertibleCheck(betaCoeffs)) {
-                for (int j = 0; j < q; j++) {
-                    forecastedValue -= betaCoeffs[p + j] * a.getDataset()[a.getDataset().length - 1 - j];
-                }
-            }
-            else{
-                for (int j = 0; j < q; j++) {
-                    forecastedValue -= startingValues[p + j] * a.getDataset()[a.getDataset().length - 1 - j];
-                }
-            }
-            test[k] = forecastedValue;
+        boolean isInvertible = invertibleCheck(betaCoeffs);
+        for(int i = 0; i < q; i++){
+            test[i] = dataset.getDataset()[i] + dataset.getMean();
         }
+
+        for(int currentIndex = q; currentIndex < test.length; currentIndex++){
+            for(int i = 0; i < q; i++){
+                if(isInvertible) test[currentIndex] -= betaCoeffs[p + i] * a.getDataset()[currentIndex - 1 - i];
+                else test[currentIndex] -= startingValues[p + i] * a.getDataset()[currentIndex - 1 - i];
+            }
+            test[currentIndex] += a.getMean();
+            test[currentIndex] += dataset.getMean();
+        }
+
         return test;
     }
 

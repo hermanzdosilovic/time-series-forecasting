@@ -43,6 +43,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import static hr.fer.zemris.project.forecasting.gui.Data.*;
 import static hr.fer.zemris.project.forecasting.gui.DatasetValue.getChartData;
@@ -67,6 +70,7 @@ public class NeuralNetworkUI {
     private Button stop;
     private Button start;
     private Thread calculationThread;
+    private ExecutorService threadPool = Executors.newFixedThreadPool(1);
 
     public NeuralNetworkUI(Data data) {
         this.data = data;
@@ -109,7 +113,9 @@ public class NeuralNetworkUI {
         predict.setDisable(true);
 
         stop = new Button("Stop training");
-        stop.setOnAction(a -> calculationThread.interrupt());
+        stop.setOnAction(a ->{
+                threadPool.shutdownNow();
+    });
         stop.setDisable(true);
 
         start = new Button("Start training");
@@ -505,8 +511,7 @@ public class NeuralNetworkUI {
                     });
                 }
             };
-            calculationThread = new Thread(runnable);
-            calculationThread.start();
+            threadPool.submit(runnable);
         };
     }
 

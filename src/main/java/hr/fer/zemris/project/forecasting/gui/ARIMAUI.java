@@ -36,7 +36,6 @@ public class ARIMAUI {
     private Data data;
     private ARIMA arima;
 
-    //TODO pokazati kako ARMA pogadja nakon što se pokrene
     public ARIMAUI(Data data) {
         this.data = data;
     }
@@ -136,13 +135,26 @@ public class ARIMAUI {
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setItems(data.getDatasetValues());
 
-        TableColumn<DatasetValue, Double> values = new TableColumn("Data Set Values");
+        TableColumn<DatasetValue, Double> values = new TableColumn("Value");
         values.setSortable(false);
         values.setEditable(true);
 
         values.setCellValueFactory(new PropertyValueFactory<>("value"));
 
+        TableColumn<DatasetValue, Integer> indices = new TableColumn<>("Index");
+        indices.setSortable(false);
+        indices.setEditable(false);
+
+        indices.setCellValueFactory(new PropertyValueFactory<>("index"));
+
+        table.getColumns().add(indices);
         table.getColumns().add(values);
+
+        indices.prefWidthProperty().bind(table.widthProperty().multiply(INDEX_SIZE));
+        values.prefWidthProperty().bind(table.widthProperty().multiply(1 - INDEX_SIZE));
+        indices.setResizable(false);
+        values.setResizable(false);
+
 
         //line chart
         XYChart.Series<Integer, Double> series = new XYChart.Series();

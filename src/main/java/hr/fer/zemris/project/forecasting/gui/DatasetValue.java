@@ -23,8 +23,10 @@ import java.util.List;
 public class DatasetValue implements Comparable<DatasetValue>{
 
     private double value;
+    private int index;
 
-    public DatasetValue(double value) {
+    public DatasetValue(int index, double value) {
+        this.index = index;
         this.value = value;
     }
 
@@ -36,6 +38,10 @@ public class DatasetValue implements Comparable<DatasetValue>{
         this.value = value;
     }
 
+    public int getIndex(){return index;}
+
+    public void setIndex(int index){this.index = index;}
+
     @Override
     public String toString(){
         return Double.toString(value);
@@ -44,7 +50,7 @@ public class DatasetValue implements Comparable<DatasetValue>{
     public static List<DatasetValue> encapsulateDoubleArray(double[] dataset){
         List<DatasetValue> tmp = new ArrayList<>(dataset.length);
         for(int i = 0; i < dataset.length; i++){
-            tmp.add(new DatasetValue(dataset[i]));
+            tmp.add(new DatasetValue(i + 1, dataset[i]));
         }
         return tmp;
     }

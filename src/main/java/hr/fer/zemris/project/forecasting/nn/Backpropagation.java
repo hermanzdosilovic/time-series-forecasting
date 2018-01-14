@@ -46,7 +46,7 @@ public class Backpropagation implements IMetaheuristic<double[]> {
         this.desiredPrecision = desiredPrecision;
         this.neuralNetwork = neuralNetwork;
         this.batchSize = batchSize;
-        datasetArray = new DatasetEntry[trainingSet.size()+validationSet.size()];
+        datasetArray = new DatasetEntry[trainingSet.size() + validationSet.size()];
         List<DatasetEntry> dataset = new ArrayList<>(trainingSet);
         dataset.addAll(trainingSet);
         datasetArray = dataset.toArray(datasetArray);
@@ -89,26 +89,37 @@ public class Backpropagation implements IMetaheuristic<double[]> {
                 RealMatrix forecastMatrix = layerOutputs[layerOutputs.length - 1];
                 RealMatrix outputDeltaMatrix = outputMatrix.subtract(forecastMatrix);
                 for (int k = 0; k < outputDeltaMatrix.getRowDimension(); ++k) {
-                    trainingMse = trainingMse.add(outputDeltaMatrix.getRowVector(k));
+                    trainingMse = trainingMse.add(outputDeltaMatrix.getRowVector(k)
+                            .ebeMultiply(outputDeltaMatrix.getRowVector(k)));
                 }
                 doBackpropagation(neuralNetwork, outputDeltaMatrix, layerOutputs);
             }
-            trainingMSE = trainingMse.dotProduct(trainingMse) / trainingSet.size();
+            trainingMSE = 0;
+            for (int j = 0; j < trainingMse.getDimension(); ++j) {
+                trainingMSE += trainingMse.getEntry(j);
+            }
+            trainingMSE /= trainingSet.size();
 
 
             RealVector validationMse = new ArrayRealVector(neuralNetwork.getOutputSize());
             for (DatasetEntry entry : validationSet) {
                 RealVector forecast = new ArrayRealVector(neuralNetwork.forward(entry.getInput()));
                 RealVector expected = new ArrayRealVector(entry.getOutput());
-                validationMse = validationMse.add(expected.subtract(forecast));
+                RealVector delta = expected.subtract(forecast);
+                validationMse = validationMse.add(delta.ebeMultiply(delta));
             }
             double validationSetMse = validationMSE;
-            validationMSE = validationMse.dotProduct(validationMse) / validationSet.size();
 
-            double datasetError = NNErrorUtil.meanSquaredError(neuralNetwork,datasetArray);
+            validationMSE = 0.;
+            for (int j = 0; j < validationMse.getDimension(); ++j) {
+                validationMSE += validationMse.getEntry(j);
+            }
+            validationMSE /= validationSet.size();
+
+            double datasetError = NNErrorUtil.meanSquaredError(neuralNetwork, datasetArray);
             solution.setFitness(datasetError);
             System.err.println("iteration: " + currentIteration + " training mse: " + trainingMSE
-                    + " validation mse: " + validationMSE+ " dataset mse: "+datasetError);
+                    + " validation mse: " + validationMSE + " dataset mse: " + datasetError);
             if ((validationSetMse < validationMSE && currentIteration > maxIteration / 2)
                     || Math.abs(trainingMSE - desiredError) < desiredPrecision) {
                 break;

@@ -102,11 +102,24 @@ public class NeuralNetworkUI {
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setItems(data.getDatasetValues());
 
-        TableColumn<DatasetValue, Double> values = new TableColumn("Data Set Values");
+
+        TableColumn<DatasetValue, Integer> indices = new TableColumn<>("Index");
+        indices.setSortable(false);
+        indices.setEditable(false);
+        indices.setCellValueFactory(new PropertyValueFactory<>("index"));
+        table.getColumns().add(indices);
+
+        TableColumn<DatasetValue, Double> values = new TableColumn("Value");
         values.setSortable(false);
         values.setEditable(true);
         values.setCellValueFactory(new PropertyValueFactory<>("value"));
         table.getColumns().add(values);
+
+        indices.prefWidthProperty().bind(table.widthProperty().multiply(INDEX_SIZE));
+        values.prefWidthProperty().bind(table.widthProperty().multiply(1 - INDEX_SIZE));
+
+        indices.setResizable(false);
+        values.setResizable(false);
 
         predict = new Button("Predict future values");
         predict.setOnAction(predictAction());

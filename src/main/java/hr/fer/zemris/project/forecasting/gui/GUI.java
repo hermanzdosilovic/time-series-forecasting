@@ -14,6 +14,7 @@ public class GUI extends Application {
     @Override
     public void start(Stage primaryStage){
         primaryStage.setTitle("Time Series Forecasting");
+        primaryStage.setResizable(false);
 
         Tab data = new Tab("Data");
         data.setClosable(false);

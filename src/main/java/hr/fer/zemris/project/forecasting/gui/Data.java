@@ -25,7 +25,9 @@ import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import javafx.util.StringConverter;
+import javafx.util.converter.IntegerStringConverter;
 import org.codefx.libfx.listener.handle.ListenerHandle;
 import org.codefx.libfx.listener.handle.ListenerHandles;
 
@@ -45,10 +47,21 @@ public class Data {
     private static List<ListenerHandle> listenerHandles = new LinkedList<>();
     private static List<MyListChangeListener> myListChangeListeners = new LinkedList<>();
 
+    public final static double INDEX_SIZE = 0.3;
+
     private static ObservableList<DatasetValue> getList(String path) {
         try {
             return FXCollections.observableArrayList(DatasetValue.
                     encapsulateDoubleArray(DataReaderUtil.readDataset(path)));
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    private static ObservableList<DatasetValue> getList(String path, String delimiter, Integer index) {
+        try {
+            return FXCollections.observableArrayList(DatasetValue.
+                    encapsulateDoubleArray(DataReaderUtil.readDataset(path, index, delimiter)));
         } catch (IOException e) {
             return null;
         }
@@ -102,16 +115,21 @@ public class Data {
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setItems(datasetValues);
         table.setPrefWidth(MAX_TABLE_WIDTH);
-        TableColumn<DatasetValue, Double> values = new TableColumn("Data Set Values");
+        TableColumn<DatasetValue, Double> values = new TableColumn("Value");
         values.setSortable(false);
         values.setEditable(true);
-
         values.setCellValueFactory(new PropertyValueFactory<>("value"));
 
         values.setCellFactory(TextFieldTableCell.forTableColumn(new MyDoubleStringConverter()));
-
         values.setOnEditCommit((e) ->
-                e.getTableView().getItems().set(e.getTablePosition().getRow(), new DatasetValue(e.getNewValue())));
+                e.getTableView().getItems().set(e.getTablePosition().getRow(),
+                        new DatasetValue(e.getTablePosition().getRow(), e.getNewValue())));
+
+        TableColumn<DatasetValue, Integer> indices = new TableColumn<>("Index");
+        indices.setSortable(false);
+        indices.setEditable(false);
+
+        indices.setCellValueFactory(new PropertyValueFactory<>("index"));
 
         table.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.PLUS) {
@@ -122,7 +140,14 @@ public class Data {
         });
 
 
+        table.getColumns().add(indices);
         table.getColumns().add(values);
+
+        indices.prefWidthProperty().bind(table.widthProperty().multiply(INDEX_SIZE));
+        values.prefWidthProperty().bind(table.widthProperty().multiply(1 - INDEX_SIZE));
+
+        indices.setResizable(false);
+        values.setResizable(false);
 
         grid.add(table, 0, 1);
 
@@ -149,14 +174,56 @@ public class Data {
             fileChooser.setTitle("Load dataset...");
 
             File f = fileChooser.showOpenDialog(primaryStage);
+
             if (f != null) {
-                for (ListenerHandle lh : listenerHandles) lh.detach();
 
-                datasetValues.clear();
-                datasetValues.addAll(getList(f.getPath()));
+                Stage delimiterStage = new Stage();
 
-                for (ListenerHandle lh : listenerHandles) lh.attach();
-                for (MyListChangeListener lcl : myListChangeListeners) lcl.setDatasetValuesOnSeries();
+                delimiterStage.initOwner(primaryStage);
+                delimiterStage.initModality(Modality.WINDOW_MODAL);
+
+                Label delLabel = new Label("Delimiter:");
+                delLabel.requestFocus();
+
+                TextField delimiterField = new TextField();
+                delimiterField.setPromptText("Enter the delimiter used in the file");
+                delimiterField.setTooltip(new Tooltip("If nothing is entered, the default delimiter is used."));
+
+                Label colLabel = new Label("Column index:");
+                TextField columnNumber = new TextField();
+                columnNumber.setPromptText("Enter the index of the column where the data is located");
+                columnNumber.setTooltip(new Tooltip("If nothing is entered, the last column is used."));
+
+                Button ok = new Button("OK");
+
+                ok.setOnAction(event1 -> {
+                    for (ListenerHandle lh : listenerHandles) lh.detach();
+                    datasetValues.clear();
+
+                    try {
+                        String delimiter = delimiterField.getText();
+                        if (delimiter.equals("")) delimiter = ",";
+                        int indexOfColumn = Integer.parseInt(columnNumber.getText());
+                        delimiterStage.hide();
+                        datasetValues.addAll(getList(f.getPath(), delimiter, indexOfColumn));
+                    } catch (NumberFormatException e) {
+                        delimiterStage.hide();
+                        datasetValues.addAll(getList(f.getPath()));
+                    }
+
+                    for (ListenerHandle lh : listenerHandles) lh.attach();
+                    for (MyListChangeListener lcl : myListChangeListeners) lcl.setDatasetValuesOnSeries();
+
+                });
+
+                VBox box = new VBox(delLabel, delimiterField, colLabel, columnNumber, ok);
+                box.setPadding(new Insets(20, 20, 20, 20));
+                box.setSpacing(10);
+                box.setAlignment(Pos.CENTER);
+                Scene delimScene = new Scene(box);
+                delimiterStage.setScene(delimScene);
+
+                delimiterStage.show();
             }
         };
 
@@ -172,9 +239,13 @@ public class Data {
         table.getSelectionModel().clearSelection();
 
         // create new record and add it to the model
-        DatasetValue data = new DatasetValue(0.0);
-        if (row < table.getItems().size() - 1) table.getItems().add(row + 1, data);
-        else table.getItems().add(data);
+        DatasetValue data = new DatasetValue(row + 2, 0.0);
+        if (row < table.getItems().size() - 1) {
+            table.getItems().add(row + 1, data);
+            for (int i = row + 2; i < datasetValues.size(); i++) {
+                datasetValues.get(i).setIndex(i + 1);
+            }
+        } else table.getItems().add(data);
 
         table.getSelectionModel().select(row + 1, selectedColumn);
 
@@ -192,10 +263,14 @@ public class Data {
         if (table.getItems().size() == 0) return;
         int row = table.getSelectionModel().getSelectedIndex();
         datasetValues.remove(row);
+        for (int i = row; i < datasetValues.size(); i++)
+            datasetValues.get(i).setIndex(i + 1);
     }
 
     public static LineChart<Number, Number> lineChart(XYChart.Series series, String lineChartName) {
         final NumberAxis xAxis = new NumberAxis();
+        xAxis.setMinorTickVisible(false);
+
         final NumberAxis yAxis = new NumberAxis();
         xAxis.setLabel("Sample Number");
         yAxis.setLabel("Sample Value");
@@ -208,7 +283,7 @@ public class Data {
         return lineChart;
     }
 
-    public static LineChart<Number, Number> mseLineChart(String lineChartName){
+    public static LineChart<Number, Number> mseLineChart(String lineChartName) {
         final NumberAxis xAxis = new NumberAxis();
         final NumberAxis yAxis = new NumberAxis();
         final LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
@@ -300,7 +375,7 @@ public class Data {
         if (from > to) throw new IllegalArgumentException();
         if (from == to) {
             for (int i = 0; i < datasetValues.size(); i++) {
-                datasetValues.set(i, new DatasetValue(from));
+                datasetValues.set(i, new DatasetValue(i, from));
             }
             return;
         }
@@ -308,7 +383,7 @@ public class Data {
         double max = Collections.max(datasetValues).getValue();
         for (int i = 0; i < datasetValues.size(); i++) {
             double x = datasetValues.get(i).getValue();
-            datasetValues.set(i, new DatasetValue(from + (x - min) * (to - from) / (max - min)));
+            datasetValues.set(i, new DatasetValue(i, from + (x - min) * (to - from) / (max - min)));
         }
     }
 
@@ -325,7 +400,6 @@ public class Data {
             try {
                 return Double.parseDouble(string);
             } catch (NumberFormatException e) {
-                //napravi bolji error handling
                 return null;
             }
         }
@@ -343,7 +417,6 @@ public class Data {
 
         @Override
         public void onChanged(Change<? extends DatasetValue> c) {
-            System.out.println("called");
             while (c.next()) {
                 if (c.wasReplaced()) {
                     for (int i = c.getFrom(); i < c.getTo(); i++) {
@@ -357,8 +430,6 @@ public class Data {
                         XYChart.Data<Integer, Double> nextAddition = new XYChart.Data<>(i, datasetValues.get(i).getValue());
                         nextAddition.setNode(new DatasetValue.HoveredThresholdNode(
                                 nextAddition.getXValue(), nextAddition.getYValue()));
-                        System.out.println(series.getData().size() + " " + datasetValues.size());
-                        System.out.println(i);
                         if (i < series.getData().size()) {
                             series.getData().add(i, nextAddition);
                             for (int j = i + 1; j < series.getData().size(); j++) {

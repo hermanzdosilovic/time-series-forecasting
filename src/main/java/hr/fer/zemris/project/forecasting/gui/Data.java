@@ -61,7 +61,7 @@ public class Data {
     private static ObservableList<DatasetValue> getList(String path, String delimiter, Integer index) {
         try {
             return FXCollections.observableArrayList(DatasetValue.
-                    encapsulateDoubleArray(DataReaderUtil.readDataset(path, index, delimiter)));
+                    encapsulateDoubleArray(DataReaderUtil.readDataset(path, index - 1, delimiter)));
         } catch (IOException e) {
             return null;
         }

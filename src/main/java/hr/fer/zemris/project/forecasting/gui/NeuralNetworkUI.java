@@ -126,9 +126,9 @@ public class NeuralNetworkUI {
         predict.setDisable(true);
 
         stop = new Button("Stop training");
-        stop.setOnAction(a ->{
-                threadPool.shutdownNow();
-    });
+        stop.setOnAction(a -> {
+            threadPool.shutdownNow();
+        });
         stop.setDisable(true);
 
         start = new Button("Start training");
@@ -342,7 +342,7 @@ public class NeuralNetworkUI {
         private volatile ObservableList<XYChart.Data<Integer, Double>> mseObservableList;
         private volatile ObservableList<XYChart.Data<Integer, Double>> observableList;
         private long lastPlottingTime = System.currentTimeMillis();
-        private long period = 800;
+        private long period = 1500;
         private volatile List<XYChart.Data<Integer, Double>> mseList = new ArrayList<>();
         private volatile List<XYChart.Data<Integer, Double>> outputList = new ArrayList<>();
         private double[] lastSeenWeights;
@@ -363,13 +363,12 @@ public class NeuralNetworkUI {
             mseList.add(new XYChart.Data<>((int) iteration, solution.getFitness()));
 
             long currentTime = System.currentTimeMillis();
-            if (currentTime - lastPlottingTime < period
-                    && (lastSeenWeights == null || Arrays.equals(lastSeenWeights, solution.getRepresentative()))) {
+            if (currentTime - lastPlottingTime < period || Arrays.equals(lastSeenWeights, solution.getRepresentative())) {
                 return;
             }
             lastPlottingTime = System.currentTimeMillis();
             lastSeenWeights = solution.getRepresentative();
-
+            System.out.println("Usao " + lastPlottingTime / 1000);
             if (NeuralNetworkUI.this.series == null) {
                 NeuralNetworkUI.this.series = new XYChart.Series();
                 NeuralNetworkUI.this.series.setName("Forecast");
@@ -512,7 +511,7 @@ public class NeuralNetworkUI {
                         ((SimpleGA) metaheuristic).attachObserver(new GraphRealVectorObserver(neuralNetwork.get()));
                         ((SimpleGA) metaheuristic).run(metaheuristicRequirement);
                     } else {
-                        System.err.println("wrong metaheurstic");
+                        System.err.println("wrong metaheuristic");
                     }
 
                     Platform.runLater(() -> {

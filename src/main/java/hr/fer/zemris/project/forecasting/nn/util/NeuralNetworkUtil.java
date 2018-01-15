@@ -50,8 +50,8 @@ public final class NeuralNetworkUtil {
         return tdnnDataset;
     }
 
-    public static Pair<List<DataEntry>, List<DataEntry>> splitTDNNDataset(
-        List<DataEntry> dataset,
+    public static Pair<List<DatasetEntry>, List<DatasetEntry>> splitTDNNDataset(
+        List<DatasetEntry> dataset,
         double trainPercentage
     ) {
         int trainSize = (int) (dataset.size() * trainPercentage);

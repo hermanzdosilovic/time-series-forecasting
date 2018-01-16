@@ -10,10 +10,11 @@ import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.util.IObserver;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.ElmanNN;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.FeedForwardANN;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
-import com.dosilovic.hermanzvonimir.ecfjava.neural.activations.*;
+import com.dosilovic.hermanzvonimir.ecfjava.neural.activations.IActivation;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 import com.dosilovic.hermanzvonimir.ecfjava.util.RealVector;
-import com.dosilovic.hermanzvonimir.ecfjava.util.Solution;
+import hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.GraphObserver;
+import hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.RealVectorGraphObserver;
 import hr.fer.zemris.project.forecasting.gui.forms.NeuralNetworkForm;
 import hr.fer.zemris.project.forecasting.nn.Backpropagation;
 import javafx.application.Platform;
@@ -39,16 +40,13 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import static hr.fer.zemris.project.forecasting.gui.Data.*;
 import static hr.fer.zemris.project.forecasting.gui.DatasetValue.getChartData;
+import static hr.fer.zemris.project.forecasting.gui.GUIUtil.extractActivation;
 
 public class NeuralNetworkUI {
 
@@ -64,13 +62,11 @@ public class NeuralNetworkUI {
     private double trainPercentage;
     private LineChart line;
     private LineChart mseChart;
-    private XYChart.Series<Integer, Double> series;
-    private XYChart.Series<Integer, Double> mseSeries;
+    private volatile XYChart.Series<Integer, Double> series;
+    private volatile XYChart.Series<Integer, Double> mseSeries;
     private Button predict;
     private Button stop;
     private Button start;
-    private Thread calculationThread;
-    private ExecutorService threadPool = Executors.newFixedThreadPool(1);
 
     public NeuralNetworkUI(Data data) {
         this.data = data;
@@ -127,7 +123,6 @@ public class NeuralNetworkUI {
 
         stop = new Button("Stop training");
         stop.setOnAction(a -> {
-            threadPool.shutdownNow();
         });
         stop.setDisable(true);
 
@@ -319,123 +314,12 @@ public class NeuralNetworkUI {
         };
     }
 
-    private static IActivation extractActivation(String activation) {
-        switch (activation) {
-            case "Sigmoid":
-                return SigmoidActivation.getInstance();
-            case "Binary Step":
-                return BinaryStepActivation.getInstance();
-            case "Identity":
-                return IdentityActivation.getInstance();
-            case "ReLU":
-                return ReLUActivation.getInstance();
-            case "TanH":
-                return TanHActivation.getInstance();
-            default:
-                return null;
-        }
-    }
-
-    private class GraphObserver implements IObserver<double[]> {
-        private INeuralNetwork nn;
-        private long iteration;
-        private volatile ObservableList<XYChart.Data<Integer, Double>> mseObservableList;
-        private volatile ObservableList<XYChart.Data<Integer, Double>> observableList;
-        private long lastPlottingTime = System.currentTimeMillis();
-        private long period = 1500;
-        private volatile List<XYChart.Data<Integer, Double>> mseList = new ArrayList<>();
-        private volatile List<XYChart.Data<Integer, Double>> outputList = new ArrayList<>();
-        private double[] lastSeenWeights;
-
-        public GraphObserver(INeuralNetwork nn) {
-            this.nn = nn instanceof ElmanNN ? new ElmanNN(nn.getArchitecture(), nn.getLayerActivations()) :
-                    new FeedForwardANN(nn.getArchitecture(), nn.getLayerActivations());
-
-            for (int i = 0; i < dataset.size(); i++) {
-                outputList.add(new XYChart.Data<>(i + 1, 0.));
-                outputList.get(i).setNode(new DatasetValue.HoveredThresholdNode(0, 0.));
-            }
-        }
-
-        @Override
-        public void update(Solution<double[]> solution) {
-            ++iteration;
-            mseList.add(new XYChart.Data<>((int) iteration, solution.getFitness()));
-
-            long currentTime = System.currentTimeMillis();
-            if (currentTime - lastPlottingTime < period || Arrays.equals(lastSeenWeights, solution.getRepresentative())) {
-                return;
-            }
-            lastPlottingTime = System.currentTimeMillis();
-            lastSeenWeights = solution.getRepresentative();
-            System.out.println("Usao " + lastPlottingTime / 1000);
-            if (NeuralNetworkUI.this.series == null) {
-                NeuralNetworkUI.this.series = new XYChart.Series();
-                NeuralNetworkUI.this.series.setName("Forecast");
-
-            }
-            if (NeuralNetworkUI.this.mseSeries == null) {
-                NeuralNetworkUI.this.mseSeries = new XYChart.Series();
-                NeuralNetworkUI.this.mseSeries.setName("mse");
-            }
-            double[] weights = solution.getRepresentative();
-            nn.setWeights(weights);
-
-
-            for (int i = 0; i < dataset.size(); i++) {
-                double[] forecast = nn.forward(dataset.get(i).getInput());
-                outputList.get(i).setYValue(forecast[0]);
-                outputList.get(i).setXValue(i + 1);
-                DatasetValue.HoveredThresholdNode node = ((DatasetValue.HoveredThresholdNode) outputList.get(i).getNode());
-                node.setValue(outputList.get(i).getYValue());
-                node.setPriorValue(outputList.get(i).getXValue());
-            }
-
-            Runnable plot = new Runnable() {
-                @Override
-                public void run() {
-                    if (line.getData().size() == 1) {
-                        line.getData().add(NeuralNetworkUI.this.series);
-                    }
-                    if (mseChart.getData().size() == 0) {
-                        mseChart.getData().add(NeuralNetworkUI.this.mseSeries);
-                        mseObservableList = FXCollections.observableArrayList();
-                        NeuralNetworkUI.this.mseSeries.setData(mseObservableList);
-                    }
-
-                    observableList = FXCollections.observableArrayList();
-                    NeuralNetworkUI.this.series.setData(observableList);
-                    observableList.addAll(outputList);
-
-                    mseObservableList.addAll(mseList);
-                    mseList.clear();
-                }
-            };
-            Platform.runLater(plot);
-        }
-    }
-
-    private class GraphRealVectorObserver implements IObserver<RealVector> {
-
-        IObserver<double[]> graphObserver;
-
-        private GraphRealVectorObserver(INeuralNetwork nn) {
-            graphObserver = new GraphObserver(nn);
-        }
-
-        @Override
-        public void update(Solution<RealVector> solution) {
-            graphObserver.update(new Solution<>(solution.getRepresentative().toArray()));
-        }
-    }
-
     private void initNeuralNetwork() {
         neuralNetwork.addListener((t, u, v) -> {
             if (v != null) {
                 dataset = DatasetValue.getTrainingData(data.getDatasetValues(), neuralNetwork.get().getInputSize(),
                         neuralNetwork.get().getOutputSize());
                 chooseAlgorithm.setOnAction(null);
-                int index = chooseAlgorithm.getSelectionModel().getSelectedIndex();
                 if (v instanceof ElmanNN) {
                     chooseAlgorithm.getItems().clear();
                     chooseAlgorithm.getItems().addAll(Arrays.asList("<none>", "Genetic", "OSGA", "SA", "PSO"));
@@ -445,12 +329,10 @@ public class NeuralNetworkUI {
                 }
                 chooseAlgorithm.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
                         neuralNetwork.get(), data.getPrimaryStage(), metaheuristicProperty));
-                changeParams.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
-                        neuralNetwork.get(), data.getPrimaryStage(), metaheuristicProperty));
-
-
                 chooseAlgorithm.getSelectionModel().select(0);
                 chooseAlgorithm.setDisable(false);
+                changeParams.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
+                        neuralNetwork.get(), data.getPrimaryStage(), metaheuristicProperty));
                 changeParams.setDisable(false);
             } else {
                 chooseAlgorithm.setDisable(true);
@@ -484,32 +366,41 @@ public class NeuralNetworkUI {
             mseChart.getData().remove(mseSeries);
             series = null;
             mseSeries = null;
-            Runnable runnable = new Runnable() {
+            Runnable training = new Runnable() {
                 @Override
                 public void run() {
                     IMetaheuristic metaheuristic = AlgorithmsGUI.metaheuristic;
+                    IObserver realVectorGraphObserver = new RealVectorGraphObserver(neuralNetwork.get(), dataset, series,
+                            mseSeries, line, mseChart);
                     if (metaheuristic instanceof SimpleSA) {
                         RealVector metaheuristicRequirement = (RealVector) AlgorithmsGUI.metaheuristicRequirement;
-                        ((SimpleSA) metaheuristic).attachObserver(new GraphRealVectorObserver(neuralNetwork.get()));
-                        ((SimpleSA) metaheuristic).run(metaheuristicRequirement);
+                        SimpleSA simpleSA = (SimpleSA) metaheuristic;
+                        simpleSA.attachObserver(realVectorGraphObserver);
+                        simpleSA.run(metaheuristicRequirement);
                     } else if (metaheuristic instanceof BasicPSO) {
                         Collection<Particle<RealVector>> metaheuristicRequirement =
                                 (Collection<Particle<RealVector>>) AlgorithmsGUI.metaheuristicRequirement;
-                        ((BasicPSO) metaheuristic).attachObserver(new GraphRealVectorObserver(neuralNetwork.get()));
-                        ((BasicPSO) metaheuristic).run(metaheuristicRequirement);
+                        BasicPSO basicPSO = (BasicPSO) metaheuristic;
+                        basicPSO.attachObserver(realVectorGraphObserver);
+                        basicPSO.run(metaheuristicRequirement);
                     } else if (metaheuristic instanceof Backpropagation) {
-                        ((Backpropagation) metaheuristic).attachObserver(new GraphObserver(neuralNetwork.get()));
-                        ((Backpropagation) metaheuristic).run();
+                        Backpropagation backpropagation = (Backpropagation) metaheuristic;
+                        IObserver graphObserver = new GraphObserver(neuralNetwork.get(), dataset, series,
+                                mseSeries, line, mseChart);
+                        backpropagation.attachObserver(graphObserver);
+                        backpropagation.run();
                     } else if (metaheuristic instanceof SimpleOSGA) {
                         Collection<RealVector> metaheuristicRequirement =
                                 (Collection<RealVector>) AlgorithmsGUI.metaheuristicRequirement;
-                        ((SimpleOSGA) metaheuristic).attachObserver(new GraphRealVectorObserver(neuralNetwork.get()));
-                        ((SimpleOSGA) metaheuristic).run(metaheuristicRequirement);
+                        SimpleOSGA simpleOSGA = (SimpleOSGA) metaheuristic;
+                        simpleOSGA.attachObserver(realVectorGraphObserver);
+                        simpleOSGA.run(metaheuristicRequirement);
                     } else if (metaheuristic instanceof SimpleGA) {
                         Collection<RealVector> metaheuristicRequirement =
                                 (Collection<RealVector>) AlgorithmsGUI.metaheuristicRequirement;
-                        ((SimpleGA) metaheuristic).attachObserver(new GraphRealVectorObserver(neuralNetwork.get()));
-                        ((SimpleGA) metaheuristic).run(metaheuristicRequirement);
+                        SimpleGA simpleGA = (SimpleGA) metaheuristic;
+                        simpleGA.attachObserver(realVectorGraphObserver);
+                        simpleGA.run(metaheuristicRequirement);
                     } else {
                         System.err.println("wrong metaheuristic");
                     }
@@ -518,12 +409,10 @@ public class NeuralNetworkUI {
                         start.setDisable(false);
                         predict.setDisable(false);
                         stop.setDisable(true);
-                        //ovo tu?
-                        metaheuristic.notifyObservers(metaheuristic.getBestSolution());
                     });
                 }
             };
-            threadPool.submit(runnable);
+            new Thread(training).start();
         };
     }
 
@@ -571,7 +460,6 @@ public class NeuralNetworkUI {
                             double[] expected = neuralNetwork.get().forward(input);
                             predictions[i + nnInputSize] = expected[0];
                         }
-//                        double[] predictions = arima.computeNextValues(howManyPredictions);
                         ObservableList<DatasetValue> observableList = FXCollections.observableList(
                                 DatasetValue.encapsulateDoubleArray(Arrays.copyOfRange(predictions, nnInputSize, predictions.length)));
                         Platform.runLater(() -> {
@@ -600,7 +488,7 @@ public class NeuralNetworkUI {
                             stage.show();
                             predictStage.hide();
                         });
-                    }).run();
+                    }).start();
                 } catch (Exception e1) {
                     invalidInput.setVisible(true);
                 }

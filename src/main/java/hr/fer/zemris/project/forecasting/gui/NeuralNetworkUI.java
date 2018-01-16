@@ -78,45 +78,38 @@ public class NeuralNetworkUI {
         grid.setHgap(10);
         grid.setPadding(new Insets(30, 30, 30, 30));
 
-        chooseNetwork = new ComboBox<>(FXCollections.observableArrayList("<none>", "TDNN", "Elman ANN"));
-        chooseNetwork.getSelectionModel().select(0);
-        chooseNetwork.setOnAction(changeArchitectureAction(chooseNetwork));
-        Button changeArch = new Button("Change architecture");
-        changeArch.setOnAction(changeArchitectureAction(chooseNetwork));
+        initButtons();
+        initNeuralNetwork();
+        initMetaheuristic();
+        VBox rightSide = new VBox();
 
-        HBox neural = new HBox(chooseNetwork, changeArch);
-        chooseAlgorithm = new ComboBox<>(FXCollections.observableArrayList(
-                "<none>"));
-        chooseAlgorithm.getSelectionModel().select(0);
-        changeParams = new Button("Change parameters");
-        HBox params = new HBox(chooseAlgorithm, changeParams);
+        initLineChart();
+        mseChart = mseLineChart("MSE");
 
-        TableView table = new TableView();
-        table.setPrefWidth(MAX_TABLE_WIDTH);
-        table.setMaxWidth(MAX_TABLE_WIDTH);
-        table.setEditable(true);
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        table.setItems(data.getDatasetValues());
+        GridPane rightSideGrid = new GridPane();
+        rightSideGrid.setHgap(10);
+        rightSideGrid.setVgap(10);
+        rightSideGrid.add(start, 1, 0);
+        rightSideGrid.add(predict, 1, 1);
+        rightSideGrid.add(stop, 1, 2);
+        rightSideGrid.add(mseChart, 2, 0, 2, 4);
 
+        rightSide.getChildren().add(rightSideGrid);
 
-        TableColumn<DatasetValue, Integer> indices = new TableColumn<>("Index");
-        indices.setSortable(false);
-        indices.setEditable(false);
-        indices.setCellValueFactory(new PropertyValueFactory<>("index"));
-        table.getColumns().add(indices);
+        TableView table = initTable();
+        HBox neural = initChoosers();
+        HBox params = initParams();
 
-        TableColumn<DatasetValue, Double> values = new TableColumn("Value");
-        values.setSortable(false);
-        values.setEditable(true);
-        values.setCellValueFactory(new PropertyValueFactory<>("value"));
-        table.getColumns().add(values);
+        grid.add(neural, 0, 0);
+        grid.add(params, 0, 1);
+        grid.add(table, 0, 2);
+        grid.add(line, 1, 0, 3, 3);
+        grid.add(rightSide, 1, 4);
 
-        indices.prefWidthProperty().bind(table.widthProperty().multiply(INDEX_SIZE));
-        values.prefWidthProperty().bind(table.widthProperty().multiply(1 - INDEX_SIZE));
+        parent.getChildren().add(grid);
+    }
 
-        indices.setResizable(false);
-        values.setResizable(false);
-
+    private void initButtons() {
         predict = new Button("Predict future values");
         predict.setOnAction(predictAction());
         predict.setDisable(true);
@@ -129,189 +122,36 @@ public class NeuralNetworkUI {
         start = new Button("Start training");
         start.setOnAction(startButtonAction());
         start.setDisable(true);
+    }
 
-        initNeuralNetwork();
-        initMetaheuristic();
+    private HBox initChoosers() {
+        chooseNetwork = new ComboBox<>(FXCollections.observableArrayList("<none>", "TDNN", "Elman ANN"));
+        chooseNetwork.getSelectionModel().select(0);
+        chooseNetwork.setOnAction(changeArchitectureAction(chooseNetwork));
+        Button changeArchitectureButton = new Button("Change architecture");
+        changeArchitectureButton.setOnAction(changeArchitectureAction(chooseNetwork));
+        HBox neural = new HBox(chooseNetwork, changeArchitectureButton);
+        return neural;
+    }
 
+    private HBox initParams() {
+        chooseAlgorithm = new ComboBox<>(FXCollections.observableArrayList(
+                "<none>"));
+        chooseAlgorithm.getSelectionModel().select(0);
+        changeParams = new Button("Change parameters");
         chooseAlgorithm.setDisable(true);
         changeParams.setDisable(true);
-        VBox rightSide = new VBox();
+        HBox params = new HBox(chooseAlgorithm, changeParams);
+        return params;
+    }
 
-        //line chart
+    private void initLineChart() {
         XYChart.Series<Integer, Double> series = new XYChart.Series();
         series.setName("Expected");
         ObservableList<XYChart.Data<Integer, Double>> observableList = DatasetValue.getChartData(data.getDatasetValues());
         series.setData(observableList);
         updateSeriesOnListChangeListener(data.getDatasetValues(), series);
         line = lineChart(series, "Data");
-
-        //mseChart
-        mseChart = mseLineChart("MSE");
-        GridPane rightSideGrid = new GridPane();
-        rightSideGrid.setHgap(10);
-        rightSideGrid.setVgap(10);
-        rightSideGrid.add(start, 1, 0);
-        rightSideGrid.add(predict, 1, 1);
-        rightSideGrid.add(stop, 1, 2);
-        rightSideGrid.add(mseChart, 2, 0, 2, 4);
-
-        rightSide.getChildren().add(rightSideGrid);
-
-        grid.add(neural, 0, 0);
-        grid.add(params, 0, 1);
-        grid.add(table, 0, 2);
-        grid.add(line, 1, 0, 3, 3);
-        grid.add(rightSide, 1, 4);
-
-        parent.getChildren().add(grid);
-    }
-
-    private EventHandler<ActionEvent> changeArchitectureAction(ComboBox arch) {
-        return event -> {
-            if (arch.getSelectionModel().getSelectedItem().equals("<none>")) {
-                neuralNetwork.setValue(null);
-                start.setDisable(true);
-                return;
-            }
-            System.out.println(arch.getValue());
-            Stage changeArch = new Stage();
-            changeArch.initOwner(data.getPrimaryStage());
-            changeArch.initModality(Modality.WINDOW_MODAL);
-            changeArch.setTitle("Change!");
-
-            NeuralNetworkForm neuralNetworkForm = NeuralNetworkForm.getInstance();
-            List<String> activationsList = Arrays.asList("Sigmoid", "Binary Step", "Identity", "ReLU", "TanH");
-
-            Label inputLayer = new Label("Input layer:");
-            TextField input = new TextField();
-            input.setText(neuralNetworkForm.getInputLayer());
-
-            Label inputLayerActivation = new Label("Input layer activation:");
-            ComboBox<String> inputActivation = new ComboBox<>(FXCollections.observableArrayList(
-                    "Sigmoid", "Binary Step", "Identity", "ReLU", "TanH"));
-            inputActivation.getSelectionModel().select(
-                    activationsList.indexOf(neuralNetworkForm.getInputLayerActivation())
-            );
-
-            Label hiddenLayers = new Label("Hidden layers(splited by comma):");
-            TextField hidden = new TextField();
-            hidden.setText(neuralNetworkForm.getHiddenLayers());
-            hidden.setTooltip(new Tooltip("Split number of nodes for each hidden layer with a comma"));
-
-            Label hiddenLayerActivation = new Label("Hidden layers activations:");
-            ComboBox<String> hiddenActivation = new ComboBox<>(FXCollections.observableArrayList(
-                    "Sigmoid", "Binary Step", "Identity", "ReLU", "TanH"));
-            hiddenActivation.getSelectionModel().select(
-                    activationsList.indexOf(neuralNetworkForm.getHiddenLayersActivation())
-            );
-
-            Label outputLayer = new Label("Output layer:");
-            TextField output = new TextField();
-            output.setText(neuralNetworkForm.getOutputLayer());
-
-            Label outputLayerActivation = new Label("Output layer activation:");
-            ComboBox<String> outputActivation = new ComboBox<>(FXCollections.observableArrayList(
-                    "Sigmoid", "Binary Step", "Identity", "ReLU", "TanH"));
-            outputActivation.getSelectionModel().select(
-                    activationsList.indexOf(neuralNetworkForm.getOutputLayerActivation())
-            );
-
-            Label datasetLabel = new Label("Train set percentage:");
-            Slider dataSlider = new Slider(0, 100, 90);
-            dataSlider.setValue(neuralNetworkForm.getPercentage());
-            dataSlider.setShowTickMarks(true);
-            dataSlider.setShowTickLabels(true);
-            dataSlider.setMajorTickUnit(10);
-            dataSlider.setMinorTickCount(0);
-            dataSlider.setSnapToTicks(true);
-
-            Label invalidInput = new Label("Invalid input");
-            invalidInput.setTextFill(Color.RED);
-            invalidInput.setVisible(false);
-
-            Button ok = new Button("OK");
-
-            HBox okBox = new HBox(ok);
-            okBox.setAlignment(Pos.CENTER);
-
-            HBox invalidBox = new HBox(invalidInput);
-            invalidBox.setAlignment(Pos.CENTER);
-            ok.setOnAction((e) -> {
-                try {
-                    String[] hiddens = hidden.getText().split(",");
-                    architecture = new int[hiddens.length + 2];
-                    architecture[0] = Integer.parseInt(input.getText());
-                    architecture[architecture.length - 1] = Integer.parseInt(output.getText());
-                    for (int i = 1; i < architecture.length - 1; i++) {
-                        architecture[i] = Integer.parseInt(hiddens[i - 1]);
-                    }
-                    System.out.println(Arrays.toString(architecture));
-
-                    trainPercentage = dataSlider.getValue() / 100.;
-
-                    neuralNetworkForm.setHiddenLayers(hidden.getText());
-                    neuralNetworkForm.setInputLayer(input.getText());
-                    neuralNetworkForm.setOutputLayer(output.getText());
-                    neuralNetworkForm.setPercentage((int) dataSlider.getValue());
-
-                    activations = new IActivation[architecture.length];
-                    activations[0] = extractActivation(inputActivation.getValue());
-                    for (int i = 1; i < activations.length - 1; ++i) {
-                        activations[i] = extractActivation(hiddenActivation.getValue());
-                    }
-                    activations[activations.length - 1] = extractActivation(outputActivation.getValue());
-
-                    neuralNetworkForm.setOutputLayerActivation(outputActivation.getValue());
-                    neuralNetworkForm.setHiddenLayersActivation(hiddenActivation.getValue());
-                    neuralNetworkForm.setInputLayerActivation(inputActivation.getValue());
-
-                    if (chooseNetwork.getValue().equals("Elman ANN")) {
-                        neuralNetwork.setValue(new ElmanNN(architecture, activations));
-                        dataset = DatasetValue.getTrainingData(data.getDatasetValues(), neuralNetwork.get().getInputSize(),
-                                neuralNetwork.get().getOutputSize());
-                    } else if (chooseNetwork.getValue().equals("TDNN")) {
-                        neuralNetwork.setValue(new FeedForwardANN(architecture, activations));
-                        dataset = DatasetValue.getTrainingData(data.getDatasetValues(),
-                                neuralNetwork.get().getInputSize(), neuralNetwork.get().getOutputSize());
-                    } else {
-                        neuralNetwork.setValue(null);
-                    }
-                    changeArch.hide();
-                } catch (NumberFormatException nfe) {
-                    invalidInput.setVisible(true);
-                }
-            });
-
-            GridPane gridPane = new GridPane();
-            gridPane.setPadding(new Insets(20, 20, 20, 20));
-            gridPane.setHgap(10);
-            gridPane.setVgap(10);
-
-            gridPane.add(inputLayer, 0, 0);
-            gridPane.add(input, 1, 0);
-            gridPane.add(inputLayerActivation, 0, 1);
-            gridPane.add(inputActivation, 1, 1);
-
-            gridPane.add(hiddenLayers, 0, 2);
-            gridPane.add(hidden, 1, 2);
-            gridPane.add(hiddenLayerActivation, 0, 3);
-            gridPane.add(hiddenActivation, 1, 3);
-
-            gridPane.add(outputLayer, 0, 4);
-            gridPane.add(output, 1, 4);
-            gridPane.add(outputLayerActivation, 0, 5);
-            gridPane.add(outputActivation, 1, 5);
-
-            gridPane.add(datasetLabel, 0, 6);
-            gridPane.add(dataSlider, 1, 6);
-
-            gridPane.add(invalidBox, 0, 7, 2, 1);
-            gridPane.add(okBox, 0, 8, 2, 1);
-
-            Scene gridScene = new Scene(gridPane);
-            changeArch.setScene(gridScene);
-            changeArch.show();
-        };
     }
 
     private void initNeuralNetwork() {
@@ -345,6 +185,35 @@ public class NeuralNetworkUI {
                 start.setDisable(false);
             }
         });
+    }
+
+    private TableView initTable() {
+        TableView table = new TableView();
+        table.setPrefWidth(MAX_TABLE_WIDTH);
+        table.setMaxWidth(MAX_TABLE_WIDTH);
+        table.setEditable(true);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setItems(data.getDatasetValues());
+
+
+        TableColumn<DatasetValue, Integer> indices = new TableColumn<>("Index");
+        indices.setSortable(false);
+        indices.setEditable(false);
+        indices.setCellValueFactory(new PropertyValueFactory<>("index"));
+        table.getColumns().add(indices);
+
+        TableColumn<DatasetValue, Double> values = new TableColumn("Value");
+        values.setSortable(false);
+        values.setEditable(true);
+        values.setCellValueFactory(new PropertyValueFactory<>("value"));
+        table.getColumns().add(values);
+
+        indices.prefWidthProperty().bind(table.widthProperty().multiply(INDEX_SIZE));
+        values.prefWidthProperty().bind(table.widthProperty().multiply(1 - INDEX_SIZE));
+
+        indices.setResizable(false);
+        values.setResizable(false);
+        return table;
     }
 
     private void initMetaheuristic() {
@@ -493,6 +362,163 @@ public class NeuralNetworkUI {
                     invalidInput.setVisible(true);
                 }
             });
+        };
+    }
+
+    private EventHandler<ActionEvent> changeArchitectureAction(ComboBox arch) {
+        return event -> {
+            if (arch.getSelectionModel().getSelectedItem().equals("<none>")) {
+                neuralNetwork.setValue(null);
+                start.setDisable(true);
+                return;
+            }
+            System.out.println(arch.getValue());
+            Stage changeArchitecture = new Stage();
+            changeArchitecture.initOwner(data.getPrimaryStage());
+            changeArchitecture.initModality(Modality.WINDOW_MODAL);
+            changeArchitecture.setTitle("Change!");
+
+            NeuralNetworkForm neuralNetworkForm = NeuralNetworkForm.getInstance();
+            List<String> activationsList = Arrays.asList("Sigmoid", "Binary Step", "Identity", "ReLU", "TanH");
+
+            Label inputLayer = new Label("Input layer:");
+            TextField input = new TextField();
+            input.setText(neuralNetworkForm.getInputLayer());
+
+            Label inputLayerActivation = new Label("Input layer activation:");
+            ComboBox<String> inputActivation = new ComboBox<>(FXCollections.observableArrayList(
+                    "Sigmoid", "Binary Step", "Identity", "ReLU", "TanH"));
+            inputActivation.getSelectionModel().select(
+                    activationsList.indexOf(neuralNetworkForm.getInputLayerActivation())
+            );
+
+            Label hiddenLayers = new Label("Hidden layers(splited by comma):");
+            TextField hidden = new TextField();
+            hidden.setText(neuralNetworkForm.getHiddenLayers());
+            hidden.setTooltip(new Tooltip("Split number of nodes for each hidden layer with a comma"));
+
+            Label hiddenLayerActivation = new Label("Hidden layers activations:");
+            ComboBox<String> hiddenActivation = new ComboBox<>(FXCollections.observableArrayList(
+                    "Sigmoid", "Binary Step", "Identity", "ReLU", "TanH"));
+            hiddenActivation.getSelectionModel().select(
+                    activationsList.indexOf(neuralNetworkForm.getHiddenLayersActivation())
+            );
+
+            Label outputLayer = new Label("Output layer:");
+            TextField output = new TextField();
+            output.setText(neuralNetworkForm.getOutputLayer());
+
+            Label outputLayerActivation = new Label("Output layer activation:");
+            ComboBox<String> outputActivation = new ComboBox<>(FXCollections.observableArrayList(
+                    "Sigmoid", "Binary Step", "Identity", "ReLU", "TanH"));
+            outputActivation.getSelectionModel().select(
+                    activationsList.indexOf(neuralNetworkForm.getOutputLayerActivation())
+            );
+
+            Label datasetLabel = new Label("Train set percentage:");
+            Slider dataSlider = new Slider(0, 100, 90);
+            dataSlider.setValue(neuralNetworkForm.getPercentage());
+            dataSlider.setShowTickMarks(true);
+            dataSlider.setShowTickLabels(true);
+            dataSlider.setMajorTickUnit(10);
+            dataSlider.setMinorTickCount(0);
+            dataSlider.setSnapToTicks(true);
+
+            Label invalidInput = new Label("Invalid input");
+            invalidInput.setTextFill(Color.RED);
+            invalidInput.setVisible(false);
+
+            Button ok = new Button("OK");
+
+            HBox okBox = new HBox(ok);
+            okBox.setAlignment(Pos.CENTER);
+
+            HBox invalidBox = new HBox(invalidInput);
+            invalidBox.setAlignment(Pos.CENTER);
+            ok.setOnAction(okButtonHandler(hidden, input, output, dataSlider, inputActivation, outputActivation,
+                    hiddenActivation, invalidInput, changeArchitecture));
+
+            GridPane gridPane = new GridPane();
+            gridPane.setPadding(new Insets(20, 20, 20, 20));
+            gridPane.setHgap(10);
+            gridPane.setVgap(10);
+
+            gridPane.add(inputLayer, 0, 0);
+            gridPane.add(input, 1, 0);
+            gridPane.add(inputLayerActivation, 0, 1);
+            gridPane.add(inputActivation, 1, 1);
+
+            gridPane.add(hiddenLayers, 0, 2);
+            gridPane.add(hidden, 1, 2);
+            gridPane.add(hiddenLayerActivation, 0, 3);
+            gridPane.add(hiddenActivation, 1, 3);
+
+            gridPane.add(outputLayer, 0, 4);
+            gridPane.add(output, 1, 4);
+            gridPane.add(outputLayerActivation, 0, 5);
+            gridPane.add(outputActivation, 1, 5);
+
+            gridPane.add(datasetLabel, 0, 6);
+            gridPane.add(dataSlider, 1, 6);
+
+            gridPane.add(invalidBox, 0, 7, 2, 1);
+            gridPane.add(okBox, 0, 8, 2, 1);
+
+            Scene gridScene = new Scene(gridPane);
+            changeArchitecture.setScene(gridScene);
+            changeArchitecture.show();
+        };
+    }
+
+    private EventHandler<ActionEvent> okButtonHandler(TextField hidden, TextField input, TextField output,
+                                                      Slider dataSlider, ComboBox<String> inputActivation,
+                                                      ComboBox<String> outputActivation, ComboBox<String> hiddenActivation,
+                                                      Label invalidInput, Stage changeArchitecture) {
+        return e -> {
+            NeuralNetworkForm neuralNetworkForm = NeuralNetworkForm.getInstance();
+            try {
+                String[] hiddens = hidden.getText().split(",");
+                architecture = new int[hiddens.length + 2];
+                architecture[0] = Integer.parseInt(input.getText());
+                architecture[architecture.length - 1] = Integer.parseInt(output.getText());
+                for (int i = 1; i < architecture.length - 1; i++) {
+                    architecture[i] = Integer.parseInt(hiddens[i - 1]);
+                }
+                System.out.println(Arrays.toString(architecture));
+
+                trainPercentage = dataSlider.getValue() / 100.;
+
+                neuralNetworkForm.setHiddenLayers(hidden.getText());
+                neuralNetworkForm.setInputLayer(input.getText());
+                neuralNetworkForm.setOutputLayer(output.getText());
+                neuralNetworkForm.setPercentage((int) dataSlider.getValue());
+
+                activations = new IActivation[architecture.length];
+                activations[0] = extractActivation(inputActivation.getValue());
+                for (int i = 1; i < activations.length - 1; ++i) {
+                    activations[i] = extractActivation(hiddenActivation.getValue());
+                }
+                activations[activations.length - 1] = extractActivation(outputActivation.getValue());
+
+                neuralNetworkForm.setOutputLayerActivation(outputActivation.getValue());
+                neuralNetworkForm.setHiddenLayersActivation(hiddenActivation.getValue());
+                neuralNetworkForm.setInputLayerActivation(inputActivation.getValue());
+
+                if (chooseNetwork.getValue().equals("Elman ANN")) {
+                    neuralNetwork.setValue(new ElmanNN(architecture, activations));
+                    dataset = DatasetValue.getTrainingData(data.getDatasetValues(), neuralNetwork.get().getInputSize(),
+                            neuralNetwork.get().getOutputSize());
+                } else if (chooseNetwork.getValue().equals("TDNN")) {
+                    neuralNetwork.setValue(new FeedForwardANN(architecture, activations));
+                    dataset = DatasetValue.getTrainingData(data.getDatasetValues(),
+                            neuralNetwork.get().getInputSize(), neuralNetwork.get().getOutputSize());
+                } else {
+                    neuralNetwork.setValue(null);
+                }
+                changeArchitecture.hide();
+            } catch (NumberFormatException nfe) {
+                invalidInput.setVisible(true);
+            }
         };
     }
 }

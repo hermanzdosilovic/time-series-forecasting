@@ -69,7 +69,6 @@ public class NeuralNetworkObservers {
             }
             lastPlottingTime = System.currentTimeMillis();
             lastSeenWeights = solution.getRepresentative();
-            System.out.println("Usao " + lastPlottingTime / 1000);
             if (series == null) {
                 series = new XYChart.Series();
                 series.setName("Forecast");

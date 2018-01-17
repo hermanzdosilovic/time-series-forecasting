@@ -34,6 +34,7 @@ import java.util.Map;
 
 import static hr.fer.zemris.project.forecasting.gui.Data.INDEX_SIZE;
 import static hr.fer.zemris.project.forecasting.gui.Data.MAX_TABLE_WIDTH;
+import static hr.fer.zemris.project.forecasting.gui.Data.updateSeriesOnListChangeListener;
 import static hr.fer.zemris.project.forecasting.gui.DatasetValue.getChartData;
 
 public class GeneticProgrammingUI implements IListener<BinaryTree> {
@@ -96,8 +97,8 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
 
         trainMseL = new Label();
         testMseL = new Label();
-        trainMseL.setFont(new Font("Arial", 30));
-        testMseL.setFont(new Font("Arial", 30));
+        trainMseL.setFont(new Font("Arial", 20));
+        testMseL.setFont(new Font("Arial", 20));
 
         grid.add(trainMseL, 4, 6, 3, 1);
         grid.add(testMseL, 4, 7, 3, 1);
@@ -110,6 +111,9 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
 
     private void initializePredictionChart() {
         predictionChart = Data.lineChart("Training chart", PREDICTION_WIDTH, PREDICTION_HEIGHT);
+        XYChart.Series series = new XYChart.Series("Dataset", getChartData(data.getDatasetValues()));
+        predictionChart.getData().add(series);
+        updateSeriesOnListChangeListener(data.getDatasetValues(), series);
     }
 
     private void initializeMseChart() {

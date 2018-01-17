@@ -51,7 +51,8 @@ import java.util.Collection;
 import java.util.List;
 
 public abstract class AlgorithmsGUI {
-
+    public static double INNER_INITIAL_TEMP = 1000.;
+    public static double INNER_FINAL_TEMP = 1E-3;
     public static IMetaheuristic metaheuristic;
     public static Object metaheuristicRequirement;
 
@@ -622,8 +623,8 @@ public abstract class AlgorithmsGUI {
                     );
                     ICoolingSchedule innerCoolingSchedule = new GeometricCoolingSchedule(
                             innerIteration,
-                            1000,
-                            1E-3
+                            INNER_INITIAL_TEMP,
+                            INNER_FINAL_TEMP
                     );
                     IMutation<RealVector> mutationValue = new RealVectorGaussianMutation<>(mutationP, forceMutations, sigma);
                     ISimulatedAnnealing<RealVector> simulatedAnnealing = new SimpleSA<>(

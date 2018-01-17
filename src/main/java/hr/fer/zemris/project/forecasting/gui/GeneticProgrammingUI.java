@@ -32,17 +32,16 @@ import javafx.stage.Stage;
 import java.util.List;
 import java.util.Map;
 
-import static hr.fer.zemris.project.forecasting.gui.Data.INDEX_SIZE;
-import static hr.fer.zemris.project.forecasting.gui.Data.MAX_TABLE_WIDTH;
-import static hr.fer.zemris.project.forecasting.gui.Data.updateSeriesOnListChangeListener;
+import static hr.fer.zemris.project.forecasting.gui.Data.*;
 import static hr.fer.zemris.project.forecasting.gui.DatasetValue.getChartData;
 
 public class GeneticProgrammingUI implements IListener<BinaryTree> {
 
-    private static int PREDICTION_WIDTH  = 640;
-    private static int PREDICTION_HEIGHT = 480;
-    private static int MSE_WIDTH         = 640;
-    private static int MSE_HEIGHT        = 480;
+    private static int  PREDICTION_WIDTH  = 640;
+    private static int  PREDICTION_HEIGHT = 480;
+    private static int  MSE_WIDTH         = 640;
+    private static int  MSE_HEIGHT        = 480;
+    private static long PERIOD            = 1000L;
 
     private Data               data;
     private GeneticProgramming geneticProgramming;
@@ -50,11 +49,14 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
     private volatile LineChart mseChart;
     private volatile LineChart predictionChart;
 
+    private volatile XYChart.Series predictionSeries;
     private volatile XYChart.Series mseTrainSeries;
     private volatile XYChart.Series mseTestSeries;
 
     private Label trainMseL;
     private Label testMseL;
+
+    private long lastUpdated;
 
     public GeneticProgrammingUI(Data data) {
         this.data = data;
@@ -157,6 +159,7 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
                         BinaryTree            solution = geneticProgramming.start();
                         Map<String, double[]> map      = geneticProgramming.getForecastedData(solution);
 
+                        Platform.runLater(() -> predictionChart.getData().clear());
                         map.forEach((k, v) -> {
                             XYChart.Series series = new XYChart.Series(
                                 k,
@@ -399,6 +402,27 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
 
     @Override public void newBest(BinaryTree best) {
         Platform.runLater(() -> {
+            Map<String, double[]> data = geneticProgramming.getForecastedData(best);
+            if (predictionChart.getData().size() == 0) {
+                String key = "Expected";
+                predictionChart.getData().add(new XYChart.Series(
+                    key,
+                    DatasetValue.getChartData(FXCollections.observableArrayList(DatasetValue.encapsulateDoubleArray(
+                        data.get(key))))
+                ));
+
+                key = "Forecasted";
+                predictionSeries = new XYChart.Series(key, DatasetValue.getChartData(
+                    FXCollections.observableArrayList(DatasetValue.encapsulateDoubleArray(data.get(key)))));
+                predictionChart.getData().add(predictionSeries);
+            } else {
+                long currentTime = System.currentTimeMillis();
+                if (currentTime > lastUpdated + PERIOD) {
+                    predictionSeries.setData(DatasetValue.getChartData(FXCollections.observableArrayList(DatasetValue.encapsulateDoubleArray(
+                        data.get("Forecasted")))));
+                    lastUpdated = currentTime;
+                }
+            }
             mseTrainSeries.getData().add(new XYChart.Data<>(mseTrainSeries.getData().size(), best.getTrainFitness()));
             mseTestSeries.getData().add(new XYChart.Data<>(mseTestSeries.getData().size(), best.getTestFitness()));
         });

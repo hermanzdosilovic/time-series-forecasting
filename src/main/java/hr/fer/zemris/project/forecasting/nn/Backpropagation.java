@@ -1,12 +1,14 @@
 package hr.fer.zemris.project.forecasting.nn;
 
+import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.AbstractMetaheuristic;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.IMetaheuristic;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.util.IObserver;
+import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.ISolution;
+import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.SimpleSolution;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.activations.IActivation;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.errors.NNErrorUtil;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
-import com.dosilovic.hermanzvonimir.ecfjava.util.Solution;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -18,7 +20,7 @@ import java.util.List;
 
 import static hr.fer.zemris.project.forecasting.nn.util.BackpropagationUtil.*;
 
-public class Backpropagation implements IMetaheuristic<double[]> {
+public class Backpropagation extends AbstractMetaheuristic<double[]> {
 
     private List<DatasetEntry> trainingSet;
     private List<DatasetEntry> validationSet;
@@ -29,7 +31,6 @@ public class Backpropagation implements IMetaheuristic<double[]> {
     private long currentIteration;
     private double trainingMSE;
     private double validationMSE;
-    private Solution<double[]> solution;
     private INeuralNetwork neuralNetwork;
     private int batchSize;
     private List<IObserver<double[]>> observers = new ArrayList<>();
@@ -53,7 +54,7 @@ public class Backpropagation implements IMetaheuristic<double[]> {
     }
 
     @Override
-    public double[] run() {
+    public ISolution<double[]> run() {
         List<DatasetEntry>[] batches = createBatches(batchSize, trainingSet);
         RealMatrix[] layerOutputs = new RealMatrix[neuralNetwork.getNumberOfLayers()];
 
@@ -117,7 +118,7 @@ public class Backpropagation implements IMetaheuristic<double[]> {
             validationMSE /= validationSet.size();
 
             double datasetError = NNErrorUtil.meanSquaredError(neuralNetwork, datasetArray);
-            solution.setFitness(datasetError);
+            bestSolution.setFitness(datasetError);
             System.err.println("iteration: " + currentIteration + " training mse: " + trainingMSE
                     + " validation mse: " + validationMSE + " dataset mse: " + datasetError);
             if ((validationSetMse < validationMSE && currentIteration > maxIteration / 2)
@@ -125,9 +126,9 @@ public class Backpropagation implements IMetaheuristic<double[]> {
                 break;
             }
 
-            notifyObservers(solution);
+            notifyObservers();
         }
-        return solution.getRepresentative();
+        return bestSolution;
     }
 
     private void doBackpropagation(INeuralNetwork neuralNetwork, RealMatrix outputDeltaMatrix, RealMatrix[] allLayerOutputs) {
@@ -184,28 +185,8 @@ public class Backpropagation implements IMetaheuristic<double[]> {
             }
         }
         double[] weights = extractWeights(layerWeights, neuralNetwork.getNumberOfWeights());
-        solution = new Solution<>(weights);
+        bestSolution = new SimpleSolution<>(weights);
         neuralNetwork.setWeights(weights);
-    }
-
-    @Override
-    public Solution<double[]> getBestSolution() {
-        return solution;
-    }
-
-    @Override
-    public void attachObserver(IObserver observer) {
-        observers.add(observer);
-    }
-
-    @Override
-    public void detachObserver(IObserver observer) {
-        observers.remove(observer);
-    }
-
-    @Override
-    public void notifyObservers(Solution<double[]> solution) {
-        observers.forEach(o -> o.update(solution));
     }
 
     public List<DatasetEntry> getTrainingSet() {

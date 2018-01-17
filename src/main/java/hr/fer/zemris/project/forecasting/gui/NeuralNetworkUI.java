@@ -4,15 +4,17 @@ import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.IMetaheuristic;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.ga.SimpleGA;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.ga.SimpleOSGA;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.pso.BasicPSO;
-import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.pso.Particle;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.sa.SimpleSA;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.util.IObserver;
+import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.SimpleSolution;
+import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.particle.Particle;
+import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.vector.RealVector;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.ElmanNN;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.FeedForwardANN;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.activations.IActivation;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
-import com.dosilovic.hermanzvonimir.ecfjava.util.RealVector;
+import hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.DoubleArrayGraphObserver;
 import hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.GraphObserver;
 import hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.RealVectorGraphObserver;
 import hr.fer.zemris.project.forecasting.gui.forms.NeuralNetworkForm;
@@ -245,7 +247,7 @@ public class NeuralNetworkUI {
                         RealVector metaheuristicRequirement = (RealVector) AlgorithmsGUI.metaheuristicRequirement;
                         SimpleSA simpleSA = (SimpleSA) metaheuristic;
                         simpleSA.attachObserver(realVectorGraphObserver);
-                        simpleSA.run(metaheuristicRequirement);
+                        simpleSA.run(new SimpleSolution(metaheuristicRequirement));
                     } else if (metaheuristic instanceof BasicPSO) {
                         Collection<Particle<RealVector>> metaheuristicRequirement =
                                 (Collection<Particle<RealVector>>) AlgorithmsGUI.metaheuristicRequirement;
@@ -254,7 +256,7 @@ public class NeuralNetworkUI {
                         basicPSO.run(metaheuristicRequirement);
                     } else if (metaheuristic instanceof Backpropagation) {
                         Backpropagation backpropagation = (Backpropagation) metaheuristic;
-                        IObserver graphObserver = new GraphObserver(neuralNetwork.get(), dataset, series,
+                        IObserver graphObserver = new DoubleArrayGraphObserver(neuralNetwork.get(), dataset, series,
                                 mseSeries, line, mseChart);
                         backpropagation.attachObserver(graphObserver);
                         backpropagation.run();
@@ -482,7 +484,7 @@ public class NeuralNetworkUI {
                 architecture[0] = Integer.parseInt(input.getText());
                 architecture[architecture.length - 1] = Integer.parseInt(output.getText());
                 for (int i = 1; i < architecture.length - 1; i++) {
-                    architecture[i] = Integer.parseInt(hiddens[i - 1]);
+                    architecture[i] = Integer.parseInt(hiddens[i - 1].trim());
                 }
                 System.out.println(Arrays.toString(architecture));
 

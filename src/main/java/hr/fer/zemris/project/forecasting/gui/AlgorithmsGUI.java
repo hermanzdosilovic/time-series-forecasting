@@ -6,7 +6,6 @@ import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.ga.SimpleGA;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.ga.SimpleOSGA;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.pso.BasicPSO;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.pso.IParticleSwarmOptimization;
-import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.pso.Particle;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.pso.topologies.FullyConnectedTopology;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.sa.ISimulatedAnnealing;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.sa.SimpleSA;
@@ -20,14 +19,20 @@ import com.dosilovic.hermanzvonimir.ecfjava.models.problems.FunctionMinimization
 import com.dosilovic.hermanzvonimir.ecfjava.models.problems.IProblem;
 import com.dosilovic.hermanzvonimir.ecfjava.models.selections.ISelection;
 import com.dosilovic.hermanzvonimir.ecfjava.models.selections.TournamentSelection;
+import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.ISolution;
+import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.SimpleSolution;
+import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.factories.ISolutionFactory;
+import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.factories.ParticleFactory;
+import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.factories.RealVectorFactory;
+import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.factories.SimpleSolutionFactory;
+import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.particle.Particle;
+import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.vector.RealVector;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
+import com.dosilovic.hermanzvonimir.ecfjava.neural.errors.MSEFunction;
 import com.dosilovic.hermanzvonimir.ecfjava.numeric.IFunction;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
-import com.dosilovic.hermanzvonimir.ecfjava.util.RealVector;
-import com.dosilovic.hermanzvonimir.ecfjava.util.Solution;
 import hr.fer.zemris.project.forecasting.gui.forms.*;
 import hr.fer.zemris.project.forecasting.nn.Backpropagation;
-import hr.fer.zemris.project.forecasting.nn.functions.MSEFunction;
 import javafx.beans.property.ObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -56,10 +61,13 @@ public abstract class AlgorithmsGUI {
                                                                   Stage primaryStage,
                                                                   ObjectProperty<IMetaheuristic> metaheuristicProperty) {
         return e -> {
-            if (comboBox.getValue().equals("Genetic")) genetic(dataset, neuralNetwork, primaryStage, metaheuristicProperty);
-            else if (comboBox.getValue().equals("OSGA")) OSGA(dataset, neuralNetwork, primaryStage, metaheuristicProperty);
-            else if (comboBox.getValue().equals("SA")) SA(dataset, neuralNetwork, primaryStage,metaheuristicProperty);
-            else if ((comboBox.getValue().equals("PSO"))) PSO(dataset, neuralNetwork, primaryStage, metaheuristicProperty);
+            if (comboBox.getValue().equals("Genetic"))
+                genetic(dataset, neuralNetwork, primaryStage, metaheuristicProperty);
+            else if (comboBox.getValue().equals("OSGA"))
+                OSGA(dataset, neuralNetwork, primaryStage, metaheuristicProperty);
+            else if (comboBox.getValue().equals("SA")) SA(dataset, neuralNetwork, primaryStage, metaheuristicProperty);
+            else if ((comboBox.getValue().equals("PSO")))
+                PSO(dataset, neuralNetwork, primaryStage, metaheuristicProperty);
             else if ((comboBox.getValue().equals("Backpropagation")))
                 backpropagation(dataset, trainPercentage, neuralNetwork, primaryStage, metaheuristicProperty);
         };
@@ -116,7 +124,7 @@ public abstract class AlgorithmsGUI {
 
         CheckBox useElitism = new CheckBox("Use elitism?");
         useElitism.setSelected(geneticForm.isUseElitism());
-        CheckBox allowRepeat = new CheckBox("Allow repeat?");
+        CheckBox allowRepeat = new CheckBox("Unique tournament?");
         allowRepeat.setSelected(geneticForm.isAllowRepeat());
         CheckBox forceMutation = new CheckBox("Force mutation?");
         forceMutation.setSelected(geneticForm.isForeceMutation());
@@ -193,7 +201,8 @@ public abstract class AlgorithmsGUI {
                     double minComponentValue = Double.parseDouble(minCompValue.getText());
                     double maxComponentValue = Double.parseDouble(maxCompValue.getText());
 
-                    IProblem<RealVector> problem = new FunctionMinimizationProblem<>(new MSEFunction<>(neuralNetwork, dataset));
+                    IProblem<RealVector> problem = new FunctionMinimizationProblem<>(new MSEFunction<>(neuralNetwork,
+                            dataset.toArray(new DatasetEntry[dataset.size()])));
                     ISelection<RealVector> selection = new TournamentSelection<>(
                             tournamentSize,
                             repeat
@@ -204,16 +213,17 @@ public abstract class AlgorithmsGUI {
                             forceMutations,
                             sigma
                     );
-                    SimpleGA<RealVector> simpleGA = new SimpleGA<>(elitism, generationSize, desiredFittnes, desiredPrec,
+                    SimpleGA<RealVector> simpleGA = new SimpleGA<>(elitism, generationSize, false, desiredFittnes, desiredPrec,
                             problem, selection, crossover, mutationValue);
                     metaheuristic = simpleGA;
                     metaheuristicProperty.setValue(metaheuristic);
-                    metaheuristicRequirement = RealVector.createCollection(
-                            populationSize,
-                            neuralNetwork.getNumberOfWeights(),
-                            minComponentValue,
-                            maxComponentValue
+
+                    ISolutionFactory<RealVector> solutionFactory = new SimpleSolutionFactory<>(
+                      new RealVectorFactory(
+                              new RealVector(neuralNetwork.getNumberOfParameters(), minComponentValue, maxComponentValue)
+                      )
                     );
+                    metaheuristicRequirement = solutionFactory.createMultipleInstances(populationSize);
 
                     geneticForm.setPopulationSize(population.getText());
                     geneticForm.setMaxGenerations(generations.getText());
@@ -312,7 +322,7 @@ public abstract class AlgorithmsGUI {
         CheckBox useElitism = new CheckBox("Use elitism?");
         useElitism.setSelected(osgaForm.isUseElitism());
 
-        CheckBox allowRepeat = new CheckBox("Allow repeat?");
+        CheckBox allowRepeat = new CheckBox("Unique tournament?");
         allowRepeat.setSelected(osgaForm.isAllowRepeat());
 
         CheckBox forceMutation = new CheckBox("Force mutation?");
@@ -403,14 +413,14 @@ public abstract class AlgorithmsGUI {
                     boolean forceMutations = forceMutation.isSelected();
                     boolean elitism = useElitism.isSelected();
                     boolean doRepeat = allowRepeat.isSelected();
-                    double desiredFittnes = Double.parseDouble(desiredFitness.getText());
+                    double fitness = Double.parseDouble(desiredFitness.getText());
                     double desiredPrec = Double.parseDouble(desiredPrecision.getText());
                     double minComponentValue = Double.parseDouble(minCompValue.getText());
                     double maxComponentValue = Double.parseDouble(maxCompValue.getText());
 
-                    IFunction<RealVector> function = new MSEFunction<>(neuralNetwork, dataset);
+                    IFunction<RealVector> function = new MSEFunction<>(neuralNetwork, dataset.toArray(new DatasetEntry[dataset.size()]));
                     IProblem<RealVector> problem = new FunctionMinimizationProblem<>(function);
-                    ISelection<RealVector> selection = new TournamentSelection<RealVector>(
+                    ISelection<RealVector> selection = new TournamentSelection<>(
                             tournamentSize,
                             doRepeat
                     );
@@ -433,7 +443,8 @@ public abstract class AlgorithmsGUI {
                     IGeneticAlgorithm<RealVector> geneticAlgorithm = new SimpleOSGA<>(
                             elitism,
                             generationSize,
-                            desiredFittnes,
+                            false,
+                            fitness,
                             desiredPrec,
                             maxP,
                             successRatioSchedule,
@@ -446,12 +457,12 @@ public abstract class AlgorithmsGUI {
 
                     metaheuristic = geneticAlgorithm;
                     metaheuristicProperty.setValue(metaheuristic);
-                    metaheuristicRequirement = RealVector.createCollection(
-                            populationSize,
-                            neuralNetwork.getNumberOfWeights(),
-                            minComponentValue,
-                            maxComponentValue
+                    ISolutionFactory<RealVector> solutionFactory = new SimpleSolutionFactory<>(
+                            new RealVectorFactory(
+                                    new RealVector(neuralNetwork.getNumberOfParameters(), minComponentValue, maxComponentValue)
+                            )
                     );
+                    metaheuristicRequirement = solutionFactory.createMultipleInstances(populationSize);
 
                     osgaForm.setPopulationSize(population.getText());
                     osgaForm.setMaxGenerations(generations.getText());
@@ -617,7 +628,7 @@ public abstract class AlgorithmsGUI {
                     double minComponentValue = Double.parseDouble(minCompValue.getText());
                     double maxComponentValue = Double.parseDouble(maxCompValue.getText());
 
-                    IFunction<RealVector> function = new MSEFunction<>(neuralNetwork, dataset);
+                    IFunction<RealVector> function = new MSEFunction<>(neuralNetwork, dataset.toArray(new DatasetEntry[dataset.size()]));
                     IProblem<RealVector> problem = new FunctionMinimizationProblem<>(function);
                     ICoolingSchedule outerCoolingSchedule = new GeometricCoolingSchedule(
                             outerIteration,
@@ -641,7 +652,7 @@ public abstract class AlgorithmsGUI {
                     metaheuristic = simulatedAnnealing;
                     metaheuristicProperty.setValue(metaheuristic);
                     metaheuristicRequirement = new RealVector(
-                            neuralNetwork.getNumberOfWeights(),
+                            neuralNetwork.getNumberOfParameters(),
                             minComponentValue,
                             maxComponentValue
                     );
@@ -718,7 +729,7 @@ public abstract class AlgorithmsGUI {
         TextField desiredPrecision = new TextField();
         desiredPrecision.setText(psoForm.getDesiredPrecision());
 
-        CheckBox isInformed = new CheckBox("Fully formed?");
+        CheckBox isInformed = new CheckBox("Fully informed?");
         isInformed.setSelected(psoForm.isFullyFormed());
 
         Label invalidInput = new Label("Invalid input.");
@@ -788,14 +799,23 @@ public abstract class AlgorithmsGUI {
                     double desiredPrec = Double.parseDouble(desiredPrecision.getText());
                     boolean isFullyInformed = isInformed.isSelected();
 
-                    IProblem<RealVector> problem = new FunctionMinimizationProblem<>(new MSEFunction<>(neuralNetwork, dataset));
-                    Collection<Particle<RealVector>> initialParticles = new ArrayList<>();
-                    for (int i = 0; i < particlesNum; i++) {
-                        initialParticles.add(new Particle<>(
-                                new Solution<>(new RealVector(neuralNetwork.getNumberOfWeights(), minValue, maxValue)),
-                                new RealVector(neuralNetwork.getNumberOfWeights(), minSpeed, maxSpeed)
-                        ));
-                    }
+                    IProblem<RealVector> problem = new FunctionMinimizationProblem<>(new MSEFunction<>(neuralNetwork,
+                            dataset.toArray(new DatasetEntry[dataset.size()])));
+                    Collection<ISolution<RealVector>> initialParticles = new ArrayList<>();
+
+                    ISolutionFactory<RealVector> particleFactory = new ParticleFactory<>(
+                            new SimpleSolutionFactory<>(
+                                    new RealVectorFactory(
+                                            new RealVector(neuralNetwork.getNumberOfParameters(), minValue, maxValue, true)
+                                    )
+                            ),
+                            new RealVectorFactory(
+                                    new RealVector(neuralNetwork.getNumberOfParameters(), minSpeed, maxSpeed)
+                            )
+                    );
+
+                    initialParticles = particleFactory.createMultipleInstances((int) particlesNum);
+
                     IParticleSwarmOptimization<RealVector> particleSwarmOptimization = new BasicPSO<>(
                             maxIter,
                             desiredFittnes,
@@ -803,10 +823,8 @@ public abstract class AlgorithmsGUI {
                             isFullyInformed,
                             individualFact,
                             socialFact,
-                            new RealVector(neuralNetwork.getNumberOfWeights(), minValue),
-                            new RealVector(neuralNetwork.getNumberOfWeights(), maxValue),
-                            new RealVector(neuralNetwork.getNumberOfWeights(), minSpeed),
-                            new RealVector(neuralNetwork.getNumberOfWeights(), maxSpeed),
+                            new RealVector(neuralNetwork.getNumberOfParameters(), minSpeed),
+                            new RealVector(neuralNetwork.getNumberOfParameters(), maxSpeed),
                             problem,
                             new FullyConnectedTopology<>()
                     );

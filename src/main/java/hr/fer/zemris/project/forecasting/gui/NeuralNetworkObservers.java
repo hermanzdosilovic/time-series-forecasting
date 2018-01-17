@@ -1,12 +1,15 @@
 package hr.fer.zemris.project.forecasting.gui;
 
+import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.IMetaheuristic;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.util.IObserver;
+import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.ISolution;
+import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.SimpleSolution;
+import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.vector.RealVector;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.ElmanNN;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.FeedForwardANN;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
-import com.dosilovic.hermanzvonimir.ecfjava.util.RealVector;
-import com.dosilovic.hermanzvonimir.ecfjava.util.Solution;
+
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -18,7 +21,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class NeuralNetworkObservers {
-    public static class GraphObserver implements IObserver<double[]> {
+    public static class GraphObserver{
         public static final int MSE_GRAPH_SIZE = 300;
         public static final long PERIOD = 1500L;
 
@@ -53,9 +56,9 @@ public class NeuralNetworkObservers {
             this.line = line;
         }
 
-        @Override
-        public void update(Solution<double[]> solution) {
+        public void update(ISolution<double[]> solution) {
             ++iteration;
+
             mseList.add(new XYChart.Data<>((int) iteration % MSE_GRAPH_SIZE, solution.getFitness()));
             if (mseList.size() > MSE_GRAPH_SIZE) {
                 int fromIndex = mseList.size() - MSE_GRAPH_SIZE;
@@ -117,7 +120,7 @@ public class NeuralNetworkObservers {
 
     public static class RealVectorGraphObserver implements IObserver<RealVector> {
 
-        IObserver<double[]> graphObserver;
+        GraphObserver graphObserver;
 
         RealVectorGraphObserver(INeuralNetwork nn, List<DatasetEntry> dataset, XYChart.Series<Integer, Double> series,
                                 XYChart.Series<Integer, Double> mseSeries, LineChart line, LineChart mseChart) {
@@ -125,8 +128,25 @@ public class NeuralNetworkObservers {
         }
 
         @Override
-        public void update(Solution<RealVector> solution) {
-            graphObserver.update(new Solution<>(solution.getRepresentative().toArray()));
+        public void update(IMetaheuristic<RealVector> metaheuristic) {
+            ISolution<double[]> solution = new SimpleSolution<>(metaheuristic.getBestSolution().getRepresentative().toArray());
+            solution.setFitness(metaheuristic.getBestSolution().getFitness());
+            graphObserver.update(solution);
+        }
+    }
+
+    public static class DoubleArrayGraphObserver implements IObserver<double[]> {
+
+        GraphObserver graphObserver;
+
+         public  DoubleArrayGraphObserver(INeuralNetwork nn, List<DatasetEntry> dataset, XYChart.Series<Integer, Double> series,
+                                XYChart.Series<Integer, Double> mseSeries, LineChart line, LineChart mseChart) {
+            graphObserver = new GraphObserver(nn, dataset, series, mseSeries, line, mseChart);
+        }
+
+        @Override
+        public void update(IMetaheuristic<double[]> metaheuristic) {
+            graphObserver.update(metaheuristic.getBestSolution());
         }
     }
 }

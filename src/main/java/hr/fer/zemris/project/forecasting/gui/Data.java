@@ -25,9 +25,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.util.Callback;
 import javafx.util.StringConverter;
-import javafx.util.converter.IntegerStringConverter;
 import org.codefx.libfx.listener.handle.ListenerHandle;
 import org.codefx.libfx.listener.handle.ListenerHandles;
 
@@ -283,13 +281,36 @@ public class Data {
         return lineChart;
     }
 
+    public static LineChart<Number, Number> lineChart(String lineChartName) {
+        return lineChart(lineChartName, GraphUtil.DEFAULT_WIDTH, GraphUtil.DEFAULT_HEIGHT);
+    }
+
+    public static LineChart<Number, Number> lineChart(String lineChartName, int width, int height) {
+        final NumberAxis xAxis = new NumberAxis();
+        xAxis.setMinorTickVisible(false);
+
+        final NumberAxis yAxis = new NumberAxis();
+        xAxis.setLabel("Sample Number");
+        yAxis.setLabel("Sample Value");
+        final LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
+        lineChart.setTitle(lineChartName);
+        lineChart.setCreateSymbols(true);
+        lineChart.setMaxSize(width, height);
+        lineChart.setAnimated(false);
+        return lineChart;
+    }
+
     public static LineChart<Number, Number> mseLineChart(String lineChartName) {
+        return mseLineChart(lineChartName, GraphUtil.MSE_DEFAULT_WIDTH, GraphUtil.MSE_DEFAULT_HEIGHT);
+    }
+
+    public static LineChart<Number, Number> mseLineChart(String lineChartName, int width, int height) {
         final NumberAxis xAxis = new NumberAxis();
         final NumberAxis yAxis = new NumberAxis();
         final LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
         lineChart.setTitle(lineChartName);
         lineChart.setCreateSymbols(true);
-        lineChart.setMaxSize(GraphUtil.MSE_DEFAULT_WIDTH, GraphUtil.MSE_DEFAULT_HEIGHT);
+        lineChart.setMaxSize(width, height);
         lineChart.setAnimated(false);
         return lineChart;
     }

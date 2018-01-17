@@ -10,10 +10,11 @@ import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.util.IObserver;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.ElmanNN;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.FeedForwardANN;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
-import com.dosilovic.hermanzvonimir.ecfjava.neural.activations.*;
+import com.dosilovic.hermanzvonimir.ecfjava.neural.activations.IActivation;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 import com.dosilovic.hermanzvonimir.ecfjava.util.RealVector;
-import com.dosilovic.hermanzvonimir.ecfjava.util.Solution;
+import hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.GraphObserver;
+import hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.RealVectorGraphObserver;
 import hr.fer.zemris.project.forecasting.gui.forms.NeuralNetworkForm;
 import hr.fer.zemris.project.forecasting.nn.Backpropagation;
 import javafx.application.Platform;
@@ -39,16 +40,13 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import static hr.fer.zemris.project.forecasting.gui.Data.*;
 import static hr.fer.zemris.project.forecasting.gui.DatasetValue.getChartData;
+import static hr.fer.zemris.project.forecasting.gui.GUIUtil.extractActivation;
 
 public class NeuralNetworkUI {
 
@@ -64,13 +62,11 @@ public class NeuralNetworkUI {
     private double trainPercentage;
     private LineChart line;
     private LineChart mseChart;
-    private XYChart.Series<Integer, Double> series;
-    private XYChart.Series<Integer, Double> mseSeries;
+    private volatile XYChart.Series<Integer, Double> series;
+    private volatile XYChart.Series<Integer, Double> mseSeries;
     private Button predict;
     private Button stop;
     private Button start;
-    private Thread calculationThread;
-    private ExecutorService threadPool = Executors.newFixedThreadPool(1);
 
     public NeuralNetworkUI(Data data) {
         this.data = data;
@@ -82,19 +78,116 @@ public class NeuralNetworkUI {
         grid.setHgap(10);
         grid.setPadding(new Insets(30, 30, 30, 30));
 
+        initButtons();
+        initNeuralNetwork();
+        initMetaheuristic();
+        VBox rightSide = new VBox();
+
+        initLineChart();
+        mseChart = mseLineChart("MSE");
+
+        GridPane rightSideGrid = new GridPane();
+        rightSideGrid.setHgap(10);
+        rightSideGrid.setVgap(10);
+        rightSideGrid.add(start, 1, 0);
+        rightSideGrid.add(predict, 1, 1);
+        rightSideGrid.add(stop, 1, 2);
+        rightSideGrid.add(mseChart, 2, 0, 2, 4);
+
+        rightSide.getChildren().add(rightSideGrid);
+
+        TableView table = initTable();
+        HBox neural = initChoosers();
+        HBox params = initParams();
+
+        grid.add(neural, 0, 0);
+        grid.add(params, 0, 1);
+        grid.add(table, 0, 2);
+        grid.add(line, 1, 0, 3, 3);
+        grid.add(rightSide, 1, 4);
+
+        parent.getChildren().add(grid);
+    }
+
+    private void initButtons() {
+        predict = new Button("Predict future values");
+        predict.setOnAction(predictAction());
+        predict.setDisable(true);
+
+        stop = new Button("Stop training");
+        stop.setOnAction(a -> {
+        });
+        stop.setDisable(true);
+
+        start = new Button("Start training");
+        start.setOnAction(startButtonAction());
+        start.setDisable(true);
+    }
+
+    private HBox initChoosers() {
         chooseNetwork = new ComboBox<>(FXCollections.observableArrayList("<none>", "TDNN", "Elman ANN"));
         chooseNetwork.getSelectionModel().select(0);
         chooseNetwork.setOnAction(changeArchitectureAction(chooseNetwork));
-        Button changeArch = new Button("Change architecture");
-        changeArch.setOnAction(changeArchitectureAction(chooseNetwork));
+        Button changeArchitectureButton = new Button("Change architecture");
+        changeArchitectureButton.setOnAction(changeArchitectureAction(chooseNetwork));
+        HBox neural = new HBox(chooseNetwork, changeArchitectureButton);
+        return neural;
+    }
 
-        HBox neural = new HBox(chooseNetwork, changeArch);
+    private HBox initParams() {
         chooseAlgorithm = new ComboBox<>(FXCollections.observableArrayList(
                 "<none>"));
         chooseAlgorithm.getSelectionModel().select(0);
         changeParams = new Button("Change parameters");
+        chooseAlgorithm.setDisable(true);
+        changeParams.setDisable(true);
         HBox params = new HBox(chooseAlgorithm, changeParams);
+        return params;
+    }
 
+    private void initLineChart() {
+        XYChart.Series<Integer, Double> series = new XYChart.Series();
+        series.setName("Expected");
+        ObservableList<XYChart.Data<Integer, Double>> observableList = DatasetValue.getChartData(data.getDatasetValues());
+        series.setData(observableList);
+        updateSeriesOnListChangeListener(data.getDatasetValues(), series);
+        line = lineChart(series, "Data");
+    }
+
+    private void initNeuralNetwork() {
+        neuralNetwork.addListener((t, u, v) -> {
+            if (v != null) {
+                dataset = DatasetValue.getTrainingData(data.getDatasetValues(), neuralNetwork.get().getInputSize(),
+                        neuralNetwork.get().getOutputSize());
+                chooseAlgorithm.setOnAction(null);
+                if (v instanceof ElmanNN) {
+                    chooseAlgorithm.getItems().clear();
+                    chooseAlgorithm.getItems().addAll(Arrays.asList("<none>", "Genetic", "OSGA", "SA", "PSO"));
+                } else {
+                    chooseAlgorithm.getItems().clear();
+                    chooseAlgorithm.getItems().addAll(Arrays.asList("<none>", "Genetic", "OSGA", "SA", "PSO", "Backpropagation"));
+                }
+                chooseAlgorithm.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
+                        neuralNetwork.get(), data.getPrimaryStage(), metaheuristicProperty));
+                chooseAlgorithm.getSelectionModel().select(0);
+                chooseAlgorithm.setDisable(false);
+                changeParams.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
+                        neuralNetwork.get(), data.getPrimaryStage(), metaheuristicProperty));
+                changeParams.setDisable(false);
+            } else {
+                chooseAlgorithm.setDisable(true);
+                changeParams.setDisable(true);
+            }
+
+            if (metaheuristicProperty.get() == null || v == null) {
+                start.setDisable(true);
+            } else {
+                start.setDisable(false);
+            }
+        });
+    }
+
+    private TableView initTable() {
         TableView table = new TableView();
         table.setPrefWidth(MAX_TABLE_WIDTH);
         table.setMaxWidth(MAX_TABLE_WIDTH);
@@ -120,55 +213,156 @@ public class NeuralNetworkUI {
 
         indices.setResizable(false);
         values.setResizable(false);
+        return table;
+    }
 
-        predict = new Button("Predict future values");
-        predict.setOnAction(predictAction());
-        predict.setDisable(true);
-
-        stop = new Button("Stop training");
-        stop.setOnAction(a -> {
-            threadPool.shutdownNow();
+    private void initMetaheuristic() {
+        metaheuristicProperty.addListener((t, u, v) -> {
+            if (v == null || neuralNetwork.get() == null) {
+                start.setDisable(true);
+            } else {
+                start.setDisable(false);
+            }
         });
-        stop.setDisable(true);
+    }
 
-        start = new Button("Start training");
-        start.setOnAction(startButtonAction());
-        start.setDisable(true);
+    private EventHandler<ActionEvent> startButtonAction() {
+        return event -> {
+            start.setDisable(true);
+            stop.setDisable(false);
+            predict.setDisable(true);
+            line.getData().remove(series);
+            mseChart.getData().remove(mseSeries);
+            series = null;
+            mseSeries = null;
+            Runnable training = new Runnable() {
+                @Override
+                public void run() {
+                    IMetaheuristic metaheuristic = AlgorithmsGUI.metaheuristic;
+                    IObserver realVectorGraphObserver = new RealVectorGraphObserver(neuralNetwork.get(), dataset, series,
+                            mseSeries, line, mseChart);
+                    if (metaheuristic instanceof SimpleSA) {
+                        RealVector metaheuristicRequirement = (RealVector) AlgorithmsGUI.metaheuristicRequirement;
+                        SimpleSA simpleSA = (SimpleSA) metaheuristic;
+                        simpleSA.attachObserver(realVectorGraphObserver);
+                        simpleSA.run(metaheuristicRequirement);
+                    } else if (metaheuristic instanceof BasicPSO) {
+                        Collection<Particle<RealVector>> metaheuristicRequirement =
+                                (Collection<Particle<RealVector>>) AlgorithmsGUI.metaheuristicRequirement;
+                        BasicPSO basicPSO = (BasicPSO) metaheuristic;
+                        basicPSO.attachObserver(realVectorGraphObserver);
+                        basicPSO.run(metaheuristicRequirement);
+                    } else if (metaheuristic instanceof Backpropagation) {
+                        Backpropagation backpropagation = (Backpropagation) metaheuristic;
+                        IObserver graphObserver = new GraphObserver(neuralNetwork.get(), dataset, series,
+                                mseSeries, line, mseChart);
+                        backpropagation.attachObserver(graphObserver);
+                        backpropagation.run();
+                    } else if (metaheuristic instanceof SimpleOSGA) {
+                        Collection<RealVector> metaheuristicRequirement =
+                                (Collection<RealVector>) AlgorithmsGUI.metaheuristicRequirement;
+                        SimpleOSGA simpleOSGA = (SimpleOSGA) metaheuristic;
+                        simpleOSGA.attachObserver(realVectorGraphObserver);
+                        simpleOSGA.run(metaheuristicRequirement);
+                    } else if (metaheuristic instanceof SimpleGA) {
+                        Collection<RealVector> metaheuristicRequirement =
+                                (Collection<RealVector>) AlgorithmsGUI.metaheuristicRequirement;
+                        SimpleGA simpleGA = (SimpleGA) metaheuristic;
+                        simpleGA.attachObserver(realVectorGraphObserver);
+                        simpleGA.run(metaheuristicRequirement);
+                    } else {
+                        System.err.println("wrong metaheuristic");
+                    }
 
-        initNeuralNetwork();
-        initMetaheuristic();
+                    Platform.runLater(() -> {
+                        start.setDisable(false);
+                        predict.setDisable(false);
+                        stop.setDisable(true);
+                    });
+                }
+            };
+            new Thread(training).start();
+        };
+    }
 
-        chooseAlgorithm.setDisable(true);
-        changeParams.setDisable(true);
-        VBox rightSide = new VBox();
+    private EventHandler<ActionEvent> predictAction() {
+        return event -> {
+            Stage predictStage = new Stage();
+            predictStage.setTitle("Predict!");
+            predictStage.initOwner(data.getPrimaryStage());
+            predictStage.initModality(Modality.WINDOW_MODAL);
 
-        //line chart
-        XYChart.Series<Integer, Double> series = new XYChart.Series();
-        series.setName("Expected");
-        ObservableList<XYChart.Data<Integer, Double>> observableList = DatasetValue.getChartData(data.getDatasetValues());
-        series.setData(observableList);
-        updateSeriesOnListChangeListener(data.getDatasetValues(), series);
-        line = lineChart(series, "Data");
+            Label numberOfPredictions = new Label("Number of predictions: ");
+            TextField predicts = new TextField();
 
-        //mseChart
-        mseChart = mseLineChart("MSE");
-        GridPane rightSideGrid = new GridPane();
-        rightSideGrid.setHgap(10);
-        rightSideGrid.setVgap(10);
-        rightSideGrid.add(start, 1, 0);
-        rightSideGrid.add(predict, 1, 1);
-        rightSideGrid.add(stop, 1, 2);
-        rightSideGrid.add(mseChart, 2, 0, 2, 4);
+            Label invalidInput = new Label("Invalid input");
+            invalidInput.setTextFill(Color.RED);
+            invalidInput.setVisible(false);
 
-        rightSide.getChildren().add(rightSideGrid);
+            Button ok = new Button("OK");
 
-        grid.add(neural, 0, 0);
-        grid.add(params, 0, 1);
-        grid.add(table, 0, 2);
-        grid.add(line, 1, 0, 3, 3);
-        grid.add(rightSide, 1, 4);
+            HBox okBox = new HBox(ok);
+            okBox.setAlignment(Pos.CENTER);
 
-        parent.getChildren().add(grid);
+            VBox predictBox = new VBox(numberOfPredictions, predicts, invalidInput, okBox);
+            predictBox.setSpacing(10);
+            predictBox.setPadding(new Insets(20, 20, 20, 20));
+
+            Scene predictScene = new Scene(predictBox);
+            predictStage.setScene(predictScene);
+            predictStage.show();
+
+            ok.setOnAction((e) -> {
+                try {
+                    int howManyPredictions = Integer.parseInt(predicts.getText());
+                    if (howManyPredictions < 1) {
+                        invalidInput.setVisible(true);
+                        return;
+                    }
+                    new Thread(() -> {
+                        int nnInputSize = neuralNetwork.get().getInputSize();
+                        double[] predictions = new double[nnInputSize + howManyPredictions];
+                        System.arraycopy(dataset.get(dataset.size() - 1).getInput(), 0,
+                                predictions, 0, nnInputSize);
+                        for (int i = 0; i < predictions.length - nnInputSize; ++i) {
+                            double[] input = Arrays.copyOfRange(predictions, i, i + nnInputSize);
+                            double[] expected = neuralNetwork.get().forward(input);
+                            predictions[i + nnInputSize] = expected[0];
+                        }
+                        ObservableList<DatasetValue> observableList = FXCollections.observableList(
+                                DatasetValue.encapsulateDoubleArray(Arrays.copyOfRange(predictions, nnInputSize, predictions.length)));
+                        Platform.runLater(() -> {
+                            Stage stage = new Stage();
+                            stage.setTitle("Predictions");
+                            stage.initOwner(data.getPrimaryStage());
+                            stage.initModality(Modality.WINDOW_MODAL);
+
+                            NumberAxis xAxis = new NumberAxis();
+                            xAxis.setLabel("Sample number");
+
+                            NumberAxis yAxis = new NumberAxis();
+                            yAxis.setLabel("Predicted value");
+
+                            XYChart.Series series = new XYChart.Series();
+                            series.setName("Prediction");
+
+                            series.setData(getChartData(observableList));
+
+                            LineChart line = new LineChart(xAxis, yAxis);
+                            line.getData().add(series);
+
+                            Scene scene = new Scene(line);
+                            stage.setScene(scene);
+
+                            stage.show();
+                            predictStage.hide();
+                        });
+                    }).start();
+                } catch (Exception e1) {
+                    invalidInput.setVisible(true);
+                }
+            });
+        };
     }
 
     private EventHandler<ActionEvent> changeArchitectureAction(ComboBox arch) {
@@ -179,10 +373,10 @@ public class NeuralNetworkUI {
                 return;
             }
             System.out.println(arch.getValue());
-            Stage changeArch = new Stage();
-            changeArch.initOwner(data.getPrimaryStage());
-            changeArch.initModality(Modality.WINDOW_MODAL);
-            changeArch.setTitle("Change!");
+            Stage changeArchitecture = new Stage();
+            changeArchitecture.initOwner(data.getPrimaryStage());
+            changeArchitecture.initModality(Modality.WINDOW_MODAL);
+            changeArchitecture.setTitle("Change!");
 
             NeuralNetworkForm neuralNetworkForm = NeuralNetworkForm.getInstance();
             List<String> activationsList = Arrays.asList("Sigmoid", "Binary Step", "Identity", "ReLU", "TanH");
@@ -241,51 +435,8 @@ public class NeuralNetworkUI {
 
             HBox invalidBox = new HBox(invalidInput);
             invalidBox.setAlignment(Pos.CENTER);
-            ok.setOnAction((e) -> {
-                try {
-                    String[] hiddens = hidden.getText().split(",");
-                    architecture = new int[hiddens.length + 2];
-                    architecture[0] = Integer.parseInt(input.getText());
-                    architecture[architecture.length - 1] = Integer.parseInt(output.getText());
-                    for (int i = 1; i < architecture.length - 1; i++) {
-                        architecture[i] = Integer.parseInt(hiddens[i - 1]);
-                    }
-                    System.out.println(Arrays.toString(architecture));
-
-                    trainPercentage = dataSlider.getValue() / 100.;
-
-                    neuralNetworkForm.setHiddenLayers(hidden.getText());
-                    neuralNetworkForm.setInputLayer(input.getText());
-                    neuralNetworkForm.setOutputLayer(output.getText());
-                    neuralNetworkForm.setPercentage((int) dataSlider.getValue());
-
-                    activations = new IActivation[architecture.length];
-                    activations[0] = extractActivation(inputActivation.getValue());
-                    for (int i = 1; i < activations.length - 1; ++i) {
-                        activations[i] = extractActivation(hiddenActivation.getValue());
-                    }
-                    activations[activations.length - 1] = extractActivation(outputActivation.getValue());
-
-                    neuralNetworkForm.setOutputLayerActivation(outputActivation.getValue());
-                    neuralNetworkForm.setHiddenLayersActivation(hiddenActivation.getValue());
-                    neuralNetworkForm.setInputLayerActivation(inputActivation.getValue());
-
-                    if (chooseNetwork.getValue().equals("Elman ANN")) {
-                        neuralNetwork.setValue(new ElmanNN(architecture, activations));
-                        dataset = DatasetValue.getTrainingData(data.getDatasetValues(), neuralNetwork.get().getInputSize(),
-                                neuralNetwork.get().getOutputSize());
-                    } else if (chooseNetwork.getValue().equals("TDNN")) {
-                        neuralNetwork.setValue(new FeedForwardANN(architecture, activations));
-                        dataset = DatasetValue.getTrainingData(data.getDatasetValues(),
-                                neuralNetwork.get().getInputSize(), neuralNetwork.get().getOutputSize());
-                    } else {
-                        neuralNetwork.setValue(null);
-                    }
-                    changeArch.hide();
-                } catch (NumberFormatException nfe) {
-                    invalidInput.setVisible(true);
-                }
-            });
+            ok.setOnAction(okButtonHandler(hidden, input, output, dataSlider, inputActivation, outputActivation,
+                    hiddenActivation, invalidInput, changeArchitecture));
 
             GridPane gridPane = new GridPane();
             gridPane.setPadding(new Insets(20, 20, 20, 20));
@@ -314,297 +465,60 @@ public class NeuralNetworkUI {
             gridPane.add(okBox, 0, 8, 2, 1);
 
             Scene gridScene = new Scene(gridPane);
-            changeArch.setScene(gridScene);
-            changeArch.show();
+            changeArchitecture.setScene(gridScene);
+            changeArchitecture.show();
         };
     }
 
-    private static IActivation extractActivation(String activation) {
-        switch (activation) {
-            case "Sigmoid":
-                return SigmoidActivation.getInstance();
-            case "Binary Step":
-                return BinaryStepActivation.getInstance();
-            case "Identity":
-                return IdentityActivation.getInstance();
-            case "ReLU":
-                return ReLUActivation.getInstance();
-            case "TanH":
-                return TanHActivation.getInstance();
-            default:
-                return null;
-        }
-    }
-
-    private class GraphObserver implements IObserver<double[]> {
-        private INeuralNetwork nn;
-        private long iteration;
-        private volatile ObservableList<XYChart.Data<Integer, Double>> mseObservableList;
-        private volatile ObservableList<XYChart.Data<Integer, Double>> observableList;
-        private long lastPlottingTime = System.currentTimeMillis();
-        private long period = 1500;
-        private volatile List<XYChart.Data<Integer, Double>> mseList = new ArrayList<>();
-        private volatile List<XYChart.Data<Integer, Double>> outputList = new ArrayList<>();
-        private double[] lastSeenWeights;
-
-        public GraphObserver(INeuralNetwork nn) {
-            this.nn = nn instanceof ElmanNN ? new ElmanNN(nn.getArchitecture(), nn.getLayerActivations()) :
-                    new FeedForwardANN(nn.getArchitecture(), nn.getLayerActivations());
-
-            for (int i = 0; i < dataset.size(); i++) {
-                outputList.add(new XYChart.Data<>(i + 1, 0.));
-                outputList.get(i).setNode(new DatasetValue.HoveredThresholdNode(0, 0.));
-            }
-        }
-
-        @Override
-        public void update(Solution<double[]> solution) {
-            ++iteration;
-            mseList.add(new XYChart.Data<>((int) iteration, solution.getFitness()));
-
-            long currentTime = System.currentTimeMillis();
-            if (currentTime - lastPlottingTime < period || Arrays.equals(lastSeenWeights, solution.getRepresentative())) {
-                return;
-            }
-            lastPlottingTime = System.currentTimeMillis();
-            lastSeenWeights = solution.getRepresentative();
-            System.out.println("Usao " + lastPlottingTime / 1000);
-            if (NeuralNetworkUI.this.series == null) {
-                NeuralNetworkUI.this.series = new XYChart.Series();
-                NeuralNetworkUI.this.series.setName("Forecast");
-
-            }
-            if (NeuralNetworkUI.this.mseSeries == null) {
-                NeuralNetworkUI.this.mseSeries = new XYChart.Series();
-                NeuralNetworkUI.this.mseSeries.setName("mse");
-            }
-            double[] weights = solution.getRepresentative();
-            nn.setWeights(weights);
-
-
-            for (int i = 0; i < dataset.size(); i++) {
-                double[] forecast = nn.forward(dataset.get(i).getInput());
-                outputList.get(i).setYValue(forecast[0]);
-                outputList.get(i).setXValue(i + 1);
-                DatasetValue.HoveredThresholdNode node = ((DatasetValue.HoveredThresholdNode) outputList.get(i).getNode());
-                node.setValue(outputList.get(i).getYValue());
-                node.setPriorValue(outputList.get(i).getXValue());
-            }
-
-            Runnable plot = new Runnable() {
-                @Override
-                public void run() {
-                    if (line.getData().size() == 1) {
-                        line.getData().add(NeuralNetworkUI.this.series);
-                    }
-                    if (mseChart.getData().size() == 0) {
-                        mseChart.getData().add(NeuralNetworkUI.this.mseSeries);
-                        mseObservableList = FXCollections.observableArrayList();
-                        NeuralNetworkUI.this.mseSeries.setData(mseObservableList);
-                    }
-
-                    observableList = FXCollections.observableArrayList();
-                    NeuralNetworkUI.this.series.setData(observableList);
-                    observableList.addAll(outputList);
-
-                    mseObservableList.addAll(mseList);
-                    mseList.clear();
+    private EventHandler<ActionEvent> okButtonHandler(TextField hidden, TextField input, TextField output,
+                                                      Slider dataSlider, ComboBox<String> inputActivation,
+                                                      ComboBox<String> outputActivation, ComboBox<String> hiddenActivation,
+                                                      Label invalidInput, Stage changeArchitecture) {
+        return e -> {
+            NeuralNetworkForm neuralNetworkForm = NeuralNetworkForm.getInstance();
+            try {
+                String[] hiddens = hidden.getText().split(",");
+                architecture = new int[hiddens.length + 2];
+                architecture[0] = Integer.parseInt(input.getText());
+                architecture[architecture.length - 1] = Integer.parseInt(output.getText());
+                for (int i = 1; i < architecture.length - 1; i++) {
+                    architecture[i] = Integer.parseInt(hiddens[i - 1]);
                 }
-            };
-            Platform.runLater(plot);
-        }
-    }
+                System.out.println(Arrays.toString(architecture));
 
-    private class GraphRealVectorObserver implements IObserver<RealVector> {
+                trainPercentage = dataSlider.getValue() / 100.;
 
-        IObserver<double[]> graphObserver;
+                neuralNetworkForm.setHiddenLayers(hidden.getText());
+                neuralNetworkForm.setInputLayer(input.getText());
+                neuralNetworkForm.setOutputLayer(output.getText());
+                neuralNetworkForm.setPercentage((int) dataSlider.getValue());
 
-        private GraphRealVectorObserver(INeuralNetwork nn) {
-            graphObserver = new GraphObserver(nn);
-        }
+                activations = new IActivation[architecture.length];
+                activations[0] = extractActivation(inputActivation.getValue());
+                for (int i = 1; i < activations.length - 1; ++i) {
+                    activations[i] = extractActivation(hiddenActivation.getValue());
+                }
+                activations[activations.length - 1] = extractActivation(outputActivation.getValue());
 
-        @Override
-        public void update(Solution<RealVector> solution) {
-            graphObserver.update(new Solution<>(solution.getRepresentative().toArray()));
-        }
-    }
+                neuralNetworkForm.setOutputLayerActivation(outputActivation.getValue());
+                neuralNetworkForm.setHiddenLayersActivation(hiddenActivation.getValue());
+                neuralNetworkForm.setInputLayerActivation(inputActivation.getValue());
 
-    private void initNeuralNetwork() {
-        neuralNetwork.addListener((t, u, v) -> {
-            if (v != null) {
-                dataset = DatasetValue.getTrainingData(data.getDatasetValues(), neuralNetwork.get().getInputSize(),
-                        neuralNetwork.get().getOutputSize());
-                chooseAlgorithm.setOnAction(null);
-                int index = chooseAlgorithm.getSelectionModel().getSelectedIndex();
-                if (v instanceof ElmanNN) {
-                    chooseAlgorithm.getItems().clear();
-                    chooseAlgorithm.getItems().addAll(Arrays.asList("<none>", "Genetic", "OSGA", "SA", "PSO"));
+                if (chooseNetwork.getValue().equals("Elman ANN")) {
+                    neuralNetwork.setValue(new ElmanNN(architecture, activations));
+                    dataset = DatasetValue.getTrainingData(data.getDatasetValues(), neuralNetwork.get().getInputSize(),
+                            neuralNetwork.get().getOutputSize());
+                } else if (chooseNetwork.getValue().equals("TDNN")) {
+                    neuralNetwork.setValue(new FeedForwardANN(architecture, activations));
+                    dataset = DatasetValue.getTrainingData(data.getDatasetValues(),
+                            neuralNetwork.get().getInputSize(), neuralNetwork.get().getOutputSize());
                 } else {
-                    chooseAlgorithm.getItems().clear();
-                    chooseAlgorithm.getItems().addAll(Arrays.asList("<none>", "Genetic", "OSGA", "SA", "PSO", "Backpropagation"));
+                    neuralNetwork.setValue(null);
                 }
-                chooseAlgorithm.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
-                        neuralNetwork.get(), data.getPrimaryStage(), metaheuristicProperty));
-                changeParams.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
-                        neuralNetwork.get(), data.getPrimaryStage(), metaheuristicProperty));
-
-
-                chooseAlgorithm.getSelectionModel().select(0);
-                chooseAlgorithm.setDisable(false);
-                changeParams.setDisable(false);
-            } else {
-                chooseAlgorithm.setDisable(true);
-                changeParams.setDisable(true);
+                changeArchitecture.hide();
+            } catch (NumberFormatException nfe) {
+                invalidInput.setVisible(true);
             }
-
-            if (metaheuristicProperty.get() == null || v == null) {
-                start.setDisable(true);
-            } else {
-                start.setDisable(false);
-            }
-        });
-    }
-
-    private void initMetaheuristic() {
-        metaheuristicProperty.addListener((t, u, v) -> {
-            if (v == null || neuralNetwork.get() == null) {
-                start.setDisable(true);
-            } else {
-                start.setDisable(false);
-            }
-        });
-    }
-
-    private EventHandler<ActionEvent> startButtonAction() {
-        return event -> {
-            start.setDisable(true);
-            stop.setDisable(false);
-            predict.setDisable(true);
-            line.getData().remove(series);
-            mseChart.getData().remove(mseSeries);
-            series = null;
-            mseSeries = null;
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    IMetaheuristic metaheuristic = AlgorithmsGUI.metaheuristic;
-                    if (metaheuristic instanceof SimpleSA) {
-                        RealVector metaheuristicRequirement = (RealVector) AlgorithmsGUI.metaheuristicRequirement;
-                        ((SimpleSA) metaheuristic).attachObserver(new GraphRealVectorObserver(neuralNetwork.get()));
-                        ((SimpleSA) metaheuristic).run(metaheuristicRequirement);
-                    } else if (metaheuristic instanceof BasicPSO) {
-                        Collection<Particle<RealVector>> metaheuristicRequirement =
-                                (Collection<Particle<RealVector>>) AlgorithmsGUI.metaheuristicRequirement;
-                        ((BasicPSO) metaheuristic).attachObserver(new GraphRealVectorObserver(neuralNetwork.get()));
-                        ((BasicPSO) metaheuristic).run(metaheuristicRequirement);
-                    } else if (metaheuristic instanceof Backpropagation) {
-                        ((Backpropagation) metaheuristic).attachObserver(new GraphObserver(neuralNetwork.get()));
-                        ((Backpropagation) metaheuristic).run();
-                    } else if (metaheuristic instanceof SimpleOSGA) {
-                        Collection<RealVector> metaheuristicRequirement =
-                                (Collection<RealVector>) AlgorithmsGUI.metaheuristicRequirement;
-                        ((SimpleOSGA) metaheuristic).attachObserver(new GraphRealVectorObserver(neuralNetwork.get()));
-                        ((SimpleOSGA) metaheuristic).run(metaheuristicRequirement);
-                    } else if (metaheuristic instanceof SimpleGA) {
-                        Collection<RealVector> metaheuristicRequirement =
-                                (Collection<RealVector>) AlgorithmsGUI.metaheuristicRequirement;
-                        ((SimpleGA) metaheuristic).attachObserver(new GraphRealVectorObserver(neuralNetwork.get()));
-                        ((SimpleGA) metaheuristic).run(metaheuristicRequirement);
-                    } else {
-                        System.err.println("wrong metaheuristic");
-                    }
-
-                    Platform.runLater(() -> {
-                        start.setDisable(false);
-                        predict.setDisable(false);
-                        stop.setDisable(true);
-                        //ovo tu?
-                        metaheuristic.notifyObservers(metaheuristic.getBestSolution());
-                    });
-                }
-            };
-            threadPool.submit(runnable);
-        };
-    }
-
-    private EventHandler<ActionEvent> predictAction() {
-        return event -> {
-            Stage predictStage = new Stage();
-            predictStage.setTitle("Predict!");
-            predictStage.initOwner(data.getPrimaryStage());
-            predictStage.initModality(Modality.WINDOW_MODAL);
-
-            Label numberOfPredictions = new Label("Number of predictions: ");
-            TextField predicts = new TextField();
-
-            Label invalidInput = new Label("Invalid input");
-            invalidInput.setTextFill(Color.RED);
-            invalidInput.setVisible(false);
-
-            Button ok = new Button("OK");
-
-            HBox okBox = new HBox(ok);
-            okBox.setAlignment(Pos.CENTER);
-
-            VBox predictBox = new VBox(numberOfPredictions, predicts, invalidInput, okBox);
-            predictBox.setSpacing(10);
-            predictBox.setPadding(new Insets(20, 20, 20, 20));
-
-            Scene predictScene = new Scene(predictBox);
-            predictStage.setScene(predictScene);
-            predictStage.show();
-
-            ok.setOnAction((e) -> {
-                try {
-                    int howManyPredictions = Integer.parseInt(predicts.getText());
-                    if (howManyPredictions < 1) {
-                        invalidInput.setVisible(true);
-                        return;
-                    }
-                    new Thread(() -> {
-                        int nnInputSize = neuralNetwork.get().getInputSize();
-                        double[] predictions = new double[nnInputSize + howManyPredictions];
-                        System.arraycopy(dataset.get(dataset.size() - 1).getInput(), 0,
-                                predictions, 0, nnInputSize);
-                        for (int i = 0; i < predictions.length - nnInputSize; ++i) {
-                            double[] input = Arrays.copyOfRange(predictions, i, i + nnInputSize);
-                            double[] expected = neuralNetwork.get().forward(input);
-                            predictions[i + nnInputSize] = expected[0];
-                        }
-//                        double[] predictions = arima.computeNextValues(howManyPredictions);
-                        ObservableList<DatasetValue> observableList = FXCollections.observableList(
-                                DatasetValue.encapsulateDoubleArray(Arrays.copyOfRange(predictions, nnInputSize, predictions.length)));
-                        Platform.runLater(() -> {
-                            Stage stage = new Stage();
-                            stage.setTitle("Predictions");
-                            stage.initOwner(data.getPrimaryStage());
-                            stage.initModality(Modality.WINDOW_MODAL);
-
-                            NumberAxis xAxis = new NumberAxis();
-                            xAxis.setLabel("Sample number");
-
-                            NumberAxis yAxis = new NumberAxis();
-                            yAxis.setLabel("Predicted value");
-
-                            XYChart.Series series = new XYChart.Series();
-                            series.setName("Prediction");
-
-                            series.setData(getChartData(observableList));
-
-                            LineChart line = new LineChart(xAxis, yAxis);
-                            line.getData().add(series);
-
-                            Scene scene = new Scene(line);
-                            stage.setScene(scene);
-
-                            stage.show();
-                            predictStage.hide();
-                        });
-                    }).run();
-                } catch (Exception e1) {
-                    invalidInput.setVisible(true);
-                }
-            });
         };
     }
 }

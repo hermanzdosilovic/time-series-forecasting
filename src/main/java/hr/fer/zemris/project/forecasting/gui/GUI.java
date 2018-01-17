@@ -42,6 +42,10 @@ public class GUI extends Application {
         Tab geneticProgramming = new Tab("GP");
         geneticProgramming.setClosable(false);
         geneticProgramming.setDisable(true);
+        Pane gpContent = new Pane();
+        GeneticProgrammingUI gpTab = new GeneticProgrammingUI(dataTab);
+        gpTab.createUI(gpContent);
+        geneticProgramming.setContent(gpContent);
 
         ObservableList dataset = dataTab.getDatasetValues();
         dataset.addListener((ListChangeListener) c -> {

@@ -26,6 +26,8 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -42,6 +44,7 @@ public class ARIMAUI {
 
     public static int MAX_ORDER = 10;
 
+    private static final double FORMULA_MAX_HEIGHT = 70;
     public void createUI(Pane parent) {
         GridPane grid = new GridPane();
 
@@ -79,26 +82,29 @@ public class ARIMAUI {
         ma.setSnapToTicks(true);
 
 
-        Label currentFormula = new Label();
+//        Label currentFormula = new Label();
+
+        WebView currentFormula = new WebView();
+        WebEngine webEngine = currentFormula.getEngine();
 
         ar.valueProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                 if (Math.abs((Double) newValue - 0) < 1) {
 
-                    currentFormula.setText("");
+                    webEngine.loadContent("");
                     ma.setDisable(false);
                 } else {
 
-                    String latexString = "y_t = ";
+                    String latexString = "<font face=\"verdana\" size=\"3\"><i>y<sub>t</sub> = ";
 
                     for (int i = 1; i <= newValue.intValue(); i++) {
-                        latexString += "c_" + i + " * " + "y_t-" + i + " + ";
+                        latexString += "c<sub>" + i + "</sub> " + "y<sub>t-" + i + "</sub> + ";
                     }
 
-                    latexString += "a_t";
+                    latexString += "a<sub>t</sub></i></font>";
 
-                    currentFormula.setText(latexString);
+                    webEngine.loadContent(latexString);
                     ma.setDisable(true);
                 }
             }
@@ -109,19 +115,19 @@ public class ARIMAUI {
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                 if (Math.abs((Double) newValue - 0) < 1){
                     ar.setDisable(false);
-                    currentFormula.setText("");
+                    webEngine.loadContent("");
                 }
                 else{
                     ar.setDisable(true);
 
-                    String latexString = "y_t = E(y) + a_t - ";
+                    String latexString = "<font face=\"verdana\" size=\"3\"><i>y<sub>t</sub> = m<sub>y</sub> + a<sub>t</sub> - ";
 
                     for (int i = 1; i <= newValue.intValue(); i++) {
-                        latexString += "c_" + i + " * " + "a_t-" + i;
+                        latexString += "c<sub>" + i + "</sub>" + " a<sub>t-" + i + "</sub>";
                         if(i != newValue.intValue()) latexString += " - ";
                     }
-
-                    currentFormula.setText(latexString);
+                    latexString += "</i></font>";
+                    webEngine.loadContent(latexString);
                     ar.setDisable(true);
                 }
             }
@@ -164,18 +170,19 @@ public class ARIMAUI {
         updateSeriesOnListChangeListener(data.getDatasetValues(), series);
         LineChart line = lineChart(series, "Data");
 
+        System.out.println(line.getMaxWidth());
         currentFormula.setMaxWidth(line.getMaxWidth());
-        currentFormula.setWrapText(true);
+        currentFormula.setMaxHeight(FORMULA_MAX_HEIGHT);
+//        currentFormula.setMaxSize(line.getMaxWidth(), FORMULA_MAX_HEIGHT);
 
         HBox label = new HBox(currentFormula);
         label.setAlignment(Pos.TOP_CENTER);
-        currentFormula.setFont(Font.font("Verdana", FontWeight.BOLD, 14));
-        grid.add(label,1, 0, 5, 1);
+//        currentFormula.setFont(Font.font("Verdana", FontWeight.BOLD, 14));
+        grid.add(label,1, 0, 3, 1);
         grid.add(line, 1, 1, 3, 3);
 
         //start button
         Button start = new Button("Start");
-        grid.add(start, 3, 3);
         start.setDisable(true);
         enableButtonWhenDatasetExistsListener(data.getDatasetValues(), start);
         allowOneSeriesUponDatasetChangeListener(data.getDatasetValues(), line);
@@ -184,10 +191,13 @@ public class ARIMAUI {
         //predict button
         Button predict = new Button("Predict future values");
         predict.setDisable(true);
-        grid.add(predict, 4, 3);
+
+        HBox startAndPredict = new HBox(start, predict);
+        startAndPredict.setSpacing(10);
+        startAndPredict.setAlignment(Pos.CENTER);
+        grid.add(startAndPredict, 3, 4);
 
         predict.setOnAction(predictAction());
-
         start.setOnAction(
                 event -> {
                     if (ar.getValue() == 0 && ma.getValue() == 0) return;

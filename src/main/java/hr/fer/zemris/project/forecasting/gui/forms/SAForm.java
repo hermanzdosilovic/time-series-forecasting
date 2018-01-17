@@ -7,8 +7,6 @@ public class SAForm {
     private String outerInitialTemperature = "";
     private String outerFinalTemperature = "";
     private String innerIterations = "";
-    private String innerInitialTemperature = "";
-    private String innerFinalTemperature = "";
     private String desiredPenalty = "";
     private String desiredPrecision = "";
     private String desiredFitness = "";
@@ -45,14 +43,6 @@ public class SAForm {
 
     public void setInnerIterations(String innerIterations) {
         this.innerIterations = innerIterations;
-    }
-
-    public void setInnerInitialTemperature(String innerInitialTemperature) {
-        this.innerInitialTemperature = innerInitialTemperature;
-    }
-
-    public void setInnerFinalTemperature(String innerFinalTemperature) {
-        this.innerFinalTemperature = innerFinalTemperature;
     }
 
     public void setDesiredPenalty(String desiredPenalty) {
@@ -97,14 +87,6 @@ public class SAForm {
 
     public String getInnerIterations() {
         return innerIterations;
-    }
-
-    public String getInnerInitialTemperature() {
-        return innerInitialTemperature;
-    }
-
-    public String getInnerFinalTemperature() {
-        return innerFinalTemperature;
     }
 
     public String getDesiredPenalty() {

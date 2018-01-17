@@ -111,7 +111,6 @@ public class NeuralNetworkObservers {
                     observableList.addAll(outputList);
                     mseObservableList.clear();
                     mseObservableList.addAll(mseList);
-                    mseList.clear();
                 }
             };
             Platform.runLater(plot);

@@ -106,7 +106,7 @@ public abstract class AlgorithmsGUI {
         TextField s = new TextField();
         s.setText(geneticForm.getSigma());
 
-        Label desiredFit = new Label("Desired fittnes:");
+        Label desiredFit = new Label("Desired fitness:");
         TextField desiredFitness = new TextField();
         desiredFitness.setText(geneticForm.getDesiredFitness());
 
@@ -303,7 +303,7 @@ public abstract class AlgorithmsGUI {
         TextField maxComparison = new TextField();
         maxComparison.setText(osgaForm.getMaxComparisionFactor());
 
-        Label desiredFit = new Label("Desired fittnes:");
+        Label desiredFit = new Label("Desired fitness:");
         TextField desiredFitness = new TextField();
         desiredFitness.setText(osgaForm.getDesiredFitness());
 
@@ -517,14 +517,6 @@ public abstract class AlgorithmsGUI {
         TextField innerIter = new TextField();
         innerIter.setText(saForm.getInnerIterations());
 
-        Label innerInitialTemp = new Label("Inner initial temperature:");
-        TextField innerTemp = new TextField();
-        innerTemp.setText(saForm.getInnerInitialTemperature());
-
-        Label innerFinalTemp = new Label("Inner final temperature:");
-        TextField innerFinalTemperature = new TextField();
-        innerFinalTemperature.setText(saForm.getInnerFinalTemperature());
-
         Label mutationProbability = new Label("Mutation probability:");
         TextField mutation = new TextField();
         mutation.setText(saForm.getMutationProbability());
@@ -533,7 +525,7 @@ public abstract class AlgorithmsGUI {
         TextField s = new TextField();
         s.setText(saForm.getSigma());
 
-        Label desiredFit = new Label("Desired fittnes:");
+        Label desiredFit = new Label("Desired fitness:");
         TextField desiredFitness = new TextField();
         desiredFitness.setText(saForm.getDesiredFitness());
 
@@ -573,25 +565,20 @@ public abstract class AlgorithmsGUI {
         grid.add(innerIterations, 2, 1);
         grid.add(innerIter, 3, 1);
 
-        grid.add(innerInitialTemp, 0, 2);
-        grid.add(innerTemp, 1, 2);
-        grid.add(innerFinalTemp, 2, 2);
-        grid.add(innerFinalTemperature, 3, 2);
+        grid.add(mutationProbability, 0, 2);
+        grid.add(mutation, 1, 2);
+        grid.add(sigma, 2, 2);
+        grid.add(s, 3, 2);
 
-        grid.add(mutationProbability, 0, 3);
-        grid.add(mutation, 1, 3);
-        grid.add(sigma, 2, 3);
-        grid.add(s, 3, 3);
+        grid.add(desiredFit, 0, 3);
+        grid.add(desiredFitness, 1, 3);
+        grid.add(precision, 2, 3);
+        grid.add(desiredPrecision, 3, 3);
 
-        grid.add(desiredFit, 0, 4);
-        grid.add(desiredFitness, 1, 4);
-        grid.add(precision, 2, 4);
-        grid.add(desiredPrecision, 3, 4);
-
-        grid.add(minComp, 0, 5);
-        grid.add(minCompValue, 1, 5);
-        grid.add(maxComp, 2, 5);
-        grid.add(maxCompValue, 3, 5);
+        grid.add(minComp, 0, 4);
+        grid.add(minCompValue, 1, 4);
+        grid.add(maxComp, 2, 4);
+        grid.add(maxCompValue, 3, 4);
 
         HBox invalidBox = new HBox(invalidInput);
         invalidBox.setAlignment(Pos.CENTER);
@@ -602,9 +589,9 @@ public abstract class AlgorithmsGUI {
         HBox forceMutBox = new HBox(forceMutation);
         forceMutBox.setAlignment(Pos.CENTER);
 
-        grid.add(forceMutBox, 0, 6, 4, 1);
-        grid.add(invalidBox, 0, 7, 4, 1);
-        grid.add(okBox, 0, 8, 4, 1);
+        grid.add(forceMutBox, 0, 5, 4, 1);
+        grid.add(invalidBox, 0, 6, 4, 1);
+        grid.add(okBox, 0, 7, 4, 1);
 
         Scene scene = new Scene(grid);
         SAStage.setScene(scene);
@@ -618,12 +605,10 @@ public abstract class AlgorithmsGUI {
                     int innerIteration = Integer.parseInt(innerIter.getText());
                     double outerTemperature = Double.parseDouble(outerTemp.getText());
                     double outerFinalTemp = Double.parseDouble(outerFinalTemperature.getText());
-                    double innerTemperature = Double.parseDouble(innerTemp.getText());
-                    double innerFinalTemp = Double.parseDouble(innerFinalTemperature.getText());
                     double mutationP = Double.parseDouble(mutation.getText());
                     double sigma = Double.parseDouble(s.getText());
                     boolean forceMutations = forceMutation.isSelected();
-                    double desiredFittnes = Double.parseDouble(desiredFitness.getText());
+                    double fitness = Double.parseDouble(desiredFitness.getText());
                     double desiredPrec = Double.parseDouble(desiredPrecision.getText());
                     double minComponentValue = Double.parseDouble(minCompValue.getText());
                     double maxComponentValue = Double.parseDouble(maxCompValue.getText());
@@ -637,13 +622,13 @@ public abstract class AlgorithmsGUI {
                     );
                     ICoolingSchedule innerCoolingSchedule = new GeometricCoolingSchedule(
                             innerIteration,
-                            innerTemperature,
-                            innerFinalTemp
+                            1000,
+                            1E-3
                     );
                     IMutation<RealVector> mutationValue = new RealVectorGaussianMutation<>(mutationP, forceMutations, sigma);
                     ISimulatedAnnealing<RealVector> simulatedAnnealing = new SimpleSA<>(
                             desiredPrec,
-                            desiredFittnes,
+                            fitness,
                             problem,
                             mutationValue,
                             outerCoolingSchedule,
@@ -661,8 +646,6 @@ public abstract class AlgorithmsGUI {
                     saForm.setInnerIterations(innerIter.getText());
                     saForm.setOuterInitialTemperature(outerTemp.getText());
                     saForm.setOuterFinalTemperature(outerFinalTemperature.getText());
-                    saForm.setInnerInitialTemperature(innerTemp.getText());
-                    saForm.setInnerFinalTemperature(innerFinalTemperature.getText());
                     saForm.setMutationProbability(mutation.getText());
                     saForm.setSigma(s.getText());
                     saForm.setForceMutation(forceMutation.isSelected());
@@ -721,7 +704,7 @@ public abstract class AlgorithmsGUI {
         TextField socialFactor = new TextField();
         socialFactor.setText(psoForm.getSocialFactor());
 
-        Label desiredFit = new Label("Desired fittnes:");
+        Label desiredFit = new Label("Desired fitness:");
         TextField desiredFitness = new TextField();
         desiredFitness.setText(psoForm.getDesiredFitness());
 

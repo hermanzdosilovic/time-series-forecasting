@@ -1,8 +1,6 @@
 package hr.fer.zemris.project.forecasting.gp;
 
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
-import hr.fer.zemris.project.forecasting.functionGenerator.IFunction;
-import hr.fer.zemris.project.forecasting.functionGenerator.functions.Sin;
 import hr.fer.zemris.project.forecasting.gp.selections.ISelection;
 import hr.fer.zemris.project.forecasting.gp.selections.Tournament;
 import hr.fer.zemris.project.forecasting.gp.tree.BinaryTree;
@@ -35,7 +33,7 @@ public class Main {
 //        double[] data = DataReaderUtil.readDataset("datasets/smijesanDataset", 1, ",");
 
         List<DatasetEntry> dataEntries = NeuralNetworkUtil.createTDNNDateset(data, OFFSET, 1);
-        IFunction          function    = new Sin();
+//        IFunction          function    = new Sin();
 //        List<DataEntry> dataEntries = FunctionGenerator.generateDataEntries(200, 5, function);
 
         Pair<List<DatasetEntry>, List<DatasetEntry>>splittedDataEntries =

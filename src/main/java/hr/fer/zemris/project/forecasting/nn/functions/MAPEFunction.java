@@ -1,13 +1,11 @@
 package hr.fer.zemris.project.forecasting.nn.functions;
 
+import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
 import com.dosilovic.hermanzvonimir.ecfjava.numeric.IFunction;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 import com.dosilovic.hermanzvonimir.ecfjava.util.RealVector;
-
-import hr.fer.zemris.project.forecasting.nn.util.DataEntry;
 import hr.fer.zemris.project.forecasting.nn.util.NeuralNetworkUtil;
 import hr.fer.zemris.project.forecasting.util.NumericErrorUtil;
-import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
 
 import java.util.List;
 

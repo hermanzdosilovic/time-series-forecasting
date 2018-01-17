@@ -199,7 +199,7 @@ public class ARIMAUI {
                             if (am instanceof ARMA) {
                                 if (!ARMA.invertibleCheck(arima.getCoeffs())) {
                                     showErrorMessage("Could not compute an invertible MA model. " +
-                                            "Using starting values instead.");
+                                            "Using starting values instead.", data);
                                 }
                             }
                             predict.setDisable(false);
@@ -214,7 +214,7 @@ public class ARIMAUI {
                             });
                         } catch (RuntimeException r) {
                             showErrorMessage("Unable to compute the given model:" +
-                                    " matrix for the given dataset is singular.");
+                                    " matrix for the given dataset is singular.", data);
                         }
                     }).run();
 
@@ -225,7 +225,7 @@ public class ARIMAUI {
         parent.getChildren().add(grid);
     }
 
-    private static void allowOneSeriesUponDatasetChangeListener(ObservableList<DatasetValue> datasetValues, LineChart line) {
+    protected static void allowOneSeriesUponDatasetChangeListener(ObservableList<DatasetValue> datasetValues, LineChart line) {
         datasetValues.addListener((ListChangeListener<DatasetValue>) c -> {
             if (line.getData().size() > 1) line.getData().remove(1);
         });
@@ -299,7 +299,7 @@ public class ARIMAUI {
         };
     }
 
-    private void showErrorMessage(String message) {
+    public static void showErrorMessage(String message, Data data) {
         Platform.runLater(() -> {
             Stage notInvertible = new Stage();
             notInvertible.initOwner(data.getPrimaryStage());

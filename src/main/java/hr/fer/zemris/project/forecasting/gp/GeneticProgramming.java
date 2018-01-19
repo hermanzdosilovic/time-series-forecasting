@@ -88,7 +88,7 @@ public class GeneticProgramming implements IObserver<BinaryTree> {
 
         for (int i = 0; i < maxIter; i++) {
             bestSolution = BinaryTree.findBest(population, BinaryTree.getTrainFitness);
-            handleNewBest(bestSolution);
+            handleNewBest(bestSolution, i);
 //            BinaryTree bestTest  = BinaryTree.findBest(population, BinaryTree.getTestFitness);
             System.err.printf(
                 "Iter %d, bestTrain train fitness %.2f, test fitness %.2f %n",
@@ -111,8 +111,8 @@ public class GeneticProgramming implements IObserver<BinaryTree> {
         return BinaryTree.findBest(population, BinaryTree.getTrainFitness);
     }
 
-    private void handleNewBest(BinaryTree bestSolution) {
-        listeners.forEach(l -> l.newBest(bestSolution));
+    private void handleNewBest(BinaryTree bestSolution, int i) {
+        listeners.forEach(l -> l.newBest(bestSolution, i));
     }
 
     private BinaryTree[] getNewGeneration(BinaryTree[] population, BinaryTree best) {
@@ -174,6 +174,10 @@ public class GeneticProgramming implements IObserver<BinaryTree> {
 
     @Override public void removeListener(IListener l) {
         listeners.remove(l);
+    }
+
+    public DatasetEntry returnFirst() {
+        return trainSet.get(0);
     }
 
     public Map<String, double[]> getForecastedData(BinaryTree solution) {

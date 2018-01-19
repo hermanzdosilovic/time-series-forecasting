@@ -10,6 +10,7 @@ import hr.fer.zemris.project.forecasting.nn.util.NeuralNetworkUtil;
 import hr.fer.zemris.project.forecasting.util.Pair;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -28,10 +29,13 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.apache.commons.lang3.ArrayUtils;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static hr.fer.zemris.project.forecasting.gui.ARIMAUI.allowOneSeriesUponDatasetChangeListener;
 import static hr.fer.zemris.project.forecasting.gui.Data.*;
 import static hr.fer.zemris.project.forecasting.gui.DatasetValue.getChartData;
 
@@ -55,6 +59,7 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
 
     private Label trainMseL;
     private Label testMseL;
+    private Label iteration;
 
     private long lastUpdated;
 
@@ -71,12 +76,15 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
         Button start = new Button("Start");
         start.setDisable(true);
 
+        Button predict = new Button("Predict future values");
+        predict.setDisable(true);
+
         Button editParams = new Button("Set parameters");
         editParams.setDisable(false);
         editParams.setOnAction(createAndShowParamsGrid(start));
         grid.add(editParams, 1, 0);
 
-        initializePredictionChart();
+        initializePredictionChart(start, predict);
         initializeMseChart();
 
         TableView table = generateTable();
@@ -84,9 +92,6 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
 
         Button stop = new Button("Stop");
         stop.setDisable(true);
-
-        Button predict = new Button("Predict future values");
-        predict.setDisable(true);
 
         setActionForStart(start, stop, predict);
         grid.add(start, 1, 4);
@@ -99,11 +104,14 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
 
         trainMseL = new Label();
         testMseL = new Label();
+        iteration = new Label();
         trainMseL.setFont(new Font("Arial", 20));
         testMseL.setFont(new Font("Arial", 20));
+        iteration.setFont(new Font("Arial", 20));
 
         grid.add(trainMseL, 4, 6, 3, 1);
         grid.add(testMseL, 4, 7, 3, 1);
+        grid.add(iteration, 4, 8, 3, 1);
 
         predict.setOnAction(predictAction(predict));
         grid.add(predict, 1, 6);
@@ -111,15 +119,30 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
         parent.getChildren().add(grid);
     }
 
-    private void initializePredictionChart() {
+    private void initializePredictionChart(Button start, Button predict) {
         predictionChart = Data.lineChart("Training chart", PREDICTION_WIDTH, PREDICTION_HEIGHT);
         XYChart.Series series = new XYChart.Series("Dataset", getChartData(data.getDatasetValues()));
         predictionChart.getData().add(series);
+
+        setStartUponDatasetChange(data.getDatasetValues(), start, predict);
         updateSeriesOnListChangeListener(data.getDatasetValues(), series);
+        allowOneSeriesUponDatasetChangeListener(data.getDatasetValues(), predictionChart);
+    }
+
+    private void setStartUponDatasetChange(
+        ObservableList<DatasetValue> datasetValues,
+        Button start,
+        Button predict
+    ) {
+        datasetValues.addListener((ListChangeListener<DatasetValue>) c -> {
+            start.setDisable(true);
+            predict.setDisable(true);
+        });
     }
 
     private void initializeMseChart() {
         mseChart = Data.mseLineChart("Mse chart", MSE_WIDTH, MSE_HEIGHT);
+        mseChart.setCreateSymbols(false);
     }
 
     private void setActionForStop(Button start, Button stop) {
@@ -147,7 +170,10 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
                 start.setDisable(true);
                 stop.setDisable(false);
                 predictions.setDisable(true);
-                predictionChart.getData().clear();
+//                predictionChart.getData().clear();
+                if (predictionChart.getData().size() > 1) {
+                    predictionChart.getData().remove(1);
+                }
                 mseChart.setTitle("Mse chart");
                 mseChart.getData().clear();
                 initializeMseSeries();
@@ -157,19 +183,6 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
                     try {
                         geneticProgramming.addListener(this);
                         BinaryTree            solution = geneticProgramming.start();
-                        Map<String, double[]> map      = geneticProgramming.getForecastedData(solution);
-
-                        Platform.runLater(() -> predictionChart.getData().clear());
-                        map.forEach((k, v) -> {
-                            XYChart.Series series = new XYChart.Series(
-                                k,
-                                DatasetValue.getChartData(FXCollections.observableArrayList(DatasetValue.encapsulateDoubleArray(
-                                    v)))
-                            );
-                            Platform.runLater(() -> {
-                                predictionChart.getData().add(series);
-                            });
-                        });
                         Platform.runLater(() -> {
                             start.setDisable(false);
                             stop.setDisable(true);
@@ -400,32 +413,38 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
         return table;
     }
 
-    @Override public void newBest(BinaryTree best) {
+    @Override public void newBest(BinaryTree best, Integer iter) {
         Platform.runLater(() -> {
             Map<String, double[]> data = geneticProgramming.getForecastedData(best);
-            if (predictionChart.getData().size() == 0) {
-                String key = "Expected";
-                predictionChart.getData().add(new XYChart.Series(
-                    key,
-                    DatasetValue.getChartData(FXCollections.observableArrayList(DatasetValue.encapsulateDoubleArray(
-                        data.get(key))))
-                ));
-
-                key = "Forecasted";
+            double[] forecasted = obtainForecasted(data);
+            String key = "Forecasted";
+            if (predictionChart.getData().size() == 1) {
                 predictionSeries = new XYChart.Series(key, DatasetValue.getChartData(
-                    FXCollections.observableArrayList(DatasetValue.encapsulateDoubleArray(data.get(key)))));
+                    FXCollections.observableArrayList(DatasetValue.encapsulateDoubleArray(forecasted))));
                 predictionChart.getData().add(predictionSeries);
             } else {
                 long currentTime = System.currentTimeMillis();
                 if (currentTime > lastUpdated + PERIOD) {
                     predictionSeries.setData(DatasetValue.getChartData(FXCollections.observableArrayList(DatasetValue.encapsulateDoubleArray(
-                        data.get("Forecasted")))));
+                        forecasted))));
                     lastUpdated = currentTime;
                 }
             }
             mseTrainSeries.getData().add(new XYChart.Data<>(mseTrainSeries.getData().size(), best.getTrainFitness()));
             mseTestSeries.getData().add(new XYChart.Data<>(mseTestSeries.getData().size(), best.getTestFitness()));
+            trainMseL.setText(String.format("Train MSE: %.2f", best.getTrainFitness()));
+            testMseL.setText(String.format("Test MSE: %.2f", best.getTestFitness()));
+            iteration.setText(String.format("Iter: %d", iter));
         });
+    }
+
+    private double[] obtainForecasted(Map<String, double[]> data) {
+        double[] forecasted = data.get("Forecasted");
+        DatasetEntry datasetEntry = geneticProgramming.returnFirst();
+        return ArrayUtils.addAll(
+            datasetEntry.getInput(),
+            forecasted
+        );
     }
 
     private EventHandler<ActionEvent> predictAction(Button predict) {

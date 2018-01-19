@@ -1,7 +1,6 @@
 package hr.fer.zemris.project.forecasting.nn;
 
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.AbstractMetaheuristic;
-import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.IMetaheuristic;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.util.IObserver;
 import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.ISolution;
 import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.SimpleSolution;
@@ -59,6 +58,10 @@ public class Backpropagation extends AbstractMetaheuristic<double[]> {
         RealMatrix[] layerOutputs = new RealMatrix[neuralNetwork.getNumberOfLayers()];
 
         for (currentIteration = 1; currentIteration <= maxIteration; ++currentIteration) {
+            if(isStopped.get()){
+                break;
+            }
+
             RealVector trainingMse = new ArrayRealVector(neuralNetwork.getOutputSize());
             for (List<DatasetEntry> batch : batches) {
                 RealMatrix outputMatrix = new Array2DRowRealMatrix(batch.size(), neuralNetwork.getOutputSize());
@@ -95,12 +98,7 @@ public class Backpropagation extends AbstractMetaheuristic<double[]> {
                 }
                 doBackpropagation(neuralNetwork, outputDeltaMatrix, layerOutputs);
             }
-            trainingMSE = 0;
-            for (int j = 0; j < trainingMse.getDimension(); ++j) {
-                trainingMSE += trainingMse.getEntry(j);
-            }
-            trainingMSE /= trainingSet.size();
-
+            trainingMSE = calculateSetMSE(trainingMse, trainingSet.size());
 
             RealVector validationMse = new ArrayRealVector(neuralNetwork.getOutputSize());
             for (DatasetEntry entry : validationSet) {
@@ -110,12 +108,7 @@ public class Backpropagation extends AbstractMetaheuristic<double[]> {
                 validationMse = validationMse.add(delta.ebeMultiply(delta));
             }
             double validationSetMse = validationMSE;
-
-            validationMSE = 0.;
-            for (int j = 0; j < validationMse.getDimension(); ++j) {
-                validationMSE += validationMse.getEntry(j);
-            }
-            validationMSE /= validationSet.size();
+            validationMSE = calculateSetMSE(validationMse, validationSet.size());
 
             double datasetError = NNErrorUtil.meanSquaredError(neuralNetwork, datasetArray);
             bestSolution.setFitness(datasetError);

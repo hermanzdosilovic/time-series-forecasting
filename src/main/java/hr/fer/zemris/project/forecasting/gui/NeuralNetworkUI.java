@@ -15,7 +15,6 @@ import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.activations.IActivation;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 import hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.DoubleArrayGraphObserver;
-import hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.GraphObserver;
 import hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.RealVectorGraphObserver;
 import hr.fer.zemris.project.forecasting.gui.forms.NeuralNetworkForm;
 import hr.fer.zemris.project.forecasting.nn.Backpropagation;
@@ -118,6 +117,9 @@ public class NeuralNetworkUI {
 
         stop = new Button("Stop training");
         stop.setOnAction(a -> {
+            metaheuristicProperty.get().stop();
+            predict.setDisable(false);
+            stop.setDisable(true);
         });
         stop.setDisable(true);
 
@@ -233,8 +235,10 @@ public class NeuralNetworkUI {
             start.setDisable(true);
             stop.setDisable(false);
             predict.setDisable(true);
-            line.getData().remove(series);
-            mseChart.getData().remove(mseSeries);
+            if (line.getData().size() == 2 && mseChart.getData().size() == 1) {
+                line.getData().remove(1);
+                mseChart.getData().remove(0);
+            }
             series = null;
             mseSeries = null;
             Runnable training = new Runnable() {

@@ -15,7 +15,9 @@ import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.activations.IActivation;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 import hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.DoubleArrayGraphObserver;
+import hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.DoubleArrayStatusbarObserver;
 import hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.RealVectorGraphObserver;
+import hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.RealVectorStatusbarObserver;
 import hr.fer.zemris.project.forecasting.gui.forms.NeuralNetworkForm;
 import hr.fer.zemris.project.forecasting.nn.Backpropagation;
 import javafx.application.Platform;
@@ -70,6 +72,7 @@ public class NeuralNetworkUI {
     private Button stop;
     private Button start;
     private AtomicBoolean trainingPaused = new AtomicBoolean(false);
+    private Label statusBar;
 
     public NeuralNetworkUI(Data data) {
         this.data = data;
@@ -102,13 +105,15 @@ public class NeuralNetworkUI {
         HBox neural = initChoosers();
         HBox params = initParams();
 
+        statusBar = new Label("Iteration: / MSE: /");
+
         grid.add(neural, 0, 0);
         grid.add(params, 0, 1);
         grid.add(table, 0, 2);
         grid.add(line, 1, 0, 3, 3);
         grid.add(rightSide, 1, 4);
-        grid.add(mseChart,5,0,3,3);
-
+        grid.add(mseChart, 5, 0, 3, 3);
+        grid.add(statusBar, 0, 7);
         parent.getChildren().add(grid);
     }
 
@@ -240,9 +245,9 @@ public class NeuralNetworkUI {
             start.setDisable(true);
             stop.setDisable(false);
             predict.setDisable(true);
-            if(trainingPaused.get()){
+            if (trainingPaused.get()) {
                 trainingPaused.set(false);
-                new Thread(()->{
+                new Thread(() -> {
                     metaheuristicProperty.get().run();
                 }).start();
                 return;
@@ -260,34 +265,41 @@ public class NeuralNetworkUI {
                     IMetaheuristic metaheuristic = AlgorithmsGUI.metaheuristic;
                     IObserver realVectorGraphObserver = new RealVectorGraphObserver(neuralNetwork.get(), dataset, series,
                             mseSeries, line, mseChart);
+                    IObserver realVectorStatusBarObserver = new RealVectorStatusbarObserver(statusBar);
                     if (metaheuristic instanceof SimpleSA) {
                         RealVector metaheuristicRequirement = (RealVector) AlgorithmsGUI.metaheuristicRequirement;
                         SimpleSA simpleSA = (SimpleSA) metaheuristic;
                         simpleSA.attachObserver(realVectorGraphObserver);
+                        simpleSA.attachObserver(realVectorStatusBarObserver);
                         simpleSA.run(new SimpleSolution(metaheuristicRequirement));
                     } else if (metaheuristic instanceof BasicPSO) {
                         Collection<Particle<RealVector>> metaheuristicRequirement =
                                 (Collection<Particle<RealVector>>) AlgorithmsGUI.metaheuristicRequirement;
                         BasicPSO basicPSO = (BasicPSO) metaheuristic;
                         basicPSO.attachObserver(realVectorGraphObserver);
+                        basicPSO.attachObserver(realVectorStatusBarObserver);
                         basicPSO.run(metaheuristicRequirement);
                     } else if (metaheuristic instanceof Backpropagation) {
                         Backpropagation backpropagation = (Backpropagation) metaheuristic;
                         IObserver graphObserver = new DoubleArrayGraphObserver(neuralNetwork.get(), dataset, series,
                                 mseSeries, line, mseChart);
+                        IObserver doubleArrayStatusBarObserver = new DoubleArrayStatusbarObserver(statusBar);
                         backpropagation.attachObserver(graphObserver);
+                        backpropagation.attachObserver(doubleArrayStatusBarObserver);
                         backpropagation.run();
                     } else if (metaheuristic instanceof SimpleOSGA) {
                         Collection<RealVector> metaheuristicRequirement =
                                 (Collection<RealVector>) AlgorithmsGUI.metaheuristicRequirement;
                         SimpleOSGA simpleOSGA = (SimpleOSGA) metaheuristic;
                         simpleOSGA.attachObserver(realVectorGraphObserver);
+                        simpleOSGA.attachObserver(realVectorStatusBarObserver);
                         simpleOSGA.run(metaheuristicRequirement);
                     } else if (metaheuristic instanceof SimpleGA) {
                         Collection<RealVector> metaheuristicRequirement =
                                 (Collection<RealVector>) AlgorithmsGUI.metaheuristicRequirement;
                         SimpleGA simpleGA = (SimpleGA) metaheuristic;
                         simpleGA.attachObserver(realVectorGraphObserver);
+                        simpleGA.attachObserver(realVectorStatusBarObserver);
                         simpleGA.run(metaheuristicRequirement);
                     } else {
                         System.err.println("wrong metaheuristic");

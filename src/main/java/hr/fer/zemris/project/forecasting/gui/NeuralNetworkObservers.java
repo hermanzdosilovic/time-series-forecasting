@@ -9,13 +9,13 @@ import com.dosilovic.hermanzvonimir.ecfjava.neural.ElmanNN;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.FeedForwardANN;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
-
 import hr.fer.zemris.project.forecasting.gui.DatasetValue.HoveredThresholdNode;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.Label;
 
 import java.util.Arrays;
 import java.util.List;
@@ -124,10 +124,10 @@ public class NeuralNetworkObservers {
 
     public static class RealVectorGraphObserver implements IObserver<RealVector> {
 
-        GraphObserver graphObserver;
+        private GraphObserver graphObserver;
 
-        RealVectorGraphObserver(INeuralNetwork nn, List<DatasetEntry> dataset, XYChart.Series<Integer, Double> series,
-                                XYChart.Series<Integer, Double> mseSeries, LineChart line, LineChart mseChart) {
+        public RealVectorGraphObserver(INeuralNetwork nn, List<DatasetEntry> dataset, XYChart.Series<Integer, Double> series,
+                                       XYChart.Series<Integer, Double> mseSeries, LineChart line, LineChart mseChart) {
             graphObserver = new GraphObserver(nn, dataset, series, mseSeries, line, mseChart);
         }
 
@@ -151,6 +151,51 @@ public class NeuralNetworkObservers {
         @Override
         public void update(IMetaheuristic<double[]> metaheuristic) {
             graphObserver.update(metaheuristic.getBestSolution());
+        }
+    }
+
+    public static class DoubleArrayStatusbarObserver implements IObserver<double[]> {
+
+        private StatusBarUpdater statusBarUpdater;
+
+        public DoubleArrayStatusbarObserver(Label statusBar) {
+            statusBarUpdater = new StatusBarUpdater(statusBar);
+        }
+
+        @Override
+        public void update(IMetaheuristic<double[]> metaheuristic) {
+            statusBarUpdater.update(metaheuristic.getBestSolution().getFitness());
+        }
+    }
+
+    public static class RealVectorStatusbarObserver implements IObserver<RealVector> {
+
+        private StatusBarUpdater statusBarUpdater;
+
+        public RealVectorStatusbarObserver(Label statusBar) {
+            statusBarUpdater = new StatusBarUpdater(statusBar);
+        }
+
+        @Override
+        public void update(IMetaheuristic<RealVector> metaheuristic) {
+            statusBarUpdater.update(metaheuristic.getBestSolution().getFitness());
+        }
+    }
+
+
+    private static class StatusBarUpdater {
+        private Label statusBar;
+        private long iteration = 0;
+
+        public StatusBarUpdater(Label statusBar) {
+            this.statusBar = statusBar;
+        }
+
+
+        public void update(double currentMSE) {
+            ++iteration;
+            String text = String.format("Iteration: %10d Current mse: %4.2f", iteration, currentMSE);
+            Platform.runLater(() -> statusBar.setText(text));
         }
     }
 }

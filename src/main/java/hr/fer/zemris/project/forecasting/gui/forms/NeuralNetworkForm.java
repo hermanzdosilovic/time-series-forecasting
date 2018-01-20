@@ -3,12 +3,12 @@ package hr.fer.zemris.project.forecasting.gui.forms;
 public class NeuralNetworkForm {
 
     private int percentage = 90;
-    private String inputLayer = "";
-    private String hiddenLayers = "";
-    private String outputLayer = "";
-    private String inputLayerActivation = "Sigmoid";
-    private String hiddenLayersActivation = "Sigmoid";
-    private String outputLayerActivation = "Sigmoid";
+    private String inputLayer = "5";
+    private String hiddenLayers = "3";
+    private String outputLayer = "1";
+    private String inputLayerActivation = "ReLU";
+    private String hiddenLayersActivation = "ReLU";
+    private String outputLayerActivation = "ReLU";
 
 
     private static NeuralNetworkForm ourInstance = new NeuralNetworkForm();

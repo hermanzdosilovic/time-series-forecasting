@@ -2,11 +2,11 @@ package hr.fer.zemris.project.forecasting.gui.forms;
 
 public class BackpropagationForm {
 
-    private String maxIteration = "";
-    private String batchSize = "";
-    private String learningRate = "";
-    private String desiredError = "";
-    private String desiredPrecision = "";
+    private String maxIteration = "10000";
+    private String batchSize = "32";
+    private String learningRate = "1E-7";
+    private String desiredError = "0";
+    private String desiredPrecision = "1E-3";
 
     private static BackpropagationForm ourInstance = new BackpropagationForm();
 

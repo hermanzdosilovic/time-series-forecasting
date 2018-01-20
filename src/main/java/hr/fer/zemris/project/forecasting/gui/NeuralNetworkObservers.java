@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class NeuralNetworkObservers {
-    public static class GraphObserver{
+    public static class GraphObserver {
         public static final int MSE_GRAPH_SIZE = 300;
         public static final long PERIOD = 1500L;
 
@@ -45,9 +45,8 @@ public class NeuralNetworkObservers {
             this.nn = nn instanceof ElmanNN ? new ElmanNN(nn.getArchitecture(), nn.getLayerActivations()) :
                     new FeedForwardANN(nn.getArchitecture(), nn.getLayerActivations());
 
-            for (int i = 0; i < dataset.size()+nn.getInputSize(); i++) {
-                outputList.add(new XYChart.Data<>(i + 1, 0.));
-//                outputList.get(i).setNode(new DatasetValue.HoveredThresholdNode(0, 0.));
+            for (int i = 0; i < dataset.size() + nn.getInputSize(); i++) {
+                outputList.add(new XYChart.Data<>(i, 0.));
             }
 
             this.dataset = dataset;
@@ -80,50 +79,45 @@ public class NeuralNetworkObservers {
             }
             if (mseSeries == null) {
                 mseSeries = new XYChart.Series();
-                mseSeries.setName("mse");
+                mseSeries.setName("MSE");
             }
             double[] weights = solution.getRepresentative();
             nn.setWeights(weights);
 
-            for(int i = 0; i<nn.getInputSize(); ++i){
+            for (int i = 0; i < nn.getInputSize(); ++i) {
                 outputList.get(i).setYValue(dataset.get(0).getInput()[i]);
-                outputList.get(i).setXValue(i + 1);
-                HoveredThresholdNode node = new HoveredThresholdNode(i+1,
-                        (int)dataset.get(0).getInput()[i]);
+                HoveredThresholdNode node = new HoveredThresholdNode(i, (int) dataset.get(0).getInput()[i]);
                 outputList.get(i).setNode(node);
             }
             int offset = nn.getInputSize();
             for (int i = 0; i < dataset.size(); i++) {
                 double[] forecast = nn.forward(dataset.get(i).getInput());
-                outputList.get(i).setYValue(forecast[0]);
-                outputList.get(i).setXValue(offset + 1);
-                HoveredThresholdNode node =  new HoveredThresholdNode(offset+1,
+                outputList.get(offset).setYValue(forecast[0]);
+                HoveredThresholdNode node = new HoveredThresholdNode(offset,
                         forecast[0]);
                 node.setValue(forecast[0]);
-                node.setPriorValue(offset + 1);
-                outputList.get(i).setNode(node);
+                node.setPriorValue(offset);
+                outputList.get(offset).setNode(node);
                 offset++;
             }
 
-            Runnable plot = new Runnable() {
-                @Override
-                public void run() {
-                    if (line.getData().size() == 1) {
-                        line.getData().add(series);
-                    }
-                    if (mseChart.getData().size() == 0) {
-                        mseChart.getData().add(mseSeries);
-                        mseObservableList = FXCollections.observableArrayList();
-                        mseSeries.setData(mseObservableList);
-                    }
-
-                    observableList = FXCollections.observableArrayList();
-                    series.setData(observableList);
-                    observableList.addAll(outputList);
-                    mseObservableList.clear();
-                    mseObservableList.addAll(mseList);
+            Runnable plot = () -> {
+                if (line.getData().size() == 1) {
+                    line.getData().add(series);
                 }
+                if (mseChart.getData().size() == 0) {
+                    mseChart.getData().add(mseSeries);
+                    mseObservableList = FXCollections.observableArrayList();
+                    mseSeries.setData(mseObservableList);
+                }
+
+                observableList = FXCollections.observableArrayList();
+                series.setData(observableList);
+                observableList.addAll(outputList);
+                mseObservableList.clear();
+                mseObservableList.addAll(mseList);
             };
+
             Platform.runLater(plot);
         }
     }
@@ -149,8 +143,8 @@ public class NeuralNetworkObservers {
 
         GraphObserver graphObserver;
 
-         public  DoubleArrayGraphObserver(INeuralNetwork nn, List<DatasetEntry> dataset, XYChart.Series<Integer, Double> series,
-                                XYChart.Series<Integer, Double> mseSeries, LineChart line, LineChart mseChart) {
+        public DoubleArrayGraphObserver(INeuralNetwork nn, List<DatasetEntry> dataset, XYChart.Series<Integer, Double> series,
+                                        XYChart.Series<Integer, Double> mseSeries, LineChart line, LineChart mseChart) {
             graphObserver = new GraphObserver(nn, dataset, series, mseSeries, line, mseChart);
         }
 

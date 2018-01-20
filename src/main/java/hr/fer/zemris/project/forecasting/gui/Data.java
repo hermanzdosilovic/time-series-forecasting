@@ -307,6 +307,8 @@ public class Data {
     public static LineChart<Number, Number> mseLineChart(String lineChartName, int width, int height) {
         final NumberAxis xAxis = new NumberAxis();
         final NumberAxis yAxis = new NumberAxis();
+        xAxis.setLabel("Iteration");
+        yAxis.setLabel("Mse value");
         final LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
         lineChart.setTitle(lineChartName);
         lineChart.setCreateSymbols(false);

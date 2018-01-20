@@ -95,7 +95,6 @@ public class NeuralNetworkUI {
         rightSideGrid.add(start, 1, 0);
         rightSideGrid.add(predict, 1, 1);
         rightSideGrid.add(stop, 1, 2);
-        rightSideGrid.add(mseChart, 2, 0, 2, 4);
 
         rightSide.getChildren().add(rightSideGrid);
 
@@ -108,6 +107,7 @@ public class NeuralNetworkUI {
         grid.add(table, 0, 2);
         grid.add(line, 1, 0, 3, 3);
         grid.add(rightSide, 1, 4);
+        grid.add(mseChart,5,0,3,3);
 
         parent.getChildren().add(grid);
     }

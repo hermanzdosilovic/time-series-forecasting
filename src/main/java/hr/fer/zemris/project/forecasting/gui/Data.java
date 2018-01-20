@@ -309,7 +309,7 @@ public class Data {
         final NumberAxis yAxis = new NumberAxis();
         final LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
         lineChart.setTitle(lineChartName);
-        lineChart.setCreateSymbols(true);
+        lineChart.setCreateSymbols(false);
         lineChart.setMaxSize(width, height);
         lineChart.setAnimated(false);
         return lineChart;

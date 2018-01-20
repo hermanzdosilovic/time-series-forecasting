@@ -10,6 +10,7 @@ import com.dosilovic.hermanzvonimir.ecfjava.neural.FeedForwardANN;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 
+import hr.fer.zemris.project.forecasting.gui.DatasetValue.HoveredThresholdNode;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -44,9 +45,9 @@ public class NeuralNetworkObservers {
             this.nn = nn instanceof ElmanNN ? new ElmanNN(nn.getArchitecture(), nn.getLayerActivations()) :
                     new FeedForwardANN(nn.getArchitecture(), nn.getLayerActivations());
 
-            for (int i = 0; i < dataset.size(); i++) {
+            for (int i = 0; i < dataset.size()+nn.getInputSize(); i++) {
                 outputList.add(new XYChart.Data<>(i + 1, 0.));
-                outputList.get(i).setNode(new DatasetValue.HoveredThresholdNode(0, 0.));
+//                outputList.get(i).setNode(new DatasetValue.HoveredThresholdNode(0, 0.));
             }
 
             this.dataset = dataset;
@@ -84,14 +85,24 @@ public class NeuralNetworkObservers {
             double[] weights = solution.getRepresentative();
             nn.setWeights(weights);
 
-
+            for(int i = 0; i<nn.getInputSize(); ++i){
+                outputList.get(i).setYValue(dataset.get(0).getInput()[i]);
+                outputList.get(i).setXValue(i + 1);
+                HoveredThresholdNode node = new HoveredThresholdNode(i+1,
+                        (int)dataset.get(0).getInput()[i]);
+                outputList.get(i).setNode(node);
+            }
+            int offset = nn.getInputSize();
             for (int i = 0; i < dataset.size(); i++) {
                 double[] forecast = nn.forward(dataset.get(i).getInput());
                 outputList.get(i).setYValue(forecast[0]);
-                outputList.get(i).setXValue(i + 1);
-                DatasetValue.HoveredThresholdNode node = ((DatasetValue.HoveredThresholdNode) outputList.get(i).getNode());
-                node.setValue(outputList.get(i).getYValue());
-                node.setPriorValue(outputList.get(i).getXValue());
+                outputList.get(i).setXValue(offset + 1);
+                HoveredThresholdNode node =  new HoveredThresholdNode(offset+1,
+                        forecast[0]);
+                node.setValue(forecast[0]);
+                node.setPriorValue(offset + 1);
+                outputList.get(i).setNode(node);
+                offset++;
             }
 
             Runnable plot = new Runnable() {

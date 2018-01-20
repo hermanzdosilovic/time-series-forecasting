@@ -44,6 +44,7 @@ import javafx.stage.Stage;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static hr.fer.zemris.project.forecasting.gui.Data.*;
 import static hr.fer.zemris.project.forecasting.gui.DatasetValue.getChartData;
@@ -68,6 +69,7 @@ public class NeuralNetworkUI {
     private Button predict;
     private Button stop;
     private Button start;
+    private AtomicBoolean trainingPaused = new AtomicBoolean(false);
 
     public NeuralNetworkUI(Data data) {
         this.data = data;
@@ -120,6 +122,7 @@ public class NeuralNetworkUI {
             metaheuristicProperty.get().stop();
             predict.setDisable(false);
             stop.setDisable(true);
+            trainingPaused.set(true);
         });
         stop.setDisable(true);
 
@@ -160,6 +163,7 @@ public class NeuralNetworkUI {
 
     private void initNeuralNetwork() {
         neuralNetwork.addListener((t, u, v) -> {
+            trainingPaused.set(false);
             if (v != null) {
                 dataset = DatasetValue.getTrainingData(data.getDatasetValues(), neuralNetwork.get().getInputSize(),
                         neuralNetwork.get().getOutputSize());
@@ -222,6 +226,7 @@ public class NeuralNetworkUI {
 
     private void initMetaheuristic() {
         metaheuristicProperty.addListener((t, u, v) -> {
+            trainingPaused.set(false);
             if (v == null || neuralNetwork.get() == null) {
                 start.setDisable(true);
             } else {
@@ -235,6 +240,14 @@ public class NeuralNetworkUI {
             start.setDisable(true);
             stop.setDisable(false);
             predict.setDisable(true);
+            if(trainingPaused.get()){
+                trainingPaused.set(false);
+                new Thread(()->{
+                    metaheuristicProperty.get().run();
+                }).start();
+                return;
+            }
+
             if (line.getData().size() == 2 && mseChart.getData().size() == 1) {
                 line.getData().remove(1);
                 mseChart.getData().remove(0);

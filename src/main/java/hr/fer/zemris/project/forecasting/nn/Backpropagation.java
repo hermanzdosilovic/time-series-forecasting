@@ -27,7 +27,7 @@ public class Backpropagation extends AbstractMetaheuristic<double[]> {
     private long maxIteration;
     private double desiredError;
     private double desiredPrecision;
-    private long currentIteration;
+    private long currentIteration = 1;
     private double trainingMSE;
     private double validationMSE;
     private INeuralNetwork neuralNetwork;
@@ -54,10 +54,14 @@ public class Backpropagation extends AbstractMetaheuristic<double[]> {
 
     @Override
     public ISolution<double[]> run() {
+        if(isStopped.get()){
+            isStopped.set(false);
+        }
+
         List<DatasetEntry>[] batches = createBatches(batchSize, trainingSet);
         RealMatrix[] layerOutputs = new RealMatrix[neuralNetwork.getNumberOfLayers()];
 
-        for (currentIteration = 1; currentIteration <= maxIteration; ++currentIteration) {
+        while (currentIteration <= maxIteration) {
             if(isStopped.get()){
                 break;
             }
@@ -120,6 +124,7 @@ public class Backpropagation extends AbstractMetaheuristic<double[]> {
             }
 
             notifyObservers();
+            ++currentIteration;
         }
         return bestSolution;
     }

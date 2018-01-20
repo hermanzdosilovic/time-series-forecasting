@@ -353,8 +353,9 @@ public class NeuralNetworkUI {
                     new Thread(() -> {
                         int nnInputSize = neuralNetwork.get().getInputSize();
                         double[] predictions = new double[nnInputSize + howManyPredictions];
-                        System.arraycopy(dataset.get(dataset.size() - 1).getInput(), 0,
-                                predictions, 0, nnInputSize);
+                        System.arraycopy(dataset.get(dataset.size() - 1).getInput(), 1,
+                                predictions, 0, nnInputSize-1);
+                        predictions[nnInputSize-1] = dataset.get(dataset.size() - 1).getOutput()[0];
                         for (int i = 0; i < predictions.length - nnInputSize; ++i) {
                             double[] input = Arrays.copyOfRange(predictions, i, i + nnInputSize);
                             double[] expected = neuralNetwork.get().forward(input);

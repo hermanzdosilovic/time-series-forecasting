@@ -56,28 +56,8 @@ public class ARMA extends AModel {
         fitModel(CONVERGENCE_ITERS);
     }
 
-    public ARMA(double[] betaCoeffs, Dataset dataset, int p, int q){
-        this.betaCoeffs = betaCoeffs;
-        this.dataset = dataset;
-        this.p = p;
-        this.q = q;
-        this.a = new Dataset(findA(betaCoeffs), false);
-    }
-
-    public double[] getStartingValues(){
-        return startingValues;
-    }
-
     public Dataset getDataset(){
         return dataset;
-    }
-
-    public int getP(){
-        return p;
-    }
-
-    public int getQ(){
-        return q;
     }
 
     private void fitModel(int numberOfIters){

@@ -59,7 +59,7 @@ public class NeuralNetworkObservers {
         public void update(ISolution<double[]> solution) {
             ++iteration;
 
-            mseList.add(new XYChart.Data<>((int) iteration % MSE_GRAPH_SIZE, solution.getFitness()));
+            mseList.add(new XYChart.Data<>((int) iteration, solution.getFitness()));
             if (mseList.size() > MSE_GRAPH_SIZE) {
                 int fromIndex = mseList.size() - MSE_GRAPH_SIZE;
                 int toIndex = mseList.size();

@@ -37,22 +37,25 @@ import java.util.List;
 
 
 public class Data {
-    //TODO popraviti klikanje na hover
     private ObservableList<DatasetValue> datasetValues;
-    private XYChart.Series series;
-    private Stage primaryStage;
-    private TableView table;
-    private static List<ListenerHandle> listenerHandles = new LinkedList<>();
+    private XYChart.Series               series;
+    private Stage                        primaryStage;
+    private TableView                    table;
+    private static List<ListenerHandle>       listenerHandles       = new LinkedList<>();
     private static List<MyListChangeListener> myListChangeListeners = new LinkedList<>();
 
     public static final String DEFAULT_DATASET = "datasets/exchange-rate-twi-may-1970-aug-1.csv";
 
     public final static double INDEX_SIZE = 0.3;
+    public final static int GRAPH_WIDTH = 880;
+
+    public static final String USAGE = String.format("Press + to add a sample");
 
     public static ObservableList<DatasetValue> getList(String path) {
         try {
             return FXCollections.observableArrayList(DatasetValue.
-                    encapsulateDoubleArray(DataReaderUtil.readDataset(path)));
+                                                                     encapsulateDoubleArray(DataReaderUtil.readDataset(
+                                                                         path)));
         } catch (IOException e) {
             return null;
         }
@@ -61,7 +64,11 @@ public class Data {
     private static ObservableList<DatasetValue> getList(String path, String delimiter, Integer index) {
         try {
             return FXCollections.observableArrayList(DatasetValue.
-                    encapsulateDoubleArray(DataReaderUtil.readDataset(path, index - 1, delimiter)));
+                                                                     encapsulateDoubleArray(DataReaderUtil.readDataset(
+                                                                         path,
+                                                                         index - 1,
+                                                                         delimiter
+                                                                     )));
         } catch (IOException e) {
             return null;
         }
@@ -115,6 +122,8 @@ public class Data {
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setItems(datasetValues);
         table.setPrefWidth(MAX_TABLE_WIDTH);
+        table.setPlaceholder(new Label(USAGE));
+
         TableColumn<DatasetValue, Double> values = new TableColumn("Value");
         values.setSortable(false);
         values.setEditable(true);
@@ -122,8 +131,10 @@ public class Data {
 
         values.setCellFactory(TextFieldTableCell.forTableColumn(new MyDoubleStringConverter()));
         values.setOnEditCommit((e) ->
-                e.getTableView().getItems().set(e.getTablePosition().getRow(),
-                        new DatasetValue(e.getTablePosition().getRow(), e.getNewValue())));
+                                   e.getTableView().getItems().set(
+                                       e.getTablePosition().getRow(),
+                                       new DatasetValue(e.getTablePosition().getRow(), e.getNewValue())
+                                   ));
 
         TableColumn<DatasetValue, Integer> indices = new TableColumn<>("Index");
         indices.setSortable(false);
@@ -132,9 +143,11 @@ public class Data {
         indices.setCellValueFactory(new PropertyValueFactory<>("index"));
 
         table.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.PLUS) {
+            if (event.getCode() == KeyCode.PLUS || event.getCode() == KeyCode.ADD) {
                 addRow();
-            } else if (event.getCode() == KeyCode.MINUS) {
+            } else if (event.getCode() == KeyCode.MINUS ||
+                       event.getCode() == KeyCode.DELETE ||
+                       event.getCode() == KeyCode.SUBTRACT) {
                 removeRow();
             }
         });
@@ -159,7 +172,18 @@ public class Data {
 
         //clear dataset button
         Button clearDataset = new Button("Clear dataset");
-        clearDataset.setOnAction((l) -> datasetValues.clear());
+        clearDataset.setOnAction((l) -> {
+            for (ListenerHandle lh : listenerHandles) {
+                lh.detach();
+            }
+            datasetValues.clear();
+            for (ListenerHandle lh : listenerHandles) {
+                lh.attach();
+            }
+            for (MyListChangeListener lcl : myListChangeListeners) {
+                lcl.setDatasetValuesOnSeries();
+            }
+        });
         clearDataset.setDisable(true);
         enableButtonWhenDatasetExistsListener(datasetValues, clearDataset);
 
@@ -168,9 +192,14 @@ public class Data {
         grid.add(downBox, 0, 2);
 
         //line chart
-        LineChart line = lineChart(series, "Data");
+        LineChart line = lineChart("Data", GRAPH_WIDTH, GraphUtil.DEFAULT_HEIGHT);
+        line.getData().add(series);
 
-        grid.add(line, 1, 0, 3, 3);
+        HBox lineBox = new HBox(line);
+        lineBox.setPadding(new Insets(30, 30, 30, 30));
+        lineBox.setAlignment(Pos.CENTER);
+
+        grid.add(lineBox, 1, 0, 3, 3);
 
 
         parent.getChildren().add(grid);
@@ -192,26 +221,27 @@ public class Data {
                 delimiterStage.initModality(Modality.WINDOW_MODAL);
 
                 Label delLabel = new Label("Delimiter:");
-                delLabel.requestFocus();
 
                 TextField delimiterField = new TextField();
-                delimiterField.setPromptText("Enter the delimiter used in the file");
-                delimiterField.setTooltip(new Tooltip("If nothing is entered, the default delimiter is used."));
+                delimiterField.setText(",");
 
-                Label colLabel = new Label("Column index:");
+                Label     colLabel     = new Label("Column index:");
                 TextField columnNumber = new TextField();
-                columnNumber.setPromptText("Enter the index of the column where the data is located");
-                columnNumber.setTooltip(new Tooltip("If nothing is entered, the last column is used."));
+                columnNumber.setText("0");
 
                 Button ok = new Button("OK");
 
                 ok.setOnAction(event1 -> {
-                    for (ListenerHandle lh : listenerHandles) lh.detach();
+                    for (ListenerHandle lh : listenerHandles) {
+                        lh.detach();
+                    }
                     datasetValues.clear();
 
                     try {
                         String delimiter = delimiterField.getText();
-                        if (delimiter.equals("")) delimiter = ",";
+                        if (delimiter.equals("")) {
+                            delimiter = ",";
+                        }
                         int indexOfColumn = Integer.parseInt(columnNumber.getText());
                         delimiterStage.hide();
                         datasetValues.addAll(getList(f.getPath(), delimiter, indexOfColumn));
@@ -220,8 +250,12 @@ public class Data {
                         datasetValues.addAll(getList(f.getPath()));
                     }
 
-                    for (ListenerHandle lh : listenerHandles) lh.attach();
-                    for (MyListChangeListener lcl : myListChangeListeners) lcl.setDatasetValuesOnSeries();
+                    for (ListenerHandle lh : listenerHandles) {
+                        lh.attach();
+                    }
+                    for (MyListChangeListener lcl : myListChangeListeners) {
+                        lcl.setDatasetValuesOnSeries();
+                    }
 
                 });
 
@@ -241,7 +275,7 @@ public class Data {
     private void addRow() {
 
         // get current position
-        int row = table.getSelectionModel().getSelectedIndex();
+        int         row            = table.getSelectionModel().getSelectedIndex();
         TableColumn selectedColumn = table.getFocusModel().getFocusedCell().getTableColumn();
 
         // clear current selection
@@ -254,7 +288,9 @@ public class Data {
             for (int i = row + 2; i < datasetValues.size(); i++) {
                 datasetValues.get(i).setIndex(i + 1);
             }
-        } else table.getItems().add(data);
+        } else {
+            table.getItems().add(data);
+        }
 
         table.getSelectionModel().select(row + 1, selectedColumn);
 
@@ -269,11 +305,14 @@ public class Data {
 
 
     private void removeRow() {
-        if (table.getItems().size() == 0) return;
+        if (table.getItems().size() == 0) {
+            return;
+        }
         int row = table.getSelectionModel().getSelectedIndex();
         datasetValues.remove(row);
-        for (int i = row; i < datasetValues.size(); i++)
+        for (int i = row; i < datasetValues.size(); i++) {
             datasetValues.get(i).setIndex(i + 1);
+        }
     }
 
     public static LineChart<Number, Number> lineChart(XYChart.Series series, String lineChartName) {
@@ -307,6 +346,8 @@ public class Data {
         lineChart.setTitle(lineChartName);
         lineChart.setCreateSymbols(true);
         lineChart.setMaxSize(width, height);
+        lineChart.setMinWidth(width);
+//        lineChart.setMinSize(width, height);
         lineChart.setAnimated(false);
         return lineChart;
     }
@@ -329,8 +370,10 @@ public class Data {
         return lineChart;
     }
 
-    public static void updateSeriesOnListChangeListener(ObservableList<DatasetValue> datasetValues,
-                                                        XYChart.Series<Integer, Double> series) {
+    public static void updateSeriesOnListChangeListener(
+        ObservableList<DatasetValue> datasetValues,
+        XYChart.Series<Integer, Double> series
+    ) {
         MyListChangeListener lcl = new MyListChangeListener(datasetValues, series);
 
         myListChangeListeners.add(lcl);
@@ -342,8 +385,11 @@ public class Data {
     public static void enableButtonWhenDatasetExistsListener(ObservableList<DatasetValue> datasetValues, Button b) {
         datasetValues.addListener((ListChangeListener<DatasetValue>) c -> {
             while (c.next()) {
-                if (datasetValues.size() == 0) b.setDisable(true);
-                else b.setDisable(false);
+                if (datasetValues.size() == 0) {
+                    b.setDisable(true);
+                } else {
+                    b.setDisable(false);
+                }
             }
         });
     }
@@ -355,12 +401,12 @@ public class Data {
             normalizeStage.initOwner(primaryStage);
             normalizeStage.initModality(Modality.WINDOW_MODAL);
 
-            Label labelFrom = new Label("From:");
-            TextField from = new TextField();
+            Label     labelFrom = new Label("From:");
+            TextField from      = new TextField();
 
 
-            Label labelTo = new Label("To:");
-            TextField to = new TextField();
+            Label     labelTo = new Label("To:");
+            TextField to      = new TextField();
 
             GridPane pane = new GridPane();
             pane.add(labelFrom, 0, 0);
@@ -407,7 +453,9 @@ public class Data {
     }
 
     private void normalize(double from, double to) {
-        if (from > to) throw new IllegalArgumentException();
+        if (from > to) {
+            throw new IllegalArgumentException();
+        }
         if (from == to) {
             for (int i = 0; i < datasetValues.size(); i++) {
                 datasetValues.set(i, new DatasetValue(i, from));
@@ -426,7 +474,9 @@ public class Data {
 
         @Override
         public String toString(Double object) {
-            if (object == null) return "";
+            if (object == null) {
+                return "";
+            }
             return Double.toString(object);
         }
 
@@ -443,7 +493,7 @@ public class Data {
     private static class MyListChangeListener implements ListChangeListener<DatasetValue> {
 
         private ObservableList<DatasetValue> datasetValues;
-        private XYChart.Series series;
+        private XYChart.Series               series;
 
         public MyListChangeListener(ObservableList<DatasetValue> datasetValues, XYChart.Series series) {
             this.datasetValues = datasetValues;
@@ -455,32 +505,40 @@ public class Data {
             while (c.next()) {
                 if (c.wasReplaced()) {
                     for (int i = c.getFrom(); i < c.getTo(); i++) {
-                        XYChart.Data<Integer, Double> nextAddition = new XYChart.Data<>(i, datasetValues.get(i).getValue());
+                        XYChart.Data<Integer, Double>
+                            nextAddition =
+                            new XYChart.Data<>(i, datasetValues.get(i).getValue());
                         nextAddition.setNode(new DatasetValue.HoveredThresholdNode(
-                                nextAddition.getXValue(), nextAddition.getYValue()));
+                            nextAddition.getXValue(), nextAddition.getYValue()));
                         series.getData().set(i, nextAddition);
                     }
                 } else if (c.wasAdded()) {
                     for (int i = c.getFrom(); i < c.getTo(); i++) {
-                        XYChart.Data<Integer, Double> nextAddition = new XYChart.Data<>(i, datasetValues.get(i).getValue());
+                        XYChart.Data<Integer, Double>
+                            nextAddition =
+                            new XYChart.Data<>(i, datasetValues.get(i).getValue());
                         nextAddition.setNode(new DatasetValue.HoveredThresholdNode(
-                                nextAddition.getXValue(), nextAddition.getYValue()));
+                            nextAddition.getXValue(), nextAddition.getYValue()));
                         if (i < series.getData().size()) {
                             series.getData().add(i, nextAddition);
                             for (int j = i + 1; j < series.getData().size(); j++) {
-                                XYChart.Data<Integer, Double> after = new XYChart.Data<>(j, datasetValues.get(j).getValue());
+                                XYChart.Data<Integer, Double>
+                                    after =
+                                    new XYChart.Data<>(j, datasetValues.get(j).getValue());
                                 after.setNode(new DatasetValue.HoveredThresholdNode(
-                                        after.getXValue(), after.getYValue()));
+                                    after.getXValue(), after.getYValue()));
                                 series.getData().set(j, after);
                             }
-                        } else series.getData().add(nextAddition);
+                        } else {
+                            series.getData().add(nextAddition);
+                        }
                     }
                 } else if (c.wasRemoved()) {
                     series.getData().remove(c.getFrom());
                     for (int j = c.getFrom(); j < series.getData().size(); j++) {
                         XYChart.Data<Integer, Double> after = new XYChart.Data<>(j, datasetValues.get(j).getValue());
                         after.setNode(new DatasetValue.HoveredThresholdNode(
-                                after.getXValue(), after.getYValue()));
+                            after.getXValue(), after.getYValue()));
                         series.getData().set(j, after);
                     }
                 }

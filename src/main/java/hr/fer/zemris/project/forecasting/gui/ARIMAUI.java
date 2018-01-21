@@ -3,6 +3,7 @@ package hr.fer.zemris.project.forecasting.gui;
 import hr.fer.zemris.project.forecasting.models.AModel;
 import hr.fer.zemris.project.forecasting.models.ARIMA;
 import hr.fer.zemris.project.forecasting.models.arma.ARMA;
+import hr.fer.zemris.project.forecasting.util.GraphUtil;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -173,7 +174,8 @@ public class ARIMAUI {
         ObservableList<XYChart.Data<Integer, Double>> observableList = getChartData(data.getDatasetValues());
         series.setData(observableList);
         updateSeriesOnListChangeListener(data.getDatasetValues(), series);
-        LineChart line = lineChart(series, "Data");
+        LineChart line = lineChart("Data", Data.GRAPH_WIDTH, GraphUtil.DEFAULT_HEIGHT);
+        line.getData().add(series);
 
         System.out.println(line.getMaxWidth());
         currentFormula.setMaxWidth(line.getMaxWidth());

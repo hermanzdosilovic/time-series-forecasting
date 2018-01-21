@@ -23,8 +23,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class NeuralNetworkObservers {
     public static class GraphObserver {
-        public static final int MSE_GRAPH_SIZE = 300;
-        public static final long PERIOD = 1500L;
+        public static final int MSE_GRAPH_SIZE = 1000;
+        public static final long PERIOD = 1000L;
 
         private INeuralNetwork nn;
         private long iteration;

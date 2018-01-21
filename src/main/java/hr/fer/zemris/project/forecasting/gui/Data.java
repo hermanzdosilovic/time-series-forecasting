@@ -45,9 +45,11 @@ public class Data {
     private static List<ListenerHandle> listenerHandles = new LinkedList<>();
     private static List<MyListChangeListener> myListChangeListeners = new LinkedList<>();
 
+    public static final String DEFAULT_DATASET = "datasets/exchange-rate-twi-may-1970-aug-1.csv";
+
     public final static double INDEX_SIZE = 0.3;
 
-    private static ObservableList<DatasetValue> getList(String path) {
+    public static ObservableList<DatasetValue> getList(String path) {
         try {
             return FXCollections.observableArrayList(DatasetValue.
                     encapsulateDoubleArray(DataReaderUtil.readDataset(path)));
@@ -151,10 +153,19 @@ public class Data {
 
         //normalize button
         Button normalize = new Button("Normalize");
-        grid.add(normalize, 0, 2);
         normalize.setOnAction(normalizeAction());
         normalize.setDisable(true);
         enableButtonWhenDatasetExistsListener(datasetValues, normalize);
+
+        //clear dataset button
+        Button clearDataset = new Button("Clear dataset");
+        clearDataset.setOnAction((l) -> datasetValues.clear());
+        clearDataset.setDisable(true);
+        enableButtonWhenDatasetExistsListener(datasetValues, clearDataset);
+
+        HBox downBox = new HBox(normalize, clearDataset);
+        downBox.setSpacing(10);
+        grid.add(downBox, 0, 2);
 
         //line chart
         LineChart line = lineChart(series, "Data");

@@ -62,6 +62,7 @@ public class GUI extends Application {
                 }
             }
         });
+        dataset.setAll(Data.getList(Data.DEFAULT_DATASET));
 
         TabPane tabs = new TabPane(data, arima, neuralNetwork, geneticProgramming);
         Scene mainScene = new Scene(tabs);

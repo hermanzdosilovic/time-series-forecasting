@@ -116,8 +116,8 @@ public class Backpropagation extends AbstractMetaheuristic<double[]> {
 
             double datasetError = NNErrorUtil.meanSquaredError(neuralNetwork, datasetArray);
             bestSolution.setFitness(datasetError);
-            System.err.println("iteration: " + currentIteration + " training mse: " + trainingMSE
-                    + " validation mse: " + validationMSE + " dataset mse: " + datasetError);
+            System.err.println("Iter: #" + currentIteration + ":\n\t train mse: " + trainingMSE
+                    + "\n\t validation mse: " + validationMSE + "\n\t dataset mse: " + datasetError);
             if ((validationSetMse < validationMSE && currentIteration > maxIteration / 2)
                     || Math.abs(trainingMSE - desiredError) < desiredPrecision) {
                 break;

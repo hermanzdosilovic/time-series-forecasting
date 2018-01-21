@@ -169,7 +169,15 @@ public class NeuralNetworkUI {
     private void initNeuralNetwork() {
         neuralNetwork.addListener((t, u, v) -> {
             trainingPaused.set(false);
+            predict.setDisable(true);
+            if(line.getData().size()==2){
+                line.getData().remove(1);
+            }
+            if(mseChart.getData().size()==1){
+                mseChart.getData().remove(0);
+            }
             if (v != null) {
+                start.setDisable(true);
                 dataset = DatasetValue.getTrainingData(data.getDatasetValues(), neuralNetwork.get().getInputSize(),
                         neuralNetwork.get().getOutputSize());
                 chooseAlgorithm.setOnAction(null);
@@ -192,11 +200,11 @@ public class NeuralNetworkUI {
                 changeParams.setDisable(true);
             }
 
-            if (metaheuristicProperty.get() == null || v == null) {
-                start.setDisable(true);
-            } else {
-                start.setDisable(false);
-            }
+//            if (metaheuristicProperty.get() == null || v == null) {
+//                start.setDisable(true);
+//            } else {
+//                start.setDisable(false);
+//            }
         });
     }
 
@@ -231,6 +239,13 @@ public class NeuralNetworkUI {
 
     private void initMetaheuristic() {
         metaheuristicProperty.addListener((t, u, v) -> {
+            if(line.getData().size()==2){
+                line.getData().remove(1);
+            }
+            if(mseChart.getData().size()==1){
+                mseChart.getData().remove(0);
+            }
+            predict.setDisable(true);
             trainingPaused.set(false);
             if (v == null || neuralNetwork.get() == null) {
                 start.setDisable(true);

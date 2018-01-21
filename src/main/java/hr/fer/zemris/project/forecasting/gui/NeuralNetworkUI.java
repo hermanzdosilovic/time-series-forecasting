@@ -105,7 +105,7 @@ public class NeuralNetworkUI {
         HBox neural = initChoosers();
         HBox params = initParams();
 
-        statusBar = new Label("Iteration: / MSE: /");
+        statusBar = new Label("Iteration: / Current mse: /");
 
         grid.add(neural, 0, 0);
         grid.add(params, 0, 1);
@@ -169,6 +169,7 @@ public class NeuralNetworkUI {
     private void initNeuralNetwork() {
         neuralNetwork.addListener((t, u, v) -> {
             trainingPaused.set(false);
+            statusBar.setText("Iteration: / Current mse: /");
             predict.setDisable(true);
             if(line.getData().size()==2){
                 line.getData().remove(1);
@@ -239,6 +240,7 @@ public class NeuralNetworkUI {
 
     private void initMetaheuristic() {
         metaheuristicProperty.addListener((t, u, v) -> {
+            statusBar.setText("Iteration: / Current mse: /");
             if(line.getData().size()==2){
                 line.getData().remove(1);
             }

@@ -319,6 +319,7 @@ public class Data {
         final NumberAxis xAxis = new NumberAxis();
         final NumberAxis yAxis = new NumberAxis();
         xAxis.setLabel("Iteration");
+        xAxis.setForceZeroInRange(false);
         yAxis.setLabel("Mse value");
         final LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
         lineChart.setTitle(lineChartName);

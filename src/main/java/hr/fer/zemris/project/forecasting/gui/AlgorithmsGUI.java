@@ -55,6 +55,7 @@ public abstract class AlgorithmsGUI {
     public static double INNER_FINAL_TEMP = 1E-3;
     public static IMetaheuristic metaheuristic;
     public static Object metaheuristicRequirement;
+    public static int maxIterations;
 
     //TODO dodati DE i backPropagation
     public static EventHandler<ActionEvent> chooseAlgorithmAction(ComboBox<String> comboBox, List<DatasetEntry> dataset,
@@ -218,6 +219,7 @@ public abstract class AlgorithmsGUI {
                             problem, selection, crossover, mutationValue);
                     metaheuristic = simpleGA;
                     metaheuristicProperty.setValue(metaheuristic);
+                    AlgorithmsGUI.maxIterations = generationSize;
 
                     ISolutionFactory<RealVector> solutionFactory = new SimpleSolutionFactory<>(
                       new RealVectorFactory(
@@ -464,6 +466,7 @@ public abstract class AlgorithmsGUI {
                             )
                     );
                     metaheuristicRequirement = solutionFactory.createMultipleInstances(populationSize);
+                    AlgorithmsGUI.maxIterations = generationSize;
 
                     osgaForm.setPopulationSize(population.getText());
                     osgaForm.setMaxGenerations(generations.getText());
@@ -642,6 +645,7 @@ public abstract class AlgorithmsGUI {
                             minComponentValue,
                             maxComponentValue
                     );
+                    AlgorithmsGUI.maxIterations = outerIteration;
 
                     saForm.setOuterIterations(outerIter.getText());
                     saForm.setInnerIterations(innerIter.getText());
@@ -816,6 +820,7 @@ public abstract class AlgorithmsGUI {
                     metaheuristic = particleSwarmOptimization;
                     metaheuristicProperty.setValue(metaheuristic);
                     metaheuristicRequirement = initialParticles;
+                    AlgorithmsGUI.maxIterations = maxIter;
 
                     psoForm.setMaxIteration(iteration.getText());
                     psoForm.setNumberOfParticles(particles.getText());
@@ -921,6 +926,7 @@ public abstract class AlgorithmsGUI {
                             desiredErr, desiredPrec, neuralNetwork, batch);
                     metaheuristic = bp;
                     metaheuristicProperty.setValue(metaheuristic);
+                    AlgorithmsGUI.maxIterations = (int)maxIter;
 
                     backpropagationForm.setMaxIteration(iteration.getText());
                     backpropagationForm.setLearningRate(learningRate.getText());

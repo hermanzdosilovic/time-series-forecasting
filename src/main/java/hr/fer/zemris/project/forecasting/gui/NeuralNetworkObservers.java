@@ -58,6 +58,7 @@ public class NeuralNetworkObservers {
 
         public void update(ISolution<double[]> solution) {
             ++iteration;
+            boolean lastIteration = iteration == AlgorithmsGUI.maxIterations;
 
             mseList.add(new XYChart.Data<>((int) iteration, solution.getFitness()));
             if (mseList.size() > MSE_GRAPH_SIZE) {
@@ -67,7 +68,7 @@ public class NeuralNetworkObservers {
             }
 
             long currentTime = System.currentTimeMillis();
-            if (currentTime - lastPlottingTime < PERIOD || Arrays.equals(lastSeenWeights, solution.getRepresentative())) {
+            if ((currentTime - lastPlottingTime < PERIOD || Arrays.equals(lastSeenWeights, solution.getRepresentative()))&& !lastIteration) {
                 return;
             }
             lastPlottingTime = System.currentTimeMillis();

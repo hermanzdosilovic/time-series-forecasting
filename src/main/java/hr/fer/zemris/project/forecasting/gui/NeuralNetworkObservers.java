@@ -60,7 +60,7 @@ public class NeuralNetworkObservers {
             ++iteration;
             boolean lastIteration = iteration == AlgorithmsGUI.maxIterations;
 
-            mseList.add(new XYChart.Data<>((int) iteration, solution.getFitness()));
+            mseList.add(new XYChart.Data<>((int) iteration, Math.abs(solution.getFitness())));
             if (mseList.size() > MSE_GRAPH_SIZE) {
                 int fromIndex = mseList.size() - MSE_GRAPH_SIZE;
                 int toIndex = mseList.size();
@@ -194,6 +194,7 @@ public class NeuralNetworkObservers {
 
 
         public void update(double currentMSE) {
+            currentMSE = Math.abs(currentMSE);
             ++iteration;
             String text = String.format("Iteration: %10d Current mse: %4.2f", iteration, currentMSE);
             Platform.runLater(() -> statusBar.setText(text));

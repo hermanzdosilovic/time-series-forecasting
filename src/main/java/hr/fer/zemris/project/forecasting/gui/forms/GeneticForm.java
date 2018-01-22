@@ -2,19 +2,19 @@ package hr.fer.zemris.project.forecasting.gui.forms;
 
 public class GeneticForm {
 
-    private String populationSize = "";
-    private String maxGenerations = "";
-    private String desiredFitness = "";
-    private String desiredPrecision = "";
-    private String tournamentSize = "";
-    private String minComponentValue = "";
-    private String maxComponentValue = "";
-    private String alpha = "";
-    private String mutationProbability = "";
-    private String sigma = "";
-    private boolean useElitism = false;
-    private boolean allowRepeat = false;
-    private boolean foreceMutation = false;
+    private String populationSize = "200";
+    private String maxGenerations = "2000";
+    private String desiredFitness = "0";
+    private String desiredPrecision = "1E-3";
+    private String tournamentSize = "20";
+    private String minComponentValue = "-5";
+    private String maxComponentValue = "5";
+    private String alpha = "0.9";
+    private String mutationProbability = "0.1";
+    private String sigma = "0.9";
+    private boolean useElitism = true;
+    private boolean allowRepeat = true;
+    private boolean forceMutation = false;
 
     private static GeneticForm ourInstance = new GeneticForm();
 
@@ -73,8 +73,8 @@ public class GeneticForm {
         return allowRepeat;
     }
 
-    public boolean isForeceMutation() {
-        return foreceMutation;
+    public boolean isForceMutation() {
+        return forceMutation;
     }
 
     public void setPopulationSize(String populationSize) {
@@ -125,7 +125,7 @@ public class GeneticForm {
         this.allowRepeat = allowRepeat;
     }
 
-    public void setForeceMutation(boolean foreceMutation) {
-        this.foreceMutation = foreceMutation;
+    public void setForceMutation(boolean forceMutation) {
+        this.forceMutation = forceMutation;
     }
 }

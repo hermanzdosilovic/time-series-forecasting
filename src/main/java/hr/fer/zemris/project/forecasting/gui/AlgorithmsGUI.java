@@ -129,7 +129,7 @@ public abstract class AlgorithmsGUI {
         CheckBox allowRepeat = new CheckBox("Unique tournament?");
         allowRepeat.setSelected(geneticForm.isAllowRepeat());
         CheckBox forceMutation = new CheckBox("Force mutation?");
-        forceMutation.setSelected(geneticForm.isForeceMutation());
+        forceMutation.setSelected(geneticForm.isForceMutation());
 
         Label invalidInput = new Label("Invalid input.");
         invalidInput.setTextFill(Color.RED);
@@ -234,7 +234,7 @@ public abstract class AlgorithmsGUI {
                     geneticForm.setAlpha(a.getText());
                     geneticForm.setMutationProbability(mutation.getText());
                     geneticForm.setSigma(s.getText());
-                    geneticForm.setForeceMutation(forceMutation.isSelected());
+                    geneticForm.setForceMutation(forceMutation.isSelected());
                     geneticForm.setUseElitism(useElitism.isSelected());
                     geneticForm.setAllowRepeat(allowRepeat.isSelected());
                     geneticForm.setDesiredFitness(desiredFitness.getText());

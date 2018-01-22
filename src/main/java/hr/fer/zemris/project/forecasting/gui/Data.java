@@ -370,6 +370,8 @@ public class Data {
         final NumberAxis yAxis = new NumberAxis();
         xAxis.setLabel("Iteration");
         xAxis.setForceZeroInRange(false);
+        xAxis.setMinorTickLength(0);
+        xAxis.setTickLabelFormatter(myStringConverter());
         yAxis.setLabel("Mse value");
         final LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
         lineChart.setTitle(lineChartName);

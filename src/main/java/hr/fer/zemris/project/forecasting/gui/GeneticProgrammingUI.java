@@ -124,12 +124,12 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
         XYChart.Series series = new XYChart.Series("Dataset", getChartData(data.getDatasetValues()));
         predictionChart.getData().add(series);
 
-        setStartUponDatasetChange(data.getDatasetValues(), start, predict);
+        setInitialStateUponDatasetChange(data.getDatasetValues(), start, predict);
         updateSeriesOnListChangeListener(data.getDatasetValues(), series);
         allowOneSeriesUponDatasetChangeListener(data.getDatasetValues(), predictionChart);
     }
 
-    private void setStartUponDatasetChange(
+    private void setInitialStateUponDatasetChange(
         ObservableList<DatasetValue> datasetValues,
         Button start,
         Button predict
@@ -137,6 +137,10 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
         datasetValues.addListener((ListChangeListener<DatasetValue>) c -> {
             start.setDisable(true);
             predict.setDisable(true);
+            mseChart.getData().clear();
+            trainMseL.setText("");
+            testMseL.setText("");
+            iteration.setText("");
         });
     }
 

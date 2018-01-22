@@ -2,6 +2,7 @@ package hr.fer.zemris.project.forecasting.gui.forms;
 
 public class NeuralNetworkForm {
 
+    private String type  = "TDNN";
     private int percentage = 90;
     private String inputLayer = "5";
     private String hiddenLayers = "3";
@@ -18,6 +19,10 @@ public class NeuralNetworkForm {
 
     public static NeuralNetworkForm getInstance() {
         return ourInstance;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public void setPercentage(int percentage) {
@@ -74,5 +79,9 @@ public class NeuralNetworkForm {
 
     public int getPercentage() {
         return percentage;
+    }
+
+    public String getType() {
+        return type;
     }
 }

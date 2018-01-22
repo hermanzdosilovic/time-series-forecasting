@@ -32,6 +32,7 @@ import javafx.stage.Stage;
 
 import static hr.fer.zemris.project.forecasting.gui.Data.*;
 import static hr.fer.zemris.project.forecasting.gui.DatasetValue.getChartData;
+import static hr.fer.zemris.project.forecasting.gui.GUIUtil.showErrorMessage;
 
 public class ARIMAUI {
     private Data data;
@@ -316,22 +317,6 @@ public class ARIMAUI {
                 }
             });
         };
-    }
-
-    public static void showErrorMessage(String message, Data data) {
-        Platform.runLater(() -> {
-            Stage notInvertible = new Stage();
-            notInvertible.initOwner(data.getPrimaryStage());
-            notInvertible.initModality(Modality.WINDOW_MODAL);
-
-            Label l = new Label(message);
-
-            l.setPadding(new Insets(30, 30, 30, 30));
-
-            Scene scene = new Scene(l);
-            notInvertible.setScene(scene);
-            notInvertible.show();
-        });
     }
 
     private void showFormula(WebEngine webEngine, String model){

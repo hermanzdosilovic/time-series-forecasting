@@ -32,6 +32,7 @@ import javafx.stage.Stage;
 
 import static hr.fer.zemris.project.forecasting.gui.Data.*;
 import static hr.fer.zemris.project.forecasting.gui.DatasetValue.getChartData;
+import static hr.fer.zemris.project.forecasting.gui.GUIUtil.myStringConverter;
 import static hr.fer.zemris.project.forecasting.gui.GUIUtil.showErrorMessage;
 
 public class ARIMAUI {
@@ -293,6 +294,8 @@ public class ARIMAUI {
 
                             NumberAxis xAxis = new NumberAxis();
                             xAxis.setLabel("Sample number");
+                            xAxis.setMinorTickLength(0);
+                            xAxis.setTickLabelFormatter(myStringConverter());
 
                             NumberAxis yAxis = new NumberAxis();
                             yAxis.setLabel("Predicted value");

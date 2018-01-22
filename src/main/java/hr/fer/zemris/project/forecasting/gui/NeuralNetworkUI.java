@@ -18,6 +18,8 @@ import hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.DoubleArrayG
 import hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.DoubleArrayStatusbarObserver;
 import hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.RealVectorGraphObserver;
 import hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.RealVectorStatusbarObserver;
+import hr.fer.zemris.project.forecasting.gui.builders.MetaheuristicBuilder;
+import hr.fer.zemris.project.forecasting.gui.builders.NeuralNetworkBuilder;
 import hr.fer.zemris.project.forecasting.gui.forms.NeuralNetworkForm;
 import hr.fer.zemris.project.forecasting.nn.Backpropagation;
 import javafx.application.Platform;
@@ -74,6 +76,7 @@ public class NeuralNetworkUI {
     private Button start;
     private AtomicBoolean trainingPaused = new AtomicBoolean(false);
     private Label statusBar;
+    private AtomicBoolean trainingOver = new AtomicBoolean(false);
 
     public NeuralNetworkUI(Data data) {
         this.data = data;
@@ -280,6 +283,13 @@ public class NeuralNetworkUI {
                 }).start();
                 return;
             }
+            if(trainingOver.get()){
+                INeuralNetwork nn = NeuralNetworkBuilder.createNeuralNetwork(neuralNetwork.getValue());
+                neuralNetwork = new SimpleObjectProperty<>(nn);
+                initNeuralNetwork();
+                MetaheuristicBuilder.createNewInstance(metaheuristicProperty.getValue(),neuralNetwork.getValue(),dataset);
+                metaheuristicProperty.setValue(AlgorithmsGUI.metaheuristic);
+            }
 
             if (line.getData().size() == 2 && mseChart.getData().size() == 1) {
                 line.getData().remove(1);
@@ -287,6 +297,7 @@ public class NeuralNetworkUI {
             }
             series = null;
             mseSeries = null;
+            trainingOver.set(false);
             Runnable training = new Runnable() {
                 @Override
                 public void run() {
@@ -332,7 +343,7 @@ public class NeuralNetworkUI {
                     } else {
                         System.err.println("wrong metaheuristic");
                     }
-
+                    trainingOver.set(true);
                     Platform.runLater(() -> {
                         start.setDisable(false);
                         predict.setDisable(false);

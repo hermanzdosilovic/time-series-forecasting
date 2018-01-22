@@ -29,6 +29,7 @@ import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.errors.MSEFunction;
 import com.dosilovic.hermanzvonimir.ecfjava.numeric.IFunction;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
+import hr.fer.zemris.project.forecasting.gui.AlgorithmsGUI;
 import hr.fer.zemris.project.forecasting.gui.forms.*;
 import hr.fer.zemris.project.forecasting.nn.Backpropagation;
 
@@ -273,4 +274,22 @@ public class MetaheuristicBuilder {
     }
 
 
+    public static void createNewInstance(IMetaheuristic metaheuristic, INeuralNetwork neuralNetwork, List<DatasetEntry> dataset) {
+        if (metaheuristic instanceof Backpropagation) {
+           AlgorithmsGUI.metaheuristic = createBackpropagation(((Backpropagation) metaheuristic).getTrainingSet(),
+                    ((Backpropagation) metaheuristic).getValidationSet(), neuralNetwork);
+        } else if (metaheuristic instanceof SimpleGA) {
+            AlgorithmsGUI.metaheuristic = createSimpleGA(dataset,neuralNetwork);
+            AlgorithmsGUI.metaheuristicRequirement = createSimpleGARequirements(neuralNetwork.getNumberOfParameters());
+        } else if (metaheuristic instanceof SimpleOSGA) {
+            AlgorithmsGUI.metaheuristic = createSimpleOSGA(dataset,neuralNetwork);
+            AlgorithmsGUI.metaheuristicRequirement = createOSGARequirements(neuralNetwork.getNumberOfParameters());
+        } else if (metaheuristic instanceof BasicPSO) {
+            AlgorithmsGUI.metaheuristic = createSimplePSO(dataset,neuralNetwork);
+            AlgorithmsGUI.metaheuristicRequirement = createPSORequirements(neuralNetwork.getNumberOfParameters());
+        } else if (metaheuristic instanceof SimpleSA) {
+            AlgorithmsGUI.metaheuristic = createSimpleSA(dataset,neuralNetwork);
+            AlgorithmsGUI.metaheuristicRequirement = createSARequirements(neuralNetwork.getNumberOfParameters());
+        }
+    }
 }

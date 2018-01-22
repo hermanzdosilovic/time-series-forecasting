@@ -1,38 +1,10 @@
 package hr.fer.zemris.project.forecasting.gui;
 
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.IMetaheuristic;
-import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.ga.IGeneticAlgorithm;
-import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.ga.SimpleGA;
-import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.ga.SimpleOSGA;
-import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.pso.BasicPSO;
-import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.pso.IParticleSwarmOptimization;
-import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.pso.topologies.FullyConnectedTopology;
-import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.sa.ISimulatedAnnealing;
-import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.sa.SimpleSA;
-import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.sa.cooling.GeometricCoolingSchedule;
-import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.sa.cooling.ICoolingSchedule;
-import com.dosilovic.hermanzvonimir.ecfjava.models.crossovers.BLXAlphaCrossover;
-import com.dosilovic.hermanzvonimir.ecfjava.models.crossovers.ICrossover;
-import com.dosilovic.hermanzvonimir.ecfjava.models.mutations.IMutation;
-import com.dosilovic.hermanzvonimir.ecfjava.models.mutations.RealVectorGaussianMutation;
-import com.dosilovic.hermanzvonimir.ecfjava.models.problems.FunctionMinimizationProblem;
-import com.dosilovic.hermanzvonimir.ecfjava.models.problems.IProblem;
-import com.dosilovic.hermanzvonimir.ecfjava.models.selections.ISelection;
-import com.dosilovic.hermanzvonimir.ecfjava.models.selections.TournamentSelection;
-import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.ISolution;
-import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.SimpleSolution;
-import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.factories.ISolutionFactory;
-import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.factories.ParticleFactory;
-import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.factories.RealVectorFactory;
-import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.factories.SimpleSolutionFactory;
-import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.particle.Particle;
-import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.vector.RealVector;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
-import com.dosilovic.hermanzvonimir.ecfjava.neural.errors.MSEFunction;
-import com.dosilovic.hermanzvonimir.ecfjava.numeric.IFunction;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
+import hr.fer.zemris.project.forecasting.gui.builders.MetaheuristicBuilder;
 import hr.fer.zemris.project.forecasting.gui.forms.*;
-import hr.fer.zemris.project.forecasting.nn.Backpropagation;
 import javafx.beans.property.ObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -46,8 +18,6 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public abstract class AlgorithmsGUI {
@@ -189,45 +159,6 @@ public abstract class AlgorithmsGUI {
             @Override
             public void handle(ActionEvent event) {
                 try {
-                    int populationSize = Integer.parseInt(population.getText());
-                    int generationSize = Integer.parseInt(generations.getText());
-                    int tournamentSize = Integer.parseInt(tournament.getText());
-                    double alpha = Double.parseDouble(a.getText());
-                    double mutationP = Double.parseDouble(mutation.getText());
-                    double sigma = Double.parseDouble(s.getText());
-                    boolean forceMutations = forceMutation.isSelected();
-                    boolean elitism = useElitism.isSelected();
-                    boolean repeat = allowRepeat.isSelected();
-                    double desiredFittnes = Double.parseDouble(desiredFitness.getText());
-                    double desiredPrec = Double.parseDouble(desiredPrecision.getText());
-                    double minComponentValue = Double.parseDouble(minCompValue.getText());
-                    double maxComponentValue = Double.parseDouble(maxCompValue.getText());
-
-                    IProblem<RealVector> problem = new FunctionMinimizationProblem<>(new MSEFunction<>(neuralNetwork,
-                            dataset.toArray(new DatasetEntry[dataset.size()])));
-                    ISelection<RealVector> selection = new TournamentSelection<>(
-                            tournamentSize,
-                            repeat
-                    );
-                    ICrossover<RealVector> crossover = new BLXAlphaCrossover<>(alpha);
-                    IMutation<RealVector> mutationValue = new RealVectorGaussianMutation<>(
-                            mutationP,
-                            forceMutations,
-                            sigma
-                    );
-                    SimpleGA<RealVector> simpleGA = new SimpleGA<>(elitism, generationSize, false, desiredFittnes, desiredPrec,
-                            problem, selection, crossover, mutationValue);
-                    metaheuristic = simpleGA;
-                    metaheuristicProperty.setValue(metaheuristic);
-                    AlgorithmsGUI.maxIterations = generationSize;
-
-                    ISolutionFactory<RealVector> solutionFactory = new SimpleSolutionFactory<>(
-                      new RealVectorFactory(
-                              new RealVector(neuralNetwork.getNumberOfParameters(), minComponentValue, maxComponentValue)
-                      )
-                    );
-                    metaheuristicRequirement = solutionFactory.createMultipleInstances(populationSize);
-
                     geneticForm.setPopulationSize(population.getText());
                     geneticForm.setMaxGenerations(generations.getText());
                     geneticForm.setTournamentSize(tournament.getText());
@@ -241,6 +172,44 @@ public abstract class AlgorithmsGUI {
                     geneticForm.setDesiredPrecision(desiredPrecision.getText());
                     geneticForm.setMinComponentValue(minCompValue.getText());
                     geneticForm.setMaxComponentValue(maxCompValue.getText());
+//                    int populationSize = Integer.parseInt(population.getText());
+//                    int generationSize = Integer.parseInt(generations.getText());
+//                    int tournamentSize = Integer.parseInt(tournament.getText());
+//                    double alpha = Double.parseDouble(a.getText());
+//                    double mutationP = Double.parseDouble(mutation.getText());
+//                    double sigma = Double.parseDouble(s.getText());
+//                    boolean forceMutations = forceMutation.isSelected();
+//                    boolean elitism = useElitism.isSelected();
+//                    boolean repeat = allowRepeat.isSelected();
+//                    double desiredFittnes = Double.parseDouble(desiredFitness.getText());
+//                    double desiredPrec = Double.parseDouble(desiredPrecision.getText());
+//                    double minComponentValue = Double.parseDouble(minCompValue.getText());
+//                    double maxComponentValue = Double.parseDouble(maxCompValue.getText());
+//
+//                    IProblem<RealVector> problem = new FunctionMinimizationProblem<>(new MSEFunction<>(neuralNetwork,
+//                            dataset.toArray(new DatasetEntry[dataset.size()])));
+//                    ISelection<RealVector> selection = new TournamentSelection<>(
+//                            tournamentSize,
+//                            repeat
+//                    );
+//                    ICrossover<RealVector> crossover = new BLXAlphaCrossover<>(alpha);
+//                    IMutation<RealVector> mutationValue = new RealVectorGaussianMutation<>(
+//                            mutationP,
+//                            forceMutations,
+//                            sigma
+//                    );
+//                    SimpleGA<RealVector> simpleGA = new SimpleGA<>(elitism, generationSize, false, desiredFittnes, desiredPrec,
+//                            problem, selection, crossover, mutationValue);
+                    metaheuristic = MetaheuristicBuilder.createSimpleGA(dataset, neuralNetwork);
+                    metaheuristicProperty.setValue(metaheuristic);
+                    metaheuristicRequirement = MetaheuristicBuilder.createSimpleGARequirements(neuralNetwork.getNumberOfParameters());
+                    int generationSize = Integer.parseInt(generations.getText());
+                    AlgorithmsGUI.maxIterations = generationSize;
+//                    ISolutionFactory<RealVector> solutionFactory = new SimpleSolutionFactory<>(
+//                            new RealVectorFactory(
+//                                    new RealVector(neuralNetwork.getNumberOfParameters(), minComponentValue, maxComponentValue)
+//                            )
+//                    );
 
                     geneticStage.hide();
                 } catch (RuntimeException ex) {
@@ -402,72 +371,6 @@ public abstract class AlgorithmsGUI {
             @Override
             public void handle(ActionEvent event) {
                 try {
-                    int populationSize = Integer.parseInt(population.getText());
-                    int generationSize = Integer.parseInt(generations.getText());
-                    int tournamentSize = Integer.parseInt(tournament.getText());
-                    double alpha = Double.parseDouble(a.getText());
-                    double mutationP = Double.parseDouble(mutation.getText());
-                    double sigma = Double.parseDouble(s.getText());
-                    double maxP = Double.parseDouble(maxPressure.getText());
-                    double minSuccessRatio = Double.parseDouble(minSuccess.getText());
-                    double maxSuccessRatio = Double.parseDouble(maxSuccess.getText());
-                    double minComparisonRatio = Double.parseDouble(minComparison.getText());
-                    double maxComparisonRatio = Double.parseDouble(maxComparison.getText());
-                    boolean forceMutations = forceMutation.isSelected();
-                    boolean elitism = useElitism.isSelected();
-                    boolean doRepeat = allowRepeat.isSelected();
-                    double fitness = Double.parseDouble(desiredFitness.getText());
-                    double desiredPrec = Double.parseDouble(desiredPrecision.getText());
-                    double minComponentValue = Double.parseDouble(minCompValue.getText());
-                    double maxComponentValue = Double.parseDouble(maxCompValue.getText());
-
-                    IFunction<RealVector> function = new MSEFunction<>(neuralNetwork, dataset.toArray(new DatasetEntry[dataset.size()]));
-                    IProblem<RealVector> problem = new FunctionMinimizationProblem<>(function);
-                    ISelection<RealVector> selection = new TournamentSelection<>(
-                            tournamentSize,
-                            doRepeat
-                    );
-                    ICrossover<RealVector> crossover = new BLXAlphaCrossover<>(alpha);
-                    IMutation<RealVector> mutationValue = new RealVectorGaussianMutation<>(
-                            mutationP,
-                            forceMutations,
-                            sigma
-                    );
-                    ICoolingSchedule successRatioSchedule = new GeometricCoolingSchedule(
-                            generationSize,
-                            minSuccessRatio,
-                            maxSuccessRatio
-                    );
-                    ICoolingSchedule comparisonFactorSchedule = new GeometricCoolingSchedule(
-                            generationSize,
-                            minComparisonRatio,
-                            maxComparisonRatio
-                    );
-                    IGeneticAlgorithm<RealVector> geneticAlgorithm = new SimpleOSGA<>(
-                            elitism,
-                            generationSize,
-                            false,
-                            fitness,
-                            desiredPrec,
-                            maxP,
-                            successRatioSchedule,
-                            comparisonFactorSchedule,
-                            problem,
-                            selection,
-                            crossover,
-                            mutationValue
-                    );
-
-                    metaheuristic = geneticAlgorithm;
-                    metaheuristicProperty.setValue(metaheuristic);
-                    ISolutionFactory<RealVector> solutionFactory = new SimpleSolutionFactory<>(
-                            new RealVectorFactory(
-                                    new RealVector(neuralNetwork.getNumberOfParameters(), minComponentValue, maxComponentValue)
-                            )
-                    );
-                    metaheuristicRequirement = solutionFactory.createMultipleInstances(populationSize);
-                    AlgorithmsGUI.maxIterations = generationSize;
-
                     osgaForm.setPopulationSize(population.getText());
                     osgaForm.setMaxGenerations(generations.getText());
                     osgaForm.setTournamentSize(tournament.getText());
@@ -486,6 +389,74 @@ public abstract class AlgorithmsGUI {
                     osgaForm.setDesiredPrecision(desiredPrecision.getText());
                     osgaForm.setMinComponentValue(minCompValue.getText());
                     osgaForm.setMaxComponentValue(maxCompValue.getText());
+
+
+//                    int populationSize = Integer.parseInt(population.getText());
+//                    int generationSize = Integer.parseInt(generations.getText());
+//                    int tournamentSize = Integer.parseInt(tournament.getText());
+//                    double alpha = Double.parseDouble(a.getText());
+//                    double mutationP = Double.parseDouble(mutation.getText());
+//                    double sigma = Double.parseDouble(s.getText());
+//                    double maxP = Double.parseDouble(maxPressure.getText());
+//                    double minSuccessRatio = Double.parseDouble(minSuccess.getText());
+//                    double maxSuccessRatio = Double.parseDouble(maxSuccess.getText());
+//                    double minComparisonRatio = Double.parseDouble(minComparison.getText());
+//                    double maxComparisonRatio = Double.parseDouble(maxComparison.getText());
+//                    boolean forceMutations = forceMutation.isSelected();
+//                    boolean elitism = useElitism.isSelected();
+//                    boolean doRepeat = allowRepeat.isSelected();
+//                    double fitness = Double.parseDouble(desiredFitness.getText());
+//                    double desiredPrec = Double.parseDouble(desiredPrecision.getText());
+//                    double minComponentValue = Double.parseDouble(minCompValue.getText());
+//                    double maxComponentValue = Double.parseDouble(maxCompValue.getText());
+//
+//                    IFunction<RealVector> function = new MSEFunction<>(neuralNetwork, dataset.toArray(new DatasetEntry[dataset.size()]));
+//                    IProblem<RealVector> problem = new FunctionMinimizationProblem<>(function);
+//                    ISelection<RealVector> selection = new TournamentSelection<>(
+//                            tournamentSize,
+//                            doRepeat
+//                    );
+//                    ICrossover<RealVector> crossover = new BLXAlphaCrossover<>(alpha);
+//                    IMutation<RealVector> mutationValue = new RealVectorGaussianMutation<>(
+//                            mutationP,
+//                            forceMutations,
+//                            sigma
+//                    );
+//                    ICoolingSchedule successRatioSchedule = new GeometricCoolingSchedule(
+//                            generationSize,
+//                            minSuccessRatio,
+//                            maxSuccessRatio
+//                    );
+//                    ICoolingSchedule comparisonFactorSchedule = new GeometricCoolingSchedule(
+//                            generationSize,
+//                            minComparisonRatio,
+//                            maxComparisonRatio
+//                    );
+//                    IGeneticAlgorithm<RealVector> geneticAlgorithm = new SimpleOSGA<>(
+//                            elitism,
+//                            generationSize,
+//                            false,
+//                            fitness,
+//                            desiredPrec,
+//                            maxP,
+//                            successRatioSchedule,
+//                            comparisonFactorSchedule,
+//                            problem,
+//                            selection,
+//                            crossover,
+//                            mutationValue
+//                    );
+
+                    metaheuristic = MetaheuristicBuilder.createSimpleOSGA(dataset, neuralNetwork);
+                    metaheuristicProperty.setValue(metaheuristic);
+//                    ISolutionFactory<RealVector> solutionFactory = new SimpleSolutionFactory<>(
+//                            new RealVectorFactory(
+//                                    new RealVector(neuralNetwork.getNumberOfParameters(), minComponentValue, maxComponentValue)
+//                            )
+//                    );
+                    metaheuristicRequirement = MetaheuristicBuilder.createOSGARequirements(neuralNetwork.getNumberOfParameters());
+                    int generationSize = Integer.parseInt(generations.getText());
+                    AlgorithmsGUI.maxIterations = generationSize;
 
                     OSGAStage.hide();
                 } catch (RuntimeException ex) {
@@ -605,48 +576,6 @@ public abstract class AlgorithmsGUI {
             @Override
             public void handle(ActionEvent event) {
                 try {
-                    int outerIteration = Integer.parseInt(outerIter.getText());
-                    int innerIteration = Integer.parseInt(innerIter.getText());
-                    double outerTemperature = Double.parseDouble(outerTemp.getText());
-                    double outerFinalTemp = Double.parseDouble(outerFinalTemperature.getText());
-                    double mutationP = Double.parseDouble(mutation.getText());
-                    double sigma = Double.parseDouble(s.getText());
-                    boolean forceMutations = forceMutation.isSelected();
-                    double fitness = Double.parseDouble(desiredFitness.getText());
-                    double desiredPrec = Double.parseDouble(desiredPrecision.getText());
-                    double minComponentValue = Double.parseDouble(minCompValue.getText());
-                    double maxComponentValue = Double.parseDouble(maxCompValue.getText());
-
-                    IFunction<RealVector> function = new MSEFunction<>(neuralNetwork, dataset.toArray(new DatasetEntry[dataset.size()]));
-                    IProblem<RealVector> problem = new FunctionMinimizationProblem<>(function);
-                    ICoolingSchedule outerCoolingSchedule = new GeometricCoolingSchedule(
-                            outerIteration,
-                            outerTemperature,
-                            outerFinalTemp
-                    );
-                    ICoolingSchedule innerCoolingSchedule = new GeometricCoolingSchedule(
-                            innerIteration,
-                            INNER_INITIAL_TEMP,
-                            INNER_FINAL_TEMP
-                    );
-                    IMutation<RealVector> mutationValue = new RealVectorGaussianMutation<>(mutationP, forceMutations, sigma);
-                    ISimulatedAnnealing<RealVector> simulatedAnnealing = new SimpleSA<>(
-                            desiredPrec,
-                            fitness,
-                            problem,
-                            mutationValue,
-                            outerCoolingSchedule,
-                            innerCoolingSchedule
-                    );
-                    metaheuristic = simulatedAnnealing;
-                    metaheuristicProperty.setValue(metaheuristic);
-                    metaheuristicRequirement = new RealVector(
-                            neuralNetwork.getNumberOfParameters(),
-                            minComponentValue,
-                            maxComponentValue
-                    );
-                    AlgorithmsGUI.maxIterations = outerIteration;
-
                     saForm.setOuterIterations(outerIter.getText());
                     saForm.setInnerIterations(innerIter.getText());
                     saForm.setOuterInitialTemperature(outerTemp.getText());
@@ -658,6 +587,45 @@ public abstract class AlgorithmsGUI {
                     saForm.setDesiredPrecision(desiredPrecision.getText());
                     saForm.setMinComponentValue(minCompValue.getText());
                     saForm.setMaxComponentValue(maxCompValue.getText());
+
+//                    int outerIteration = Integer.parseInt(outerIter.getText());
+//                    int innerIteration = Integer.parseInt(innerIter.getText());
+//                    double outerTemperature = Double.parseDouble(outerTemp.getText());
+//                    double outerFinalTemp = Double.parseDouble(outerFinalTemperature.getText());
+//                    double mutationP = Double.parseDouble(mutation.getText());
+//                    double sigma = Double.parseDouble(s.getText());
+//                    boolean forceMutations = forceMutation.isSelected();
+//                    double fitness = Double.parseDouble(desiredFitness.getText());
+//                    double desiredPrec = Double.parseDouble(desiredPrecision.getText());
+//                    double minComponentValue = Double.parseDouble(minCompValue.getText());
+//                    double maxComponentValue = Double.parseDouble(maxCompValue.getText());
+//
+//                    IFunction<RealVector> function = new MSEFunction<>(neuralNetwork, dataset.toArray(new DatasetEntry[dataset.size()]));
+//                    IProblem<RealVector> problem = new FunctionMinimizationProblem<>(function);
+//                    ICoolingSchedule outerCoolingSchedule = new GeometricCoolingSchedule(
+//                            outerIteration,
+//                            outerTemperature,
+//                            outerFinalTemp
+//                    );
+//                    ICoolingSchedule innerCoolingSchedule = new GeometricCoolingSchedule(
+//                            innerIteration,
+//                            INNER_INITIAL_TEMP,
+//                            INNER_FINAL_TEMP
+//                    );
+//                    IMutation<RealVector> mutationValue = new RealVectorGaussianMutation<>(mutationP, forceMutations, sigma);
+//                    ISimulatedAnnealing<RealVector> simulatedAnnealing = new SimpleSA<>(
+//                            desiredPrec,
+//                            fitness,
+//                            problem,
+//                            mutationValue,
+//                            outerCoolingSchedule,
+//                            innerCoolingSchedule
+//                    );
+                    metaheuristic = MetaheuristicBuilder.createSimpleSA(dataset, neuralNetwork);
+                    metaheuristicProperty.setValue(metaheuristic);
+                    metaheuristicRequirement = MetaheuristicBuilder.createSARequirements(neuralNetwork.getNumberOfParameters());
+                    int outerIteration = Integer.parseInt(outerIter.getText());
+                    AlgorithmsGUI.maxIterations = outerIteration;
 
                     SAStage.hide();
                 } catch (RuntimeException ex) {
@@ -775,53 +743,6 @@ public abstract class AlgorithmsGUI {
             @Override
             public void handle(ActionEvent event) {
                 try {
-                    int maxIter = Integer.parseInt(iteration.getText());
-                    long particlesNum = Long.parseLong(particles.getText());
-                    double minSpeed = Double.parseDouble(minV.getText());
-                    double maxSpeed = Double.parseDouble(maxV.getText());
-                    double minValue = Double.parseDouble(minVal.getText());
-                    double maxValue = Double.parseDouble(maxVal.getText());
-                    double individualFact = Double.parseDouble(individualFactor.getText());
-                    double socialFact = Double.parseDouble(socialFactor.getText());
-                    double desiredFittnes = Double.parseDouble(desiredFitness.getText());
-                    double desiredPrec = Double.parseDouble(desiredPrecision.getText());
-                    boolean isFullyInformed = isInformed.isSelected();
-
-                    IProblem<RealVector> problem = new FunctionMinimizationProblem<>(new MSEFunction<>(neuralNetwork,
-                            dataset.toArray(new DatasetEntry[dataset.size()])));
-                    Collection<ISolution<RealVector>> initialParticles = new ArrayList<>();
-
-                    ISolutionFactory<RealVector> particleFactory = new ParticleFactory<>(
-                            new SimpleSolutionFactory<>(
-                                    new RealVectorFactory(
-                                            new RealVector(neuralNetwork.getNumberOfParameters(), minValue, maxValue, true)
-                                    )
-                            ),
-                            new RealVectorFactory(
-                                    new RealVector(neuralNetwork.getNumberOfParameters(), minSpeed, maxSpeed)
-                            )
-                    );
-
-                    initialParticles = particleFactory.createMultipleInstances((int) particlesNum);
-
-                    IParticleSwarmOptimization<RealVector> particleSwarmOptimization = new BasicPSO<>(
-                            maxIter,
-                            desiredFittnes,
-                            desiredPrec,
-                            isFullyInformed,
-                            individualFact,
-                            socialFact,
-                            new RealVector(neuralNetwork.getNumberOfParameters(), minSpeed),
-                            new RealVector(neuralNetwork.getNumberOfParameters(), maxSpeed),
-                            problem,
-                            new FullyConnectedTopology<>()
-                    );
-
-                    metaheuristic = particleSwarmOptimization;
-                    metaheuristicProperty.setValue(metaheuristic);
-                    metaheuristicRequirement = initialParticles;
-                    AlgorithmsGUI.maxIterations = maxIter;
-
                     psoForm.setMaxIteration(iteration.getText());
                     psoForm.setNumberOfParticles(particles.getText());
                     psoForm.setMinSpeed(minV.getText());
@@ -833,6 +754,54 @@ public abstract class AlgorithmsGUI {
                     psoForm.setDesiredFitness(desiredFitness.getText());
                     psoForm.setDesiredPrecision(desiredPrecision.getText());
                     psoForm.setFullyFormed(isInformed.isSelected());
+
+//                    int maxIter = Integer.parseInt(iteration.getText());
+//                    long particlesNum = Long.parseLong(particles.getText());
+//                    double minSpeed = Double.parseDouble(minV.getText());
+//                    double maxSpeed = Double.parseDouble(maxV.getText());
+//                    double minValue = Double.parseDouble(minVal.getText());
+//                    double maxValue = Double.parseDouble(maxVal.getText());
+//                    double individualFact = Double.parseDouble(individualFactor.getText());
+//                    double socialFact = Double.parseDouble(socialFactor.getText());
+//                    double desiredFittnes = Double.parseDouble(desiredFitness.getText());
+//                    double desiredPrec = Double.parseDouble(desiredPrecision.getText());
+//                    boolean isFullyInformed = isInformed.isSelected();
+//
+//                    IProblem<RealVector> problem = new FunctionMinimizationProblem<>(new MSEFunction<>(neuralNetwork,
+//                            dataset.toArray(new DatasetEntry[dataset.size()])));
+//                    Collection<ISolution<RealVector>> initialParticles = new ArrayList<>();
+//
+//                    ISolutionFactory<RealVector> particleFactory = new ParticleFactory<>(
+//                            new SimpleSolutionFactory<>(
+//                                    new RealVectorFactory(
+//                                            new RealVector(neuralNetwork.getNumberOfParameters(), minValue, maxValue, true)
+//                                    )
+//                            ),
+//                            new RealVectorFactory(
+//                                    new RealVector(neuralNetwork.getNumberOfParameters(), minSpeed, maxSpeed)
+//                            )
+//                    );
+//
+//                    initialParticles = particleFactory.createMultipleInstances((int) particlesNum);
+//
+//                    IParticleSwarmOptimization<RealVector> particleSwarmOptimization = new BasicPSO<>(
+//                            maxIter,
+//                            desiredFittnes,
+//                            desiredPrec,
+//                            isFullyInformed,
+//                            individualFact,
+//                            socialFact,
+//                            new RealVector(neuralNetwork.getNumberOfParameters(), minSpeed),
+//                            new RealVector(neuralNetwork.getNumberOfParameters(), maxSpeed),
+//                            problem,
+//                            new FullyConnectedTopology<>()
+//                    );
+
+                    metaheuristic = MetaheuristicBuilder.createSimplePSO(dataset, neuralNetwork);
+                    metaheuristicProperty.setValue(metaheuristic);
+                    metaheuristicRequirement = MetaheuristicBuilder.createPSORequirements(neuralNetwork.getNumberOfParameters());
+                    int maxIter = Integer.parseInt(iteration.getText());
+                    AlgorithmsGUI.maxIterations = maxIter;
 
                     PSOStage.hide();
                 } catch (RuntimeException ex) {
@@ -915,24 +884,25 @@ public abstract class AlgorithmsGUI {
             @Override
             public void handle(ActionEvent event) {
                 try {
-                    long maxIter = Long.parseLong(iteration.getText());
-                    double learningRt = Double.parseDouble(learningRate.getText());
-                    double desiredErr = Double.parseDouble(desiredError.getText());
-                    double desiredPrec = Double.parseDouble(desiredPrecision.getText());
-                    int batch = Integer.parseInt(batchSize.getText());
-                    int index = (int) Math.ceil(dataset.size() * trainPercentage);
-                    Backpropagation bp = new Backpropagation(dataset.subList(0, index),
-                            dataset.subList(index, dataset.size()), learningRt, maxIter,
-                            desiredErr, desiredPrec, neuralNetwork, batch);
-                    metaheuristic = bp;
-                    metaheuristicProperty.setValue(metaheuristic);
-                    AlgorithmsGUI.maxIterations = (int)maxIter;
-
                     backpropagationForm.setMaxIteration(iteration.getText());
                     backpropagationForm.setLearningRate(learningRate.getText());
                     backpropagationForm.setDesiredError(desiredError.getText());
                     backpropagationForm.setDesiredPrecision(desiredPrecision.getText());
                     backpropagationForm.setBatchSize(batchSize.getText());
+//                    double learningRt = Double.parseDouble(learningRate.getText());
+//                    double desiredErr = Double.parseDouble(desiredError.getText());
+//                    double desiredPrec = Double.parseDouble(desiredPrecision.getText());
+//                    int batch = Integer.parseInt(batchSize.getText());
+
+//                    Backpropagation bp = new Backpropagation(dataset.subList(0, index),
+//                            dataset.subList(index, dataset.size()), learningRt, maxIter,
+//                            desiredErr, desiredPrec, neuralNetwork, batch);
+                    long maxIter = Long.parseLong(iteration.getText());
+                    int index = (int) Math.ceil(dataset.size() * trainPercentage);
+                    metaheuristic = MetaheuristicBuilder.createBackpropagation(dataset.subList(0, index),
+                            dataset.subList(index, dataset.size()), neuralNetwork);
+                    metaheuristicProperty.setValue(metaheuristic);
+                    AlgorithmsGUI.maxIterations = (int) maxIter;
 
                     BPStage.hide();
                 } catch (RuntimeException ex) {

@@ -7,6 +7,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
 
 public class GUIUtil {
     public static IActivation extractActivation(String activation) {
@@ -39,5 +40,18 @@ public class GUIUtil {
             notInvertible.setScene(scene);
             notInvertible.show();
         });
+    }
+
+    public static StringConverter<Number> myStringConverter(){
+        return new StringConverter<Number>(){
+            @Override public String toString(Number object) {
+                if(object.doubleValue() % 1 == 0) return object.intValue() + "";
+                else return "";
+            }
+
+            @Override public Number fromString(String string) {
+                return Double.parseDouble(string);
+            }
+        };
     }
 }

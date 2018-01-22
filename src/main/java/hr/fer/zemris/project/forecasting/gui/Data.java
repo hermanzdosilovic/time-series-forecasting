@@ -35,6 +35,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import static hr.fer.zemris.project.forecasting.gui.GUIUtil.myStringConverter;
+
 
 public class Data {
     private ObservableList<DatasetValue> datasetValues;
@@ -325,8 +327,8 @@ public class Data {
 
     public static LineChart<Number, Number> lineChart(XYChart.Series series, String lineChartName) {
         final NumberAxis xAxis = new NumberAxis();
-        xAxis.setMinorTickVisible(false);
-
+        xAxis.setMinorTickLength(0);
+        xAxis.setTickLabelFormatter(myStringConverter());
         final NumberAxis yAxis = new NumberAxis();
         xAxis.setLabel("Sample Number");
         yAxis.setLabel("Sample Value");
@@ -345,8 +347,8 @@ public class Data {
 
     public static LineChart<Number, Number> lineChart(String lineChartName, int width, int height) {
         final NumberAxis xAxis = new NumberAxis();
-        xAxis.setMinorTickVisible(false);
-
+        xAxis.setMinorTickLength(0);
+        xAxis.setTickLabelFormatter(myStringConverter());
         final NumberAxis yAxis = new NumberAxis();
         xAxis.setLabel("Sample Number");
         yAxis.setLabel("Sample Value");
@@ -355,7 +357,6 @@ public class Data {
         lineChart.setCreateSymbols(true);
         lineChart.setMaxSize(width, height);
         lineChart.setMinWidth(width);
-//        lineChart.setMinSize(width, height);
         lineChart.setAnimated(false);
         return lineChart;
     }
@@ -557,5 +558,4 @@ public class Data {
             series.setData(DatasetValue.getChartData(datasetValues));
         }
     }
-
 }

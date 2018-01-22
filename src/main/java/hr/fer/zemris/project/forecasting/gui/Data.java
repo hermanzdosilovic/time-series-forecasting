@@ -131,10 +131,18 @@ public class Data {
 
         values.setCellFactory(TextFieldTableCell.forTableColumn(new MyDoubleStringConverter()));
         values.setOnEditCommit((e) ->
-                                   e.getTableView().getItems().set(
+                               {
+                                   if(e.getNewValue() != null) {
+                                       e.getTableView().getItems().set(
+                                           e.getTablePosition().getRow(),
+                                           new DatasetValue(e.getTablePosition().getRow(), e.getNewValue())
+                                       );
+                                   }
+                                   else e.getTableView().getItems().set(
                                        e.getTablePosition().getRow(),
-                                       new DatasetValue(e.getTablePosition().getRow(), e.getNewValue())
-                                   ));
+                                       new DatasetValue(e.getTablePosition().getRow(), e.getOldValue())
+                                   );
+                               });
 
         TableColumn<DatasetValue, Integer> indices = new TableColumn<>("Index");
         indices.setSortable(false);

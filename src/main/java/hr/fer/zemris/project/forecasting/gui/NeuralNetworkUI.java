@@ -52,6 +52,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static hr.fer.zemris.project.forecasting.gui.Data.*;
 import static hr.fer.zemris.project.forecasting.gui.DatasetValue.getChartData;
 import static hr.fer.zemris.project.forecasting.gui.GUIUtil.extractActivation;
+import static hr.fer.zemris.project.forecasting.gui.GUIUtil.showErrorMessage;
 
 public class NeuralNetworkUI {
 
@@ -216,9 +217,7 @@ public class NeuralNetworkUI {
                     chooseAlgorithm.setDisable(true);
                     changeParams.setDisable(true);
                 }
-            }catch (RuntimeException ex){
-
-            }
+            }catch (RuntimeException ignorable){}
         });
     }
 
@@ -580,6 +579,8 @@ public class NeuralNetworkUI {
                 changeArchitecture.hide();
             } catch (NumberFormatException nfe) {
                 invalidInput.setVisible(true);
+            }catch (RuntimeException ex){
+                showErrorMessage("Dataset too small.",data);
             }
         };
     }

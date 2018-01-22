@@ -154,7 +154,7 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
                     try {
                         geneticProgramming.stop();
                     } catch (RuntimeException r) {
-                        ARIMAUI.showErrorMessage(
+                        GUIUtil.showErrorMessage(
                             String.format("Something's gone terribly wrong %s.", r.getMessage()),
                             data
                         );
@@ -191,7 +191,7 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
                             testMseL.setText(String.format("Test MSE:  %.2f", solution.getTestFitness()));
                         });
                     } catch (RuntimeException r) {
-                        ARIMAUI.showErrorMessage(
+                        GUIUtil.showErrorMessage(
                             String.format("Something's gone terribly wrong %s.", r.getMessage()),
                             data
                         );

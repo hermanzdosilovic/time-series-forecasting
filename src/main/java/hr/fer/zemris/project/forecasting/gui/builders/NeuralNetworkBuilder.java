@@ -8,10 +8,10 @@ public class NeuralNetworkBuilder {
 
     public static INeuralNetwork createNeuralNetwork(INeuralNetwork nn) {
         INeuralNetwork neuralNetwork = null;
-        if(nn instanceof FeedForwardANN){
-            neuralNetwork = new FeedForwardANN(nn.getArchitecture(),nn.getLayerActivations());
-        }else {
-            neuralNetwork = new ElmanNN(nn.getArchitecture(),nn.getLayerActivations());
+        if (nn instanceof FeedForwardANN) {
+            neuralNetwork = new FeedForwardANN(nn.getArchitecture(), nn.getLayerActivations());
+        } else {
+            neuralNetwork = new ElmanNN(nn.getArchitecture(), nn.getLayerActivations());
         }
         return neuralNetwork;
     }

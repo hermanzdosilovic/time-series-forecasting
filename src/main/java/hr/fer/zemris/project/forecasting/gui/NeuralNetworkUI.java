@@ -171,12 +171,12 @@ public class NeuralNetworkUI {
         line = lineChart(series, "Data");
     }
 
-    private void initDatasetChanges(){
+    private void initDatasetChanges() {
         data.getDatasetValues().addListener((ListChangeListener<DatasetValue>) c -> {
-            if(mseChart.getData().size()==1) {
+            if (mseChart.getData().size() == 1) {
                 mseChart.getData().remove(0);
             }
-            if(line.getData().size()==2) {
+            if (line.getData().size() == 2) {
                 line.getData().remove(1);
             }
             neuralNetwork.setValue(null);
@@ -219,7 +219,8 @@ public class NeuralNetworkUI {
                     chooseAlgorithm.setDisable(true);
                     changeParams.setDisable(true);
                 }
-            }catch (RuntimeException ignorable){}
+            } catch (RuntimeException ignorable) {
+            }
         });
     }
 
@@ -255,10 +256,10 @@ public class NeuralNetworkUI {
     private void initMetaheuristic() {
         metaheuristicProperty.addListener((t, u, v) -> {
             statusBar.setText("Iteration: / Current mse: /");
-            if(line.getData().size()==2){
+            if (line.getData().size() == 2) {
                 line.getData().remove(1);
             }
-            if(mseChart.getData().size()==1){
+            if (mseChart.getData().size() == 1) {
                 mseChart.getData().remove(0);
             }
             predict.setDisable(true);
@@ -283,11 +284,11 @@ public class NeuralNetworkUI {
                 }).start();
                 return;
             }
-            if(trainingOver.get()){
+            if (trainingOver.get()) {
                 INeuralNetwork nn = NeuralNetworkBuilder.createNeuralNetwork(neuralNetwork.getValue());
                 neuralNetwork = new SimpleObjectProperty<>(nn);
                 initNeuralNetwork();
-                MetaheuristicBuilder.createNewInstance(metaheuristicProperty.getValue(),neuralNetwork.getValue(),dataset);
+                MetaheuristicBuilder.createNewInstance(metaheuristicProperty.getValue(), neuralNetwork.getValue(), dataset);
                 metaheuristicProperty.setValue(AlgorithmsGUI.metaheuristic);
             }
 
@@ -393,8 +394,8 @@ public class NeuralNetworkUI {
                         int nnInputSize = neuralNetwork.get().getInputSize();
                         double[] predictions = new double[nnInputSize + howManyPredictions];
                         System.arraycopy(dataset.get(dataset.size() - 1).getInput(), 1,
-                                predictions, 0, nnInputSize-1);
-                        predictions[nnInputSize-1] = dataset.get(dataset.size() - 1).getOutput()[0];
+                                predictions, 0, nnInputSize - 1);
+                        predictions[nnInputSize - 1] = dataset.get(dataset.size() - 1).getOutput()[0];
                         for (int i = 0; i < predictions.length - nnInputSize; ++i) {
                             double[] input = Arrays.copyOfRange(predictions, i, i + nnInputSize);
                             double[] expected = neuralNetwork.get().forward(input);
@@ -593,8 +594,8 @@ public class NeuralNetworkUI {
                 changeArchitecture.hide();
             } catch (NumberFormatException nfe) {
                 invalidInput.setVisible(true);
-            }catch (RuntimeException ex){
-                showErrorMessage("Dataset too small.",data);
+            } catch (RuntimeException ex) {
+                showErrorMessage("Dataset too small.", data);
             }
         };
     }

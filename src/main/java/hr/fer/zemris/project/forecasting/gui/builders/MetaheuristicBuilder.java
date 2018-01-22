@@ -273,22 +273,21 @@ public class MetaheuristicBuilder {
         return particleFactory.createMultipleInstances((int) particlesNum);
     }
 
-
     public static void createNewInstance(IMetaheuristic metaheuristic, INeuralNetwork neuralNetwork, List<DatasetEntry> dataset) {
         if (metaheuristic instanceof Backpropagation) {
-           AlgorithmsGUI.metaheuristic = createBackpropagation(((Backpropagation) metaheuristic).getTrainingSet(),
+            AlgorithmsGUI.metaheuristic = createBackpropagation(((Backpropagation) metaheuristic).getTrainingSet(),
                     ((Backpropagation) metaheuristic).getValidationSet(), neuralNetwork);
         } else if (metaheuristic instanceof SimpleGA) {
-            AlgorithmsGUI.metaheuristic = createSimpleGA(dataset,neuralNetwork);
+            AlgorithmsGUI.metaheuristic = createSimpleGA(dataset, neuralNetwork);
             AlgorithmsGUI.metaheuristicRequirement = createSimpleGARequirements(neuralNetwork.getNumberOfParameters());
         } else if (metaheuristic instanceof SimpleOSGA) {
-            AlgorithmsGUI.metaheuristic = createSimpleOSGA(dataset,neuralNetwork);
+            AlgorithmsGUI.metaheuristic = createSimpleOSGA(dataset, neuralNetwork);
             AlgorithmsGUI.metaheuristicRequirement = createOSGARequirements(neuralNetwork.getNumberOfParameters());
         } else if (metaheuristic instanceof BasicPSO) {
-            AlgorithmsGUI.metaheuristic = createSimplePSO(dataset,neuralNetwork);
+            AlgorithmsGUI.metaheuristic = createSimplePSO(dataset, neuralNetwork);
             AlgorithmsGUI.metaheuristicRequirement = createPSORequirements(neuralNetwork.getNumberOfParameters());
         } else if (metaheuristic instanceof SimpleSA) {
-            AlgorithmsGUI.metaheuristic = createSimpleSA(dataset,neuralNetwork);
+            AlgorithmsGUI.metaheuristic = createSimpleSA(dataset, neuralNetwork);
             AlgorithmsGUI.metaheuristicRequirement = createSARequirements(neuralNetwork.getNumberOfParameters());
         }
     }

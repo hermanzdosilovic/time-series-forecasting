@@ -24,6 +24,7 @@ import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -51,6 +52,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static hr.fer.zemris.project.forecasting.gui.Data.*;
 import static hr.fer.zemris.project.forecasting.gui.DatasetValue.getChartData;
 import static hr.fer.zemris.project.forecasting.gui.GUIUtil.extractActivation;
+import static hr.fer.zemris.project.forecasting.gui.GUIUtil.showErrorMessage;
 
 public class NeuralNetworkUI {
 
@@ -91,6 +93,7 @@ public class NeuralNetworkUI {
 
         initLineChart();
         mseChart = mseLineChart("MSE");
+        initDatasetChanges();
 
         GridPane rightSideGrid = new GridPane();
         rightSideGrid.setHgap(10);
@@ -166,46 +169,55 @@ public class NeuralNetworkUI {
         line = lineChart(series, "Data");
     }
 
-    private void initNeuralNetwork() {
-        neuralNetwork.addListener((t, u, v) -> {
-            trainingPaused.set(false);
-            statusBar.setText("Iteration: / Current mse: /");
-            predict.setDisable(true);
-            if(line.getData().size()==2){
-                line.getData().remove(1);
-            }
-            if(mseChart.getData().size()==1){
+    private void initDatasetChanges(){
+        data.getDatasetValues().addListener((ListChangeListener<DatasetValue>) c -> {
+            if(mseChart.getData().size()==1) {
                 mseChart.getData().remove(0);
             }
-            if (v != null) {
-                start.setDisable(true);
-                dataset = DatasetValue.getTrainingData(data.getDatasetValues(), neuralNetwork.get().getInputSize(),
-                        neuralNetwork.get().getOutputSize());
-                chooseAlgorithm.setOnAction(null);
-                if (v instanceof ElmanNN) {
-                    chooseAlgorithm.getItems().clear();
-                    chooseAlgorithm.getItems().addAll(Arrays.asList("<none>", "Genetic", "OSGA", "SA", "PSO"));
-                } else {
-                    chooseAlgorithm.getItems().clear();
-                    chooseAlgorithm.getItems().addAll(Arrays.asList("<none>", "Genetic", "OSGA", "SA", "PSO", "Backpropagation"));
-                }
-                chooseAlgorithm.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
-                        neuralNetwork.get(), data.getPrimaryStage(), metaheuristicProperty));
-                chooseAlgorithm.getSelectionModel().select(0);
-                chooseAlgorithm.setDisable(false);
-                changeParams.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
-                        neuralNetwork.get(), data.getPrimaryStage(), metaheuristicProperty));
-                changeParams.setDisable(false);
-            } else {
-                chooseAlgorithm.setDisable(true);
-                changeParams.setDisable(true);
+            if(line.getData().size()==2) {
+                line.getData().remove(1);
             }
+            neuralNetwork.setValue(null);
+            metaheuristicProperty.setValue(null);
+        });
+    }
 
-//            if (metaheuristicProperty.get() == null || v == null) {
-//                start.setDisable(true);
-//            } else {
-//                start.setDisable(false);
-//            }
+    private void initNeuralNetwork() {
+        neuralNetwork.addListener((t, u, v) -> {
+            try {
+                trainingPaused.set(false);
+                statusBar.setText("Iteration: / Current mse: /");
+                predict.setDisable(true);
+                if (line.getData().size() == 2) {
+                    line.getData().remove(1);
+                }
+                if (mseChart.getData().size() == 1) {
+                    mseChart.getData().remove(0);
+                }
+                if (v != null) {
+                    start.setDisable(true);
+                    dataset = DatasetValue.getTrainingData(data.getDatasetValues(), neuralNetwork.get().getInputSize(),
+                            neuralNetwork.get().getOutputSize());
+                    chooseAlgorithm.setOnAction(null);
+                    if (v instanceof ElmanNN) {
+                        chooseAlgorithm.getItems().clear();
+                        chooseAlgorithm.getItems().addAll(Arrays.asList("<none>", "Genetic", "OSGA", "SA", "PSO"));
+                    } else {
+                        chooseAlgorithm.getItems().clear();
+                        chooseAlgorithm.getItems().addAll(Arrays.asList("<none>", "Genetic", "OSGA", "SA", "PSO", "Backpropagation"));
+                    }
+                    chooseAlgorithm.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
+                            neuralNetwork.get(), data.getPrimaryStage(), metaheuristicProperty));
+                    chooseAlgorithm.getSelectionModel().select(0);
+                    chooseAlgorithm.setDisable(false);
+                    changeParams.setOnAction(AlgorithmsGUI.chooseAlgorithmAction(chooseAlgorithm, dataset, trainPercentage,
+                            neuralNetwork.get(), data.getPrimaryStage(), metaheuristicProperty));
+                    changeParams.setDisable(false);
+                } else {
+                    chooseAlgorithm.setDisable(true);
+                    changeParams.setDisable(true);
+                }
+            }catch (RuntimeException ignorable){}
         });
     }
 
@@ -567,6 +579,8 @@ public class NeuralNetworkUI {
                 changeArchitecture.hide();
             } catch (NumberFormatException nfe) {
                 invalidInput.setVisible(true);
+            }catch (RuntimeException ex){
+                showErrorMessage("Dataset too small.",data);
             }
         };
     }

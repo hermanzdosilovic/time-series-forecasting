@@ -51,9 +51,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static hr.fer.zemris.project.forecasting.gui.Data.*;
 import static hr.fer.zemris.project.forecasting.gui.DatasetValue.getChartData;
-import static hr.fer.zemris.project.forecasting.gui.GUIUtil.extractActivation;
-import static hr.fer.zemris.project.forecasting.gui.GUIUtil.myStringConverter;
-import static hr.fer.zemris.project.forecasting.gui.GUIUtil.showErrorMessage;
+import static hr.fer.zemris.project.forecasting.gui.GUIUtil.*;
 
 public class NeuralNetworkUI {
 
@@ -572,10 +570,12 @@ public class NeuralNetworkUI {
                     neuralNetwork.setValue(new ElmanNN(architecture, activations));
                     dataset = DatasetValue.getTrainingData(data.getDatasetValues(), neuralNetwork.get().getInputSize(),
                             neuralNetwork.get().getOutputSize());
+                    neuralNetworkForm.setType(chooseNetwork.getValue());
                 } else if (chooseNetwork.getValue().equals("TDNN")) {
                     neuralNetwork.setValue(new FeedForwardANN(architecture, activations));
                     dataset = DatasetValue.getTrainingData(data.getDatasetValues(),
                             neuralNetwork.get().getInputSize(), neuralNetwork.get().getOutputSize());
+                    neuralNetworkForm.setType(chooseNetwork.getValue());
                 } else {
                     neuralNetwork.setValue(null);
                 }

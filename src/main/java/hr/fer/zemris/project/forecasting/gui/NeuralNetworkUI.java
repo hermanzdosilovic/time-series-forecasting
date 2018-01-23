@@ -62,7 +62,6 @@ public class NeuralNetworkUI {
     private double trainPercentage;
     private ObjectProperty<INeuralNetwork> neuralNetwork = new SimpleObjectProperty<>(null);
     private ObjectProperty<IMetaheuristic> metaheuristicProperty = new SimpleObjectProperty<>(null);
-    private AtomicBoolean trainingPaused = new AtomicBoolean(false);
     private AtomicBoolean trainingOver = new AtomicBoolean(false);
 
     private LineChart line;
@@ -132,8 +131,7 @@ public class NeuralNetworkUI {
             metaheuristicProperty.get().stop();
             predict.setDisable(false);
             stop.setDisable(true);
-            trainingPaused.set(true);
-            trainingOver.set(false);
+            trainingOver.set(true);
         });
         stop.setDisable(true);
 
@@ -195,7 +193,6 @@ public class NeuralNetworkUI {
                 mseChart.getData().remove(0);
             }
             predict.setDisable(true);
-            trainingPaused.set(false);
             if (v == null || neuralNetwork.get() == null) {
                 start.setDisable(true);
             } else {
@@ -207,7 +204,6 @@ public class NeuralNetworkUI {
     private void addNNListeners() {
         neuralNetwork.addListener((t, u, v) -> {
             try {
-                trainingPaused.set(false);
                 statusBar.setText("Iteration: / Current mse: /");
                 predict.setDisable(true);
                 if (line.getData().size() == 2) {
@@ -278,13 +274,6 @@ public class NeuralNetworkUI {
             start.setDisable(true);
             stop.setDisable(false);
             predict.setDisable(true);
-            if (trainingPaused.get()) {
-                trainingPaused.set(false);
-                new Thread(() -> {
-                    metaheuristicProperty.get().run();
-                }).start();
-                return;
-            }
             if (trainingOver.get()) {
                 INeuralNetwork nn = NeuralNetworkBuilder.createNeuralNetwork(neuralNetwork.getValue());
                 neuralNetwork = new SimpleObjectProperty<>(nn);
@@ -292,6 +281,7 @@ public class NeuralNetworkUI {
                 MetaheuristicBuilder.createNewInstance(metaheuristicProperty.getValue(), neuralNetwork.getValue(), dataset);
                 metaheuristicProperty.setValue(AlgorithmsGUI.metaheuristic);
             }
+            trainingOver.set(false);
 
             if (line.getData().size() == 2 && mseChart.getData().size() == 1) {
                 line.getData().remove(1);
@@ -299,7 +289,7 @@ public class NeuralNetworkUI {
             }
             series = null;
             mseSeries = null;
-            trainingOver.set(false);
+
             Runnable training = new Runnable() {
                 @Override
                 public void run() {
@@ -345,10 +335,8 @@ public class NeuralNetworkUI {
                     } else {
                         System.err.println("wrong metaheuristic");
                     }
-                    if (doubleArrayStatusBarObserver.getCurrentIteration() >= AlgorithmsGUI.maxIterations
-                            || realVectorStatusBarObserver.getCurrentIteration() >= AlgorithmsGUI.maxIterations) {
-                        trainingOver.set(true);
-                    }
+                    trainingOver.set(true);
+
                     Platform.runLater(() -> {
                         start.setDisable(false);
                         predict.setDisable(false);
@@ -578,10 +566,12 @@ public class NeuralNetworkUI {
                 }
                 activations[activations.length - 1] = extractActivation(outputActivation.getValue());
 
+
                 neuralNetworkForm.setOutputLayerActivation(outputActivation.getValue());
                 neuralNetworkForm.setHiddenLayersActivation(hiddenActivation.getValue());
                 neuralNetworkForm.setInputLayerActivation(inputActivation.getValue());
 
+                trainingOver.set(false);
                 if (chooseNetwork.getValue().equals("Elman ANN")) {
                     neuralNetwork.setValue(new ElmanNN(architecture, activations));
                     dataset = DatasetValue.getTrainingData(data.getDatasetValues(), neuralNetwork.get().getInputSize(),

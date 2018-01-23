@@ -1,19 +1,19 @@
-package hr.fer.zemris.project.forecasting.gui.forms;
+package hr.fer.zemris.project.forecasting.gui.forms.annForms;
 
 public class SAForm {
 
 
-    private String outerIterations = "";
-    private String outerInitialTemperature = "";
-    private String outerFinalTemperature = "";
-    private String innerIterations = "";
-    private String desiredPenalty = "";
-    private String desiredPrecision = "";
-    private String desiredFitness = "";
-    private String minComponentValue = "";
-    private String maxComponentValue = "";
-    private String mutationProbability = "";
-    private String sigma = "";
+    private String outerIterations = "100";
+    private String outerInitialTemperature = "1000";
+    private String outerFinalTemperature = "1E-4";
+    private String innerIterations = "4000";
+    private String desiredPenalty = "0";
+    private String desiredPrecision = "1E-3";
+    private String desiredFitness = "0";
+    private String minComponentValue = "-5";
+    private String maxComponentValue = "5";
+    private String mutationProbability = "0.1";
+    private String sigma = "0.9";
     private boolean forceMutation = true;
 
     private static SAForm ourInstance = new SAForm();

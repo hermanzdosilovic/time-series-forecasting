@@ -20,7 +20,7 @@ import hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.RealVectorGr
 import hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.RealVectorStatusbarObserver;
 import hr.fer.zemris.project.forecasting.gui.builders.MetaheuristicBuilder;
 import hr.fer.zemris.project.forecasting.gui.builders.NeuralNetworkBuilder;
-import hr.fer.zemris.project.forecasting.gui.forms.NeuralNetworkForm;
+import hr.fer.zemris.project.forecasting.gui.forms.annForms.NeuralNetworkForm;
 import hr.fer.zemris.project.forecasting.nn.Backpropagation;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
@@ -296,8 +296,8 @@ public class NeuralNetworkUI {
                     IMetaheuristic metaheuristic = AlgorithmsGUI.metaheuristic;
                     IObserver realVectorGraphObserver = new RealVectorGraphObserver(neuralNetwork.get(), dataset, series,
                             mseSeries, line, mseChart);
-                    RealVectorStatusbarObserver realVectorStatusBarObserver = new RealVectorStatusbarObserver(statusBar);
-                    DoubleArrayStatusbarObserver doubleArrayStatusBarObserver = new DoubleArrayStatusbarObserver(statusBar);
+                    IObserver realVectorStatusBarObserver = new RealVectorStatusbarObserver(statusBar);
+                    IObserver doubleArrayStatusBarObserver = new DoubleArrayStatusbarObserver(statusBar);
                     if (metaheuristic instanceof SimpleSA) {
                         RealVector metaheuristicRequirement = (RealVector) AlgorithmsGUI.metaheuristicRequirement;
                         SimpleSA simpleSA = (SimpleSA) metaheuristic;

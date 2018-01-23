@@ -1,4 +1,4 @@
-package hr.fer.zemris.project.forecasting.gui.forms;
+package hr.fer.zemris.project.forecasting.gui.forms.annForms;
 
 public class GeneticForm {
 

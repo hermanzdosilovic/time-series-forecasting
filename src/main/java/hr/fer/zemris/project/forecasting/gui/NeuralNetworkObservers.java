@@ -27,8 +27,8 @@ public class NeuralNetworkObservers {
     public static class GraphObserver {
         public static final int MSE_GRAPH_SIZE = 1000;
         public static final long PERIOD = 1000L;
-        public static final double MAX_MSE = 1E6;
-        public static final double MAX_PLOTTING_VALUE = 1E3;
+        public static final double MAX_MSE = 1E8;
+        public static final double MAX_PLOTTING_VALUE = 1E15;
 
         private INeuralNetwork nn;
         private long iteration;
@@ -218,6 +218,7 @@ public class NeuralNetworkObservers {
         public void update(double currentMSE) {
             currentMSE = Math.abs(currentMSE);
             ++iteration;
+            System.out.println(currentMSE);
             String mseText = currentMSE > MAX_MSE ? "too large" : String.format("%7.2f", currentMSE);
             String text = String.format("Iteration: %10d Current mse: %s", iteration, mseText);
             Platform.runLater(() -> statusBar.setText(text));

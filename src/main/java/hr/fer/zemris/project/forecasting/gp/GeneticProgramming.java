@@ -52,6 +52,7 @@ public class GeneticProgramming implements IObserver<BinaryTree> {
         boolean acceptDuplicates,
         boolean elitism,
         int offset,
+        ValueTypes valueTypes,
         List<DatasetEntry> trainSet,
         List<DatasetEntry> testSet
     ) {
@@ -69,7 +70,12 @@ public class GeneticProgramming implements IObserver<BinaryTree> {
         this.offset = offset;
         this.trainSet = trainSet;
         this.testSet = testSet;
-        valueTypes = new ValueTypes(offset);
+
+        if (valueTypes != null) {
+            this.valueTypes = valueTypes;
+        }else {
+            this.valueTypes = new ValueTypes(offset);
+        }
 
         random = new Random();
     }

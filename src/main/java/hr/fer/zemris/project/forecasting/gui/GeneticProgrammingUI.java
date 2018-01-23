@@ -5,7 +5,14 @@ import hr.fer.zemris.project.forecasting.gp.GeneticProgramming;
 import hr.fer.zemris.project.forecasting.gp.gui.IListener;
 import hr.fer.zemris.project.forecasting.gp.selections.Tournament;
 import hr.fer.zemris.project.forecasting.gp.tree.BinaryTree;
-import hr.fer.zemris.project.forecasting.gui.forms.GeneticProgrammingForm;
+import hr.fer.zemris.project.forecasting.gp.values.ValueTypes;
+import hr.fer.zemris.project.forecasting.gp.values.biVariable.IDoubleBinaryOperatorGenerator;
+import hr.fer.zemris.project.forecasting.gp.values.terminating.ITerminatorGenerator;
+import hr.fer.zemris.project.forecasting.gp.values.uniVariable.IDoubleUnaryOperatorGenerator;
+import hr.fer.zemris.project.forecasting.gui.forms.gpForms.BiVariableForm;
+import hr.fer.zemris.project.forecasting.gui.forms.gpForms.GeneticProgrammingForm;
+import hr.fer.zemris.project.forecasting.gui.forms.gpForms.TerminatingForm;
+import hr.fer.zemris.project.forecasting.gui.forms.gpForms.UniVariableForm;
 import hr.fer.zemris.project.forecasting.nn.util.NeuralNetworkUtil;
 import hr.fer.zemris.project.forecasting.util.Pair;
 import javafx.application.Platform;
@@ -31,7 +38,6 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -64,6 +70,8 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
     private long lastUpdated;
 
     private Button showResult;
+    private ValueTypes valueTypes;
+    private TextField offsetTF;
 
     public GeneticProgrammingUI(Data data) {
         this.data = data;
@@ -272,7 +280,7 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
             TextField mutationProbabilityTF = new TextField(gpForm.getMutationProbability());
 
             Label     offsetL  = new Label("Number of past values used (offset):");
-            TextField offsetTF = new TextField(gpForm.getOffset());
+            offsetTF = new TextField(gpForm.getOffset());
 
             CheckBox useElitismCB = new CheckBox("Use elitism?");
             useElitismCB.setSelected(gpForm.isUseElitism());
@@ -291,6 +299,9 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
             Label invalidInput = new Label("Invalid input.");
             invalidInput.setTextFill(Color.RED);
             invalidInput.setVisible(false);
+
+            Button editNodes = new Button("Edit nodes");
+            setEditNodes(editNodes);
 
             Button ok = new Button("OK");
 
@@ -338,6 +349,7 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
             boxes.setAlignment(Pos.CENTER);
 
             grid.add(boxes, 0, 6, 4, 1);
+            grid.add(editNodes, 0, 7, 4, 1);
             grid.add(invalidBox, 0, 8, 4, 1);
             grid.add(okBox, 0, 9, 4, 1);
 
@@ -381,6 +393,7 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
                         duplicates,
                         elitism,
                         offset,
+                        valueTypes,
                         splittedDataEntries.getFirst(),
                         splittedDataEntries.getSecond()
                     );
@@ -408,6 +421,176 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
             };
             ok.setOnAction(buttonHandler);
         };
+    }
+
+    private void setEditNodes(Button editNodes) {
+        editNodes.setOnAction(event -> {
+            Stage nodes = new Stage();
+            nodes.initOwner(data.getPrimaryStage());
+            nodes.initModality(Modality.WINDOW_MODAL);
+            nodes.setTitle("Genetic programming nodes :");
+
+            TerminatingForm terminatingForm = TerminatingForm.getInstance();
+            UniVariableForm uniVariableForm = UniVariableForm.getInstance();
+            BiVariableForm biVariableForm = BiVariableForm.getInstance();
+
+            CheckBox inputCB = new CheckBox("X");
+            inputCB.setSelected(terminatingForm.isInput());
+            CheckBox realNumberCb = new CheckBox("R");
+            realNumberCb.setSelected(terminatingForm.isRealNumber());
+            CheckBox meanCB = new CheckBox("Mean");
+            meanCB.setSelected(terminatingForm.isMean());
+            CheckBox randomIntCB = new CheckBox("N");
+            randomIntCB.setSelected(terminatingForm.isRandomInt());
+            CheckBox arCB = new CheckBox("AR");
+            arCB.setSelected(terminatingForm.isAr());
+            CheckBox maxXCB = new CheckBox("MAX X");
+            maxXCB.setSelected(terminatingForm.isMaxInput());
+            CheckBox minXCB = new CheckBox("MIN X");
+            minXCB.setSelected(terminatingForm.isMinInput());
+            CheckBox piCB = new CheckBox("PI");
+            piCB.setSelected(terminatingForm.isPi());
+            CheckBox eulerCB = new CheckBox("Euler");
+            eulerCB.setSelected(terminatingForm.isEuler());
+
+            VBox terminating = new VBox(
+                inputCB,
+                realNumberCb,
+                meanCB,
+                randomIntCB,
+                arCB,
+                maxXCB,
+                minXCB,
+                piCB,
+                eulerCB
+            );
+            terminating.setSpacing(5);
+
+            CheckBox sinCB = new CheckBox("sin");
+            sinCB.setSelected(uniVariableForm.isSin());
+            CheckBox logCB = new CheckBox("log");
+            logCB.setSelected(uniVariableForm.isLog());
+            CheckBox cosCB = new CheckBox("cos");
+            cosCB.setSelected(uniVariableForm.isCos());
+            CheckBox expCB = new CheckBox("exp");
+            expCB.setSelected(uniVariableForm.isExp());
+            CheckBox sqrtCB = new CheckBox("sqrt");
+            sqrtCB.setSelected(uniVariableForm.isSqrt());
+            CheckBox tgCB = new CheckBox("tg");
+            tgCB.setSelected(uniVariableForm.isTg());
+            CheckBox tanHCB = new CheckBox("tan H");
+            tanHCB.setSelected(uniVariableForm.isTanH());
+            CheckBox reciprocalCB = new CheckBox("reciprocal");
+            reciprocalCB.setSelected(uniVariableForm.isReciprocal());
+            CheckBox binaryStepCB = new CheckBox("binary step");
+            binaryStepCB.setSelected(uniVariableForm.isBinaryStep());
+            CheckBox sigmoidCB = new CheckBox("sigmoid");
+            sigmoidCB.setSelected(uniVariableForm.isSigmoid());
+
+            VBox uniVariable = new VBox(
+                sinCB,
+                logCB,
+                cosCB,
+                expCB,
+                sqrtCB,
+                tgCB,
+                tanHCB,
+                reciprocalCB,
+                binaryStepCB,
+                sigmoidCB
+            );
+            uniVariable.setSpacing(5);
+
+            CheckBox addCB = new CheckBox("+");
+            addCB.setSelected(biVariableForm.isAdd());
+            CheckBox subCB = new CheckBox("-");
+            subCB.setSelected(biVariableForm.isSub());
+            CheckBox multiplyCB = new CheckBox("*");
+            multiplyCB.setSelected(biVariableForm.isMultiply());
+            CheckBox powCB = new CheckBox("pow");
+            powCB.setSelected(biVariableForm.isPow());
+            CheckBox divCB = new CheckBox("/");
+            divCB.setSelected(biVariableForm.isDiv());
+            CheckBox maxCB = new CheckBox("max");
+            maxCB.setSelected(biVariableForm.isMax());
+            CheckBox minCB = new CheckBox("Min");
+            minCB.setSelected(biVariableForm.isMin());
+
+            VBox biVariable = new VBox(
+                addCB,
+                subCB,
+                multiplyCB,
+                powCB,
+                divCB,
+                maxCB,
+                minCB
+            );
+            biVariable.setSpacing(5);
+
+            Button ok = new Button("OK");
+
+            GridPane grid = new GridPane();
+            grid.setVgap(15);
+            grid.setHgap(10);
+            grid.setPadding(new Insets(20, 20, 20, 20));
+
+            grid.add(biVariable, 1, 1, 1, 10);
+            grid.add(uniVariable, 3, 1, 1, 10);
+            grid.add(terminating, 5, 1, 1, 10);
+
+            HBox okBox = new HBox(ok);
+            okBox.setAlignment(Pos.CENTER);
+
+            grid.add(okBox, 0, 12, 6, 1);
+
+            Scene scene = new Scene(grid);
+            nodes.setScene(scene);
+            nodes.show();
+
+            EventHandler<ActionEvent> buttonHandler = okEvent -> {
+                try {
+                    int offset = Integer.parseInt(offsetTF.getText());
+
+                    terminatingForm.setInput(inputCB.isSelected());
+                    terminatingForm.setRealNumber(realNumberCb.isSelected());
+                    terminatingForm.setMean(meanCB.isSelected());
+                    terminatingForm.setRandomInt(randomIntCB.isSelected());
+                    terminatingForm.setAr(arCB.isSelected());
+                    terminatingForm.setMaxInput(maxXCB.isSelected());
+                    terminatingForm.setMinInput(minXCB.isSelected());
+                    terminatingForm.setPi(piCB.isSelected());
+                    terminatingForm.setEuler(eulerCB.isSelected());
+                    List<ITerminatorGenerator> terminators = terminatingForm.getAsList(Integer.parseInt(offsetTF.getText()));
+
+                    uniVariableForm.setSin(sinCB.isSelected());
+                    uniVariableForm.setLog(logCB.isSelected());
+                    uniVariableForm.setCos(cosCB.isSelected());
+                    uniVariableForm.setExp(expCB.isSelected());
+                    uniVariableForm.setSqrt(sqrtCB.isSelected());
+                    uniVariableForm.setTg(tgCB.isSelected());
+                    uniVariableForm.setTanH(tanHCB.isSelected());
+                    uniVariableForm.setReciprocal(reciprocalCB.isSelected());
+                    uniVariableForm.setBinaryStep(binaryStepCB.isSelected());
+                    uniVariableForm.setSigmoid(sigmoidCB.isSelected());
+                    List<IDoubleUnaryOperatorGenerator> uniVariableGens = uniVariableForm.getAsList();
+
+                    biVariableForm.setAdd(addCB.isSelected());
+                    biVariableForm.setSub(subCB.isSelected());
+                    biVariableForm.setMultiply(multiplyCB.isSelected());
+                    biVariableForm.setPow(powCB.isSelected());
+                    biVariableForm.setDiv(divCB.isSelected());
+                    biVariableForm.setMax(maxCB.isSelected());
+                    biVariableForm.setMin(minCB.isSelected());
+                    List<IDoubleBinaryOperatorGenerator> biVariableGens = biVariableForm.getAsList();
+
+                    valueTypes = new ValueTypes(offset, terminators, uniVariableGens, biVariableGens);
+                    nodes.hide();
+                } catch (RuntimeException ignorable) {
+                }
+                event.consume();
+            };
+            ok.setOnAction(buttonHandler);
+        });
     }
 
 

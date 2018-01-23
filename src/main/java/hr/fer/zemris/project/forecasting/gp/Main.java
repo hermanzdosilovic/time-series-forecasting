@@ -70,6 +70,7 @@ public class Main {
             ACCEPT_DUPLICATES,
             ELITISM,
             OFFSET,
+            null,
             trainSet,
             testSet
         );

@@ -23,19 +23,30 @@ public class ValueTypes {
 
     private static final int INT_BOUND = 10;
     private int offset;
-    private Random rand = new Random();
+    private Random rand;
     private List<ITerminatorGenerator>           TERMINATING_GENERATORS;
     private List<IDoubleBinaryOperatorGenerator> BI_FUNCTIONS_GENERATORS;
     private List<IDoubleUnaryOperatorGenerator>  UNI_FUNCTIONS_GENERATORS;
 
     public ValueTypes(int offset) {
-        this.offset = offset;
-        TERMINATING_GENERATORS = setTerminatingGenerator();
-        BI_FUNCTIONS_GENERATORS = setBiFunctionGenerators();
-        UNI_FUNCTIONS_GENERATORS = setUniFunctionGenerators();
+        this(offset, getTerminatingGenerator(offset),  getUniFunctionGenerators(), getBiFunctionGenerators());
     }
 
-    private List<ITerminatorGenerator> setTerminatingGenerator() {
+    public ValueTypes(
+        int offset,
+        List<ITerminatorGenerator> terminatorGenerators,
+        List<IDoubleUnaryOperatorGenerator> doubleUnaryOperatorGenerators,
+        List<IDoubleBinaryOperatorGenerator> doubleBinaryOperatorGenerators
+    ) {
+        this.offset = offset;
+        this.rand = new Random();
+        TERMINATING_GENERATORS = terminatorGenerators;
+        BI_FUNCTIONS_GENERATORS = doubleBinaryOperatorGenerators;
+        UNI_FUNCTIONS_GENERATORS = doubleUnaryOperatorGenerators;
+    }
+
+    private static List<ITerminatorGenerator> getTerminatingGenerator(int offset) {
+        Random rand = new Random();
         return Arrays.asList(
             new InputGenerator(offset, rand),
             new RealNumberGenerator(rand),
@@ -49,7 +60,7 @@ public class ValueTypes {
         );
     }
 
-    private List<IDoubleBinaryOperatorGenerator> setBiFunctionGenerators() {
+    private static List<IDoubleBinaryOperatorGenerator> getBiFunctionGenerators() {
         return Arrays.asList(
             new AddGenerator(),
             new SubGenerator(),
@@ -61,7 +72,7 @@ public class ValueTypes {
         );
     }
 
-    private List<IDoubleUnaryOperatorGenerator> setUniFunctionGenerators() {
+    private static List<IDoubleUnaryOperatorGenerator> getUniFunctionGenerators() {
         return Arrays.asList(
             new SinGenerator(),
             new LogGenerator(),
@@ -71,7 +82,6 @@ public class ValueTypes {
             new TgGenerator()
 //        new TanHGenerator(),
 //        new ReciprocalGenerator(),
-//        new SinGenerator(),
 //        new BinaryStepGenerator()
         );
     }

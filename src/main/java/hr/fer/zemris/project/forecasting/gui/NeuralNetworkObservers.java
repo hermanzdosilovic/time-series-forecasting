@@ -21,10 +21,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.GraphObserver.MAX_MSE;
+
 public class NeuralNetworkObservers {
     public static class GraphObserver {
         public static final int MSE_GRAPH_SIZE = 1000;
         public static final long PERIOD = 1000L;
+        public static final double MAX_MSE = 1E8;
+        public static final double MAX_PLOTTING_VALUE = 1E15;
 
         private INeuralNetwork nn;
         private long iteration;
@@ -60,7 +64,8 @@ public class NeuralNetworkObservers {
             ++iteration;
             boolean lastIteration = iteration == AlgorithmsGUI.maxIterations;
 
-            mseList.add(new XYChart.Data<>((int) iteration, Math.abs(solution.getFitness())));
+            double fitness = Math.abs(solution.getFitness()) > MAX_MSE ? MAX_MSE : Math.abs(solution.getFitness());
+            mseList.add(new XYChart.Data<>((int) iteration, fitness));
             if (mseList.size() > MSE_GRAPH_SIZE) {
                 int fromIndex = mseList.size() - MSE_GRAPH_SIZE;
                 int toIndex = mseList.size();
@@ -94,6 +99,15 @@ public class NeuralNetworkObservers {
             int offset = nn.getInputSize();
             for (int i = 0; i < dataset.size(); i++) {
                 double[] forecast = nn.forward(dataset.get(i).getInput());
+                forecast[0] = forecast[0] > MAX_PLOTTING_VALUE || Double.isNaN(forecast[0])
+                        || Double.isInfinite(forecast[0]) ? MAX_PLOTTING_VALUE : forecast[0];
+                forecast[0] = forecast[0] < -MAX_PLOTTING_VALUE || Double.isNaN(forecast[0])
+                        || Double.isInfinite(forecast[0]) ? -MAX_PLOTTING_VALUE : forecast[0];
+                if (Math.abs(forecast[0]) > MAX_PLOTTING_VALUE|| Double.isNaN(forecast[0]) || Double.isInfinite(forecast[0])) {
+                    System.out.println("Nesto nije dobro");
+                    outputList.clear();
+                    break;
+                }
                 outputList.get(offset).setYValue(forecast[0]);
                 HoveredThresholdNode node = new HoveredThresholdNode(offset,
                         forecast[0]);
@@ -204,7 +218,9 @@ public class NeuralNetworkObservers {
         public void update(double currentMSE) {
             currentMSE = Math.abs(currentMSE);
             ++iteration;
-            String text = String.format("Iteration: %10d Current mse: %4.2f", iteration, currentMSE);
+            System.out.println(currentMSE);
+            String mseText = currentMSE > MAX_MSE ? "too large" : String.format("%7.2f", currentMSE);
+            String text = String.format("Iteration: %10d Current mse: %s", iteration, mseText);
             Platform.runLater(() -> statusBar.setText(text));
         }
 

@@ -1,22 +1,22 @@
-package hr.fer.zemris.project.forecasting.gui.forms;
+package hr.fer.zemris.project.forecasting.gui.forms.annForms;
 
 public class OSGAForm {
 
-    private String populationSize = "";
-    private String maxGenerations = "";
-    private String maxSelectionPressure = "";
-    private String desiredFitness = "";
-    private String desiredPrecision = "";
-    private String minComponentValue = "";
-    private String maxComponentValue = "";
-    private String minSuccessRatio = "";
-    private String maxSuccessRatio = "";
-    private String minComparisionFactor = "";
-    private String maxComparisionFactor = "";
-    private String tournamentSize = "";
-    private String alpha = "";
-    private String mutationProbability = "";
-    private String sigma = "";
+    private String populationSize = "500";
+    private String maxGenerations = "100";
+    private String maxSelectionPressure = "1000";
+    private String desiredFitness = "0";
+    private String desiredPrecision = "1E-3";
+    private String minComponentValue = "-5";
+    private String maxComponentValue = "5";
+    private String minSuccessRatio = "0.3";
+    private String maxSuccessRatio = "1";
+    private String minComparisionFactor = "0.5";
+    private String maxComparisionFactor = "1";
+    private String tournamentSize = "20";
+    private String alpha = "0.3";
+    private String mutationProbability = "0.1";
+    private String sigma = "0.9";
     private boolean useElitism = true;
     private boolean allowRepeat = false;
     private boolean forceMutation = true;

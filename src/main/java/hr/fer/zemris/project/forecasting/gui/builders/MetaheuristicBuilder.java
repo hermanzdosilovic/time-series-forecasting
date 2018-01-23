@@ -30,7 +30,7 @@ import com.dosilovic.hermanzvonimir.ecfjava.neural.errors.MSEFunction;
 import com.dosilovic.hermanzvonimir.ecfjava.numeric.IFunction;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 import hr.fer.zemris.project.forecasting.gui.AlgorithmsGUI;
-import hr.fer.zemris.project.forecasting.gui.forms.*;
+import hr.fer.zemris.project.forecasting.gui.forms.annForms.*;
 import hr.fer.zemris.project.forecasting.nn.Backpropagation;
 
 import java.util.Collection;

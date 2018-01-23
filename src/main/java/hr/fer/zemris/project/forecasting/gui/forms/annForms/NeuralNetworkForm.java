@@ -1,11 +1,11 @@
-package hr.fer.zemris.project.forecasting.gui.forms;
+package hr.fer.zemris.project.forecasting.gui.forms.annForms;
 
 public class NeuralNetworkForm {
 
     private String type  = "TDNN";
     private int percentage = 90;
     private String inputLayer = "5";
-    private String hiddenLayers = "10,5";
+    private String hiddenLayers = "4,2";
     private String outputLayer = "1";
     private String inputLayerActivation = "Identity";
     private String hiddenLayersActivation = "ReLU";

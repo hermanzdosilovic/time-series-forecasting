@@ -4,7 +4,7 @@ import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.IMetaheuristic;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 import hr.fer.zemris.project.forecasting.gui.builders.MetaheuristicBuilder;
-import hr.fer.zemris.project.forecasting.gui.forms.*;
+import hr.fer.zemris.project.forecasting.gui.forms.annForms.*;
 import javafx.beans.property.ObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;

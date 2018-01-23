@@ -6,6 +6,8 @@ import hr.fer.zemris.project.forecasting.gp.util.functionalInterface.ThreeParame
 import hr.fer.zemris.project.forecasting.gp.values.ValueTypes;
 import javafx.scene.control.TreeItem;
 
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Random;
@@ -42,6 +44,8 @@ public abstract class Node implements Serializable {
     }
 
     public abstract TreeItem<String> asTreeItem(boolean expand);
+
+    public abstract DefaultMutableTreeNode asTreeNode();
 
     public abstract List<Node> getChildren();
 
@@ -128,7 +132,7 @@ public abstract class Node implements Serializable {
         return depth;
     }
 
-    protected StringJoiner asStringJoiner(Object value) {
+    protected StringJoiner asStringJoiner(Object value, boolean terminal) {
 //        StringJoiner sj = new StringJoiner("\n");
 //        sj.add(String.format(
 //            "%s%s",
@@ -137,6 +141,13 @@ public abstract class Node implements Serializable {
 //               )
 //        );
 //        return sj;
+        if (terminal) {
+            return new StringJoiner(
+                ",",
+                value.toString(),
+                ""
+            );
+        }
         return new StringJoiner(
             ",",
             value.toString() + "(",

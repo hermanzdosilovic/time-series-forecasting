@@ -3,16 +3,15 @@ package hr.fer.zemris.project.forecasting.gp.tree.nodes;
 import hr.fer.zemris.project.forecasting.gp.tree.BinaryTree;
 import hr.fer.zemris.project.forecasting.gp.tree.Node;
 import hr.fer.zemris.project.forecasting.gp.util.functionalInterface.FiveParametarInterface;
-import hr.fer.zemris.project.forecasting.gp.util.functionalInterface.FourParametarInterface;
 import hr.fer.zemris.project.forecasting.gp.util.functionalInterface.ThreeParametarInterface;
 import hr.fer.zemris.project.forecasting.gp.values.ValueTypes;
 import javafx.scene.control.TreeItem;
 
+import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.StringJoiner;
-import java.util.function.BiConsumer;
 import java.util.function.DoubleUnaryOperator;
 
 public class UniVariableNode extends Node {
@@ -41,6 +40,12 @@ public class UniVariableNode extends Node {
         TreeItem<String> parent = new TreeItem<>(value.toString() + String.format(" (depth: %d)", getDepth()), BinaryTree.LOG_ICON.get());
         parent.setExpanded(expand);
         parent.getChildren().add(child.asTreeItem(expand));
+        return parent;
+    }
+
+    @Override public DefaultMutableTreeNode asTreeNode() {
+        DefaultMutableTreeNode parent = new DefaultMutableTreeNode(value.toString());
+        parent.add(child.asTreeNode());
         return parent;
     }
 
@@ -118,7 +123,7 @@ public class UniVariableNode extends Node {
 
     @Override
     public String toString() {
-        StringJoiner sj = asStringJoiner(value);
+        StringJoiner sj = asStringJoiner(value, false);
         sj.add(child.toString());
         return sj.toString();
     }

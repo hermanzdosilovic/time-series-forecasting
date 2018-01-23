@@ -11,6 +11,8 @@ import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
+import javax.swing.*;
+import javax.swing.tree.TreeNode;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,9 +28,17 @@ public class BinaryTree implements Serializable {
     public static final Supplier<javafx.scene.Node>
         ROOT_ICON = () -> new ImageView(new Image(BinaryTree.class.getClassLoader().getResourceAsStream("root.png")));
     public static final Supplier<javafx.scene.Node>
-        LOG_ICON = () -> new ImageView(new Image(BinaryTree.class.getClassLoader().getResourceAsStream("log.png")));
+        LOG_ICON  = () -> new ImageView(new Image(BinaryTree.class.getClassLoader().getResourceAsStream("log.png")));
     public static final Supplier<javafx.scene.Node>
         LEAF_ICON = () -> new ImageView(new Image(BinaryTree.class.getClassLoader().getResourceAsStream("leaf.png")));
+
+    public static final Icon
+        J_ROOT_ICON = new ImageIcon(BinaryTree.class.getClassLoader().getResource("root.png"));
+    public static final Icon
+        J_LOG_ICON  = new ImageIcon(BinaryTree.class.getClassLoader().getResource("log.png"));
+    public static final Icon
+        J_LEAF_ICON = new ImageIcon(BinaryTree.class.getClassLoader().getResource("leaf.png"));
+
 
     private Node   topNode;
     private double trainFitness;
@@ -268,6 +278,31 @@ public class BinaryTree implements Serializable {
         TreeItem<String> root = topNode.asTreeItem(expand);
         root.setGraphic(ROOT_ICON.get());
         return new TreeView<>(root);
+    }
+
+    public JTree toJTree() {
+        UIManager.put("Tree.closedIcon", J_ROOT_ICON);
+        UIManager.put("Tree.openIcon", J_LOG_ICON);
+        UIManager.put("Tree.leafIcon", J_LEAF_ICON);
+
+        TreeNode root = topNode.asTreeNode();
+        JTree    tree = new JTree(root);
+        tree.setEditable(false);
+        tree.setRootVisible(true);
+        tree.setExpandsSelectedPaths(true);
+        expandAllNodes(tree, 0, tree.getRowCount());
+
+        return tree;
+    }
+
+    private void expandAllNodes(JTree tree, int startingIndex, int rowCount) {
+        for (int i = startingIndex; i < rowCount; ++i) {
+            tree.expandRow(i);
+        }
+
+        if (tree.getRowCount() != rowCount) {
+            expandAllNodes(tree, rowCount, tree.getRowCount());
+        }
     }
 
 

@@ -8,6 +8,7 @@ import hr.fer.zemris.project.forecasting.gp.util.functionalInterface.ThreeParame
 import hr.fer.zemris.project.forecasting.gp.values.ValueTypes;
 import javafx.scene.control.TreeItem;
 
+import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -53,6 +54,13 @@ public class BiVariableNode extends Node {
         parent.setExpanded(expand);
         parent.getChildren().add(leftNode.asTreeItem(expand));
         parent.getChildren().add(rightNode.asTreeItem(expand));
+        return parent;
+    }
+
+    @Override public DefaultMutableTreeNode asTreeNode() {
+        DefaultMutableTreeNode parent = new DefaultMutableTreeNode(value.toString());
+        parent.add(leftNode.asTreeNode());
+        parent.add(rightNode.asTreeNode());
         return parent;
     }
 
@@ -122,7 +130,7 @@ public class BiVariableNode extends Node {
 
     @Override
     public String toString() {
-        StringJoiner sj = asStringJoiner(value);
+        StringJoiner sj = asStringJoiner(value, false);
         sj.add(leftNode.toString());
         sj.add(rightNode.toString());
         return sj.toString();

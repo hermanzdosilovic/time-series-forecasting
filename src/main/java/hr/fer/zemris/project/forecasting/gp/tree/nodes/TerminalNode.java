@@ -8,6 +8,7 @@ import hr.fer.zemris.project.forecasting.gp.util.functionalInterface.ThreeParame
 import hr.fer.zemris.project.forecasting.gp.values.ValueTypes;
 import javafx.scene.control.TreeItem;
 
+import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -32,6 +33,11 @@ public class TerminalNode extends Node {
         TreeItem<String> node = new TreeItem<>(value.toString() + String.format(" (depth: %d)", getDepth()), BinaryTree.LEAF_ICON.get());
         node.setExpanded(expand);
         return node;
+    }
+
+    @Override public DefaultMutableTreeNode asTreeNode() {
+        DefaultMutableTreeNode parent = new DefaultMutableTreeNode(value.toString());
+        return parent;
     }
 
     @Override
@@ -68,7 +74,7 @@ public class TerminalNode extends Node {
 
     @Override
     public String toString() {
-        return asStringJoiner(value).toString();
+        return asStringJoiner(value, true).toString();
     }
 
 

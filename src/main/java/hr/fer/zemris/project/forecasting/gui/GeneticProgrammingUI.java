@@ -5,6 +5,7 @@ import hr.fer.zemris.project.forecasting.gp.GeneticProgramming;
 import hr.fer.zemris.project.forecasting.gp.gui.IListener;
 import hr.fer.zemris.project.forecasting.gp.selections.Tournament;
 import hr.fer.zemris.project.forecasting.gp.tree.BinaryTree;
+import hr.fer.zemris.project.forecasting.gp.tree.Node;
 import hr.fer.zemris.project.forecasting.gp.values.ValueTypes;
 import hr.fer.zemris.project.forecasting.gp.values.biVariable.IDoubleBinaryOperatorGenerator;
 import hr.fer.zemris.project.forecasting.gp.values.terminating.ITerminatorGenerator;
@@ -19,10 +20,12 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.embed.swing.SwingNode;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
@@ -142,17 +145,44 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
             showResultStage.initModality(Modality.WINDOW_MODAL);
 
             TreeView<String> treeView = geneticProgramming.getBestSolution().toTreeView(true);
+            SwingNode node = new SwingNode();
+            node.setContent(geneticProgramming.getBestSolution().toJTree());
+
+            Button treeViewButton = new Button("Pretty representation");
+            treeViewButton.setOnAction(createStage(treeView));
+
+            Button swingButton = new Button("Ugly representation  ");
+            swingButton.setOnAction(createStage(new HBox(new ScrollPane(node))));
+
+            Button labelButton = new Button("Text representation  ");
+            Label labelRepresentation = new Label(geneticProgramming.getBestSolution().toString());
+            labelButton.setOnAction(createStage(new ScrollPane(labelRepresentation)));
 
             Label nodeNumber = new Label(
                 String.format("Number of nodes: %d", geneticProgramming.getBestSolution().getNodesSize()));
             Label maxDepth = new Label(
                 String.format("Max depth: %d", geneticProgramming.getBestSolution().getDepth())
             );
-            VBox vBox = new VBox(nodeNumber, maxDepth, treeView);
+            VBox vBox = new VBox(
+                nodeNumber,
+                maxDepth,
+                treeViewButton,
+                swingButton,
+                labelButton
+            );
 
             Scene showResultScene = new Scene(vBox);
             showResultStage.setScene(showResultScene);
             showResultStage.show();
+        };
+    }
+
+    private EventHandler<ActionEvent> createStage(Parent root) {
+        return event -> {
+            Stage stage = new Stage();
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.show();
         };
     }
 

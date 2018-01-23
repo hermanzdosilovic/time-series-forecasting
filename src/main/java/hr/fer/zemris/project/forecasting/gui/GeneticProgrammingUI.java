@@ -47,9 +47,9 @@ import static hr.fer.zemris.project.forecasting.gui.DatasetValue.getChartData;
 
 public class GeneticProgrammingUI implements IListener<BinaryTree> {
 
-    private static int  PREDICTION_WIDTH  = 640;
+    private static int  PREDICTION_WIDTH  = 480;
     private static int  PREDICTION_HEIGHT = 480;
-    private static int  MSE_WIDTH         = 640;
+    private static int  MSE_WIDTH         = 480;
     private static int  MSE_HEIGHT        = 480;
     private static long PERIOD            = 1000L;
 
@@ -142,8 +142,15 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
             showResultStage.initModality(Modality.WINDOW_MODAL);
 
             TreeView<String> treeView = geneticProgramming.getBestSolution().toTreeView(true);
-            treeView.setShowRoot(true);
-            Scene showResultScene = new Scene(treeView);
+
+            Label nodeNumber = new Label(
+                String.format("Number of nodes: %d", geneticProgramming.getBestSolution().getNodesSize()));
+            Label maxDepth = new Label(
+                String.format("Max depth: %d", geneticProgramming.getBestSolution().getDepth())
+            );
+            VBox vBox = new VBox(nodeNumber, maxDepth, treeView);
+
+            Scene showResultScene = new Scene(vBox);
             showResultStage.setScene(showResultScene);
             showResultStage.show();
         };
@@ -527,6 +534,10 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
             );
             biVariable.setSpacing(5);
 
+            Label error = new Label("One of each node is necessary.");
+            error.setTextFill(Color.RED);
+            error.setVisible(false);
+
             Button ok = new Button("OK");
 
             GridPane grid = new GridPane();
@@ -538,9 +549,12 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
             grid.add(uniVariable, 3, 1, 1, 10);
             grid.add(terminating, 5, 1, 1, 10);
 
+            HBox errorBox = new HBox(error);
+            errorBox.setAlignment(Pos.CENTER);
+            grid.add(errorBox, 0, 11, 6, 1);
+
             HBox okBox = new HBox(ok);
             okBox.setAlignment(Pos.CENTER);
-
             grid.add(okBox, 0, 12, 6, 1);
 
             Scene scene = new Scene(grid);
@@ -582,6 +596,11 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
                     biVariableForm.setMax(maxCB.isSelected());
                     biVariableForm.setMin(minCB.isSelected());
                     List<IDoubleBinaryOperatorGenerator> biVariableGens = biVariableForm.getAsList();
+
+                    if (terminators.size() == 0 || uniVariableGens.size() == 0 || biVariableGens.size() == 0) {
+                        error.setVisible(true);
+                        return;
+                    }
 
                     valueTypes = new ValueTypes(offset, terminators, uniVariableGens, biVariableGens);
                     nodes.hide();

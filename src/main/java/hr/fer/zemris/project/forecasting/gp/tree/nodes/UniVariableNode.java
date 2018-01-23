@@ -38,7 +38,7 @@ public class UniVariableNode extends Node {
     }
 
     @Override public TreeItem<String> asTreeItem(boolean expand) {
-        TreeItem<String> parent = new TreeItem<>(value.toString(), BinaryTree.LOG_ICON.get());
+        TreeItem<String> parent = new TreeItem<>(value.toString() + String.format(" (depth: %d)", getDepth()), BinaryTree.LOG_ICON.get());
         parent.setExpanded(expand);
         parent.getChildren().add(child.asTreeItem(expand));
         return parent;

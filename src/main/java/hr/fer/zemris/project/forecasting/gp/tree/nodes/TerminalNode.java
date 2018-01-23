@@ -29,7 +29,7 @@ public class TerminalNode extends Node {
     }
 
     @Override public TreeItem<String> asTreeItem(boolean expand) {
-        TreeItem<String> node = new TreeItem<>(value.toString(), BinaryTree.LEAF_ICON.get());
+        TreeItem<String> node = new TreeItem<>(value.toString() + String.format(" (depth: %d)", getDepth()), BinaryTree.LEAF_ICON.get());
         node.setExpanded(expand);
         return node;
     }

@@ -294,8 +294,8 @@ public class NeuralNetworkUI {
                 @Override
                 public void run() {
                     IMetaheuristic metaheuristic = AlgorithmsGUI.metaheuristic;
-                    IObserver realVectorGraphObserver = new RealVectorGraphObserver(neuralNetwork.get(), dataset, series,
-                            mseSeries, line, mseChart);
+                    RealVectorGraphObserver realVectorGraphObserver = new RealVectorGraphObserver(neuralNetwork.get(),
+                            dataset, series, mseSeries, line, mseChart);
                     IObserver realVectorStatusBarObserver = new RealVectorStatusbarObserver(statusBar);
                     IObserver doubleArrayStatusBarObserver = new DoubleArrayStatusbarObserver(statusBar);
                     if (metaheuristic instanceof SimpleSA) {
@@ -313,11 +313,12 @@ public class NeuralNetworkUI {
                         basicPSO.run(metaheuristicRequirement);
                     } else if (metaheuristic instanceof Backpropagation) {
                         Backpropagation backpropagation = (Backpropagation) metaheuristic;
-                        IObserver graphObserver = new DoubleArrayGraphObserver(neuralNetwork.get(), dataset, series,
+                        DoubleArrayGraphObserver graphObserver = new DoubleArrayGraphObserver(neuralNetwork.get(), dataset, series,
                                 mseSeries, line, mseChart);
                         backpropagation.attachObserver(graphObserver);
                         backpropagation.attachObserver(doubleArrayStatusBarObserver);
                         backpropagation.run();
+                        graphObserver.getGraphObserver().update(null, true);
                     } else if (metaheuristic instanceof SimpleOSGA) {
                         Collection<RealVector> metaheuristicRequirement =
                                 (Collection<RealVector>) AlgorithmsGUI.metaheuristicRequirement;
@@ -334,6 +335,9 @@ public class NeuralNetworkUI {
                         simpleGA.run(metaheuristicRequirement);
                     } else {
                         System.err.println("wrong metaheuristic");
+                    }
+                    if(!(metaheuristic instanceof Backpropagation)){
+                     realVectorGraphObserver.getGraphObserver().update(null, true);
                     }
                     trainingOver.set(true);
 

@@ -1,6 +1,7 @@
 package hr.fer.zemris.project.forecasting.gui;
 
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.IMetaheuristic;
+import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.sa.SimpleSA;
 import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.util.IObserver;
 import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.ISolution;
 import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.SimpleSolution;
@@ -43,6 +44,7 @@ public class NeuralNetworkObservers {
         private volatile XYChart.Series<Integer, Double> mseSeries;
         private volatile LineChart line;
         private volatile LineChart mseChart;
+        private ISolution lastSeenSolution;
 
         public GraphObserver(INeuralNetwork nn, List<DatasetEntry> dataset, XYChart.Series<Integer, Double> series,
                              XYChart.Series<Integer, Double> mseSeries, LineChart line, LineChart mseChart) {
@@ -60,7 +62,13 @@ public class NeuralNetworkObservers {
             this.line = line;
         }
 
-        public void update(ISolution<double[]> solution) {
+        public void update(ISolution<double[]> solution, boolean lastCall) {
+            if (solution != null) {
+                lastSeenSolution = solution;
+            } else {
+                solution = lastSeenSolution;
+            }
+
             ++iteration;
             boolean lastIteration = iteration == AlgorithmsGUI.maxIterations;
 
@@ -74,7 +82,7 @@ public class NeuralNetworkObservers {
 
             long currentTime = System.currentTimeMillis();
             if ((currentTime - lastPlottingTime < PERIOD || Arrays.equals(lastSeenWeights, solution.getRepresentative()))
-                    && !lastIteration && iteration != 0) {
+                    && !lastIteration && iteration != 0 && !lastCall) {
                 return;
             }
             lastPlottingTime = System.currentTimeMillis();
@@ -103,11 +111,6 @@ public class NeuralNetworkObservers {
                         || Double.isInfinite(forecast[0]) ? MAX_PLOTTING_VALUE : forecast[0];
                 forecast[0] = forecast[0] < -MAX_PLOTTING_VALUE || Double.isNaN(forecast[0])
                         || Double.isInfinite(forecast[0]) ? -MAX_PLOTTING_VALUE : forecast[0];
-                if (Math.abs(forecast[0]) > MAX_PLOTTING_VALUE|| Double.isNaN(forecast[0]) || Double.isInfinite(forecast[0])) {
-                    System.out.println("Nesto nije dobro");
-                    outputList.clear();
-                    break;
-                }
                 outputList.get(offset).setYValue(forecast[0]);
                 HoveredThresholdNode node = new HoveredThresholdNode(offset,
                         forecast[0]);
@@ -149,9 +152,17 @@ public class NeuralNetworkObservers {
 
         @Override
         public void update(IMetaheuristic<RealVector> metaheuristic) {
+            if (metaheuristic instanceof SimpleSA) {
+                double penalty = metaheuristic.getBestSolution().getPenalty();
+                metaheuristic.getBestSolution().setFitness(penalty);
+            }
             ISolution<double[]> solution = new SimpleSolution<>(metaheuristic.getBestSolution().getRepresentative().toArray());
             solution.setFitness(metaheuristic.getBestSolution().getFitness());
-            graphObserver.update(solution);
+            graphObserver.update(solution, false);
+        }
+
+        public GraphObserver getGraphObserver() {
+            return graphObserver;
         }
     }
 
@@ -166,7 +177,11 @@ public class NeuralNetworkObservers {
 
         @Override
         public void update(IMetaheuristic<double[]> metaheuristic) {
-            graphObserver.update(metaheuristic.getBestSolution());
+            graphObserver.update(metaheuristic.getBestSolution(),false);
+        }
+
+        public GraphObserver getGraphObserver() {
+            return graphObserver;
         }
     }
 
@@ -182,10 +197,6 @@ public class NeuralNetworkObservers {
         public void update(IMetaheuristic<double[]> metaheuristic) {
             statusBarUpdater.update(metaheuristic.getBestSolution().getFitness());
         }
-
-        public long getCurrentIteration() {
-            return statusBarUpdater.getIteration();
-        }
     }
 
     public static class RealVectorStatusbarObserver implements IObserver<RealVector> {
@@ -198,12 +209,13 @@ public class NeuralNetworkObservers {
 
         @Override
         public void update(IMetaheuristic<RealVector> metaheuristic) {
+            if (metaheuristic instanceof SimpleSA) {
+                double penalty = metaheuristic.getBestSolution().getPenalty();
+                metaheuristic.getBestSolution().setFitness(penalty);
+            }
             statusBarUpdater.update(metaheuristic.getBestSolution().getFitness());
         }
 
-        public long getCurrentIteration() {
-            return statusBarUpdater.getIteration();
-        }
     }
 
 
@@ -222,10 +234,6 @@ public class NeuralNetworkObservers {
             String mseText = currentMSE > MAX_MSE ? "too large" : String.format("%7.2f", currentMSE);
             String text = String.format("Iteration: %10d Current mse: %s", iteration, mseText);
             Platform.runLater(() -> statusBar.setText(text));
-        }
-
-        public long getIteration() {
-            return iteration;
         }
     }
 }

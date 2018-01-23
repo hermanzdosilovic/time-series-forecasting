@@ -58,25 +58,25 @@ import static hr.fer.zemris.project.forecasting.gui.GUIUtil.*;
 public class NeuralNetworkUI {
 
     private Data data;
-    private int[] architecture;
+    private List<DatasetEntry> dataset;
+    private double trainPercentage;
     private ObjectProperty<INeuralNetwork> neuralNetwork = new SimpleObjectProperty<>(null);
     private ObjectProperty<IMetaheuristic> metaheuristicProperty = new SimpleObjectProperty<>(null);
-    private IActivation[] activations;
-    private List<DatasetEntry> dataset;
-    private ComboBox<String> chooseNetwork;
-    private ComboBox<String> chooseAlgorithm;
-    private Button changeParams;
-    private double trainPercentage;
+    private AtomicBoolean trainingPaused = new AtomicBoolean(false);
+    private AtomicBoolean trainingOver = new AtomicBoolean(false);
+
     private LineChart line;
     private LineChart mseChart;
     private volatile XYChart.Series<Integer, Double> series;
     private volatile XYChart.Series<Integer, Double> mseSeries;
+    private ComboBox<String> chooseNetwork;
+    private ComboBox<String> chooseAlgorithm;
+    private Button changeParams;
     private Button predict;
     private Button stop;
     private Button start;
-    private AtomicBoolean trainingPaused = new AtomicBoolean(false);
     private Label statusBar;
-    private AtomicBoolean trainingOver = new AtomicBoolean(false);
+
 
     public NeuralNetworkUI(Data data) {
         this.data = data;
@@ -89,7 +89,7 @@ public class NeuralNetworkUI {
         grid.setPadding(new Insets(30, 30, 30, 30));
 
         initButtons();
-        initNeuralNetwork();
+        addNNListeners();
         initMetaheuristic();
         VBox rightSide = new VBox();
 
@@ -133,6 +133,7 @@ public class NeuralNetworkUI {
             predict.setDisable(false);
             stop.setDisable(true);
             trainingPaused.set(true);
+            trainingOver.set(false);
         });
         stop.setDisable(true);
 
@@ -184,7 +185,26 @@ public class NeuralNetworkUI {
         });
     }
 
-    private void initNeuralNetwork() {
+    private void initMetaheuristic() {
+        metaheuristicProperty.addListener((t, u, v) -> {
+            statusBar.setText("Iteration: / Current mse: /");
+            if (line.getData().size() == 2) {
+                line.getData().remove(1);
+            }
+            if (mseChart.getData().size() == 1) {
+                mseChart.getData().remove(0);
+            }
+            predict.setDisable(true);
+            trainingPaused.set(false);
+            if (v == null || neuralNetwork.get() == null) {
+                start.setDisable(true);
+            } else {
+                start.setDisable(false);
+            }
+        });
+    }
+
+    private void addNNListeners() {
         neuralNetwork.addListener((t, u, v) -> {
             try {
                 trainingPaused.set(false);
@@ -253,25 +273,6 @@ public class NeuralNetworkUI {
         return table;
     }
 
-    private void initMetaheuristic() {
-        metaheuristicProperty.addListener((t, u, v) -> {
-            statusBar.setText("Iteration: / Current mse: /");
-            if (line.getData().size() == 2) {
-                line.getData().remove(1);
-            }
-            if (mseChart.getData().size() == 1) {
-                mseChart.getData().remove(0);
-            }
-            predict.setDisable(true);
-            trainingPaused.set(false);
-            if (v == null || neuralNetwork.get() == null) {
-                start.setDisable(true);
-            } else {
-                start.setDisable(false);
-            }
-        });
-    }
-
     private EventHandler<ActionEvent> startButtonAction() {
         return event -> {
             start.setDisable(true);
@@ -287,7 +288,7 @@ public class NeuralNetworkUI {
             if (trainingOver.get()) {
                 INeuralNetwork nn = NeuralNetworkBuilder.createNeuralNetwork(neuralNetwork.getValue());
                 neuralNetwork = new SimpleObjectProperty<>(nn);
-                initNeuralNetwork();
+                addNNListeners();
                 MetaheuristicBuilder.createNewInstance(metaheuristicProperty.getValue(), neuralNetwork.getValue(), dataset);
                 metaheuristicProperty.setValue(AlgorithmsGUI.metaheuristic);
             }
@@ -305,7 +306,8 @@ public class NeuralNetworkUI {
                     IMetaheuristic metaheuristic = AlgorithmsGUI.metaheuristic;
                     IObserver realVectorGraphObserver = new RealVectorGraphObserver(neuralNetwork.get(), dataset, series,
                             mseSeries, line, mseChart);
-                    IObserver realVectorStatusBarObserver = new RealVectorStatusbarObserver(statusBar);
+                    RealVectorStatusbarObserver realVectorStatusBarObserver = new RealVectorStatusbarObserver(statusBar);
+                    DoubleArrayStatusbarObserver doubleArrayStatusBarObserver = new DoubleArrayStatusbarObserver(statusBar);
                     if (metaheuristic instanceof SimpleSA) {
                         RealVector metaheuristicRequirement = (RealVector) AlgorithmsGUI.metaheuristicRequirement;
                         SimpleSA simpleSA = (SimpleSA) metaheuristic;
@@ -323,7 +325,6 @@ public class NeuralNetworkUI {
                         Backpropagation backpropagation = (Backpropagation) metaheuristic;
                         IObserver graphObserver = new DoubleArrayGraphObserver(neuralNetwork.get(), dataset, series,
                                 mseSeries, line, mseChart);
-                        IObserver doubleArrayStatusBarObserver = new DoubleArrayStatusbarObserver(statusBar);
                         backpropagation.attachObserver(graphObserver);
                         backpropagation.attachObserver(doubleArrayStatusBarObserver);
                         backpropagation.run();
@@ -344,7 +345,10 @@ public class NeuralNetworkUI {
                     } else {
                         System.err.println("wrong metaheuristic");
                     }
-                    trainingOver.set(true);
+                    if (doubleArrayStatusBarObserver.getCurrentIteration() >= AlgorithmsGUI.maxIterations
+                            || realVectorStatusBarObserver.getCurrentIteration() >= AlgorithmsGUI.maxIterations) {
+                        trainingOver.set(true);
+                    }
                     Platform.runLater(() -> {
                         start.setDisable(false);
                         predict.setDisable(false);
@@ -552,7 +556,7 @@ public class NeuralNetworkUI {
             NeuralNetworkForm neuralNetworkForm = NeuralNetworkForm.getInstance();
             try {
                 String[] hiddens = hidden.getText().split(",");
-                architecture = new int[hiddens.length + 2];
+                int[] architecture = new int[hiddens.length + 2];
                 architecture[0] = Integer.parseInt(input.getText());
                 architecture[architecture.length - 1] = Integer.parseInt(output.getText());
                 for (int i = 1; i < architecture.length - 1; i++) {
@@ -567,7 +571,7 @@ public class NeuralNetworkUI {
                 neuralNetworkForm.setOutputLayer(output.getText());
                 neuralNetworkForm.setPercentage((int) dataSlider.getValue());
 
-                activations = new IActivation[architecture.length];
+                IActivation[] activations = new IActivation[architecture.length];
                 activations[0] = extractActivation(inputActivation.getValue());
                 for (int i = 1; i < activations.length - 1; ++i) {
                     activations[i] = extractActivation(hiddenActivation.getValue());

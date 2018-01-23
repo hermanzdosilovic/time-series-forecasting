@@ -142,7 +142,7 @@ public class NeuralNetworkObservers {
 
     public static class DoubleArrayGraphObserver implements IObserver<double[]> {
 
-        GraphObserver graphObserver;
+        protected GraphObserver graphObserver;
 
         public DoubleArrayGraphObserver(INeuralNetwork nn, List<DatasetEntry> dataset, XYChart.Series<Integer, Double> series,
                                         XYChart.Series<Integer, Double> mseSeries, LineChart line, LineChart mseChart) {
@@ -167,11 +167,15 @@ public class NeuralNetworkObservers {
         public void update(IMetaheuristic<double[]> metaheuristic) {
             statusBarUpdater.update(metaheuristic.getBestSolution().getFitness());
         }
+
+        public long getCurrentIteration() {
+            return statusBarUpdater.getIteration();
+        }
     }
 
     public static class RealVectorStatusbarObserver implements IObserver<RealVector> {
 
-        private StatusBarUpdater statusBarUpdater;
+        protected StatusBarUpdater statusBarUpdater;
 
         public RealVectorStatusbarObserver(Label statusBar) {
             statusBarUpdater = new StatusBarUpdater(statusBar);
@@ -180,6 +184,10 @@ public class NeuralNetworkObservers {
         @Override
         public void update(IMetaheuristic<RealVector> metaheuristic) {
             statusBarUpdater.update(metaheuristic.getBestSolution().getFitness());
+        }
+
+        public long getCurrentIteration() {
+            return statusBarUpdater.getIteration();
         }
     }
 
@@ -192,12 +200,15 @@ public class NeuralNetworkObservers {
             this.statusBar = statusBar;
         }
 
-
         public void update(double currentMSE) {
             currentMSE = Math.abs(currentMSE);
             ++iteration;
             String text = String.format("Iteration: %10d Current mse: %4.2f", iteration, currentMSE);
             Platform.runLater(() -> statusBar.setText(text));
+        }
+
+        public long getIteration() {
+            return iteration;
         }
     }
 }

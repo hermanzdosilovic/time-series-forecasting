@@ -5,11 +5,11 @@ public class NeuralNetworkForm {
     private String type  = "TDNN";
     private int percentage = 90;
     private String inputLayer = "5";
-    private String hiddenLayers = "3";
+    private String hiddenLayers = "10,5";
     private String outputLayer = "1";
-    private String inputLayerActivation = "ReLU";
+    private String inputLayerActivation = "Identity";
     private String hiddenLayersActivation = "ReLU";
-    private String outputLayerActivation = "ReLU";
+    private String outputLayerActivation = "Identity";
 
 
     private static NeuralNetworkForm ourInstance = new NeuralNetworkForm();

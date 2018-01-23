@@ -47,9 +47,9 @@ import static hr.fer.zemris.project.forecasting.gui.DatasetValue.getChartData;
 
 public class GeneticProgrammingUI implements IListener<BinaryTree> {
 
-    private static int  PREDICTION_WIDTH  = 640;
+    private static int  PREDICTION_WIDTH  = 480;
     private static int  PREDICTION_HEIGHT = 480;
-    private static int  MSE_WIDTH         = 640;
+    private static int  MSE_WIDTH         = 480;
     private static int  MSE_HEIGHT        = 480;
     private static long PERIOD            = 1000L;
 

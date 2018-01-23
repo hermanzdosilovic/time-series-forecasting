@@ -1,10 +1,12 @@
 package hr.fer.zemris.project.forecasting.gp.tree.nodes;
 
+import hr.fer.zemris.project.forecasting.gp.tree.BinaryTree;
 import hr.fer.zemris.project.forecasting.gp.tree.Node;
 import hr.fer.zemris.project.forecasting.gp.util.functionalInterface.FiveParametarInterface;
 import hr.fer.zemris.project.forecasting.gp.util.functionalInterface.FourParametarInterface;
 import hr.fer.zemris.project.forecasting.gp.util.functionalInterface.ThreeParametarInterface;
 import hr.fer.zemris.project.forecasting.gp.values.ValueTypes;
+import javafx.scene.control.TreeItem;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +46,14 @@ public class BiVariableNode extends Node {
         setDepth(depth);
         leftNode.setNewDepth(depth + 1);
         rightNode.setNewDepth(depth + 1);
+    }
+
+    @Override public TreeItem<String> asTreeItem(boolean expand) {
+        TreeItem<String> parent = new TreeItem<>(value.toString(), BinaryTree.LOG_ICON.get());
+        parent.setExpanded(expand);
+        parent.getChildren().add(leftNode.asTreeItem(expand));
+        parent.getChildren().add(rightNode.asTreeItem(expand));
+        return parent;
     }
 
     public void setLeftNode(Node leftNode) {

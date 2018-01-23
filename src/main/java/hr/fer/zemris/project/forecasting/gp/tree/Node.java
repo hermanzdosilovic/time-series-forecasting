@@ -4,6 +4,7 @@ import hr.fer.zemris.project.forecasting.gp.util.functionalInterface.FiveParamet
 import hr.fer.zemris.project.forecasting.gp.util.functionalInterface.FourParametarInterface;
 import hr.fer.zemris.project.forecasting.gp.util.functionalInterface.ThreeParametarInterface;
 import hr.fer.zemris.project.forecasting.gp.values.ValueTypes;
+import javafx.scene.control.TreeItem;
 
 import java.io.Serializable;
 import java.util.List;
@@ -39,6 +40,8 @@ public abstract class Node implements Serializable {
     public void setDepth(int depth) {
         this.depth = depth;
     }
+
+    public abstract TreeItem<String> asTreeItem(boolean expand);
 
     public abstract List<Node> getChildren();
 

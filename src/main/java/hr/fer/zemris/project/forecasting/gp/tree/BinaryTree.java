@@ -6,20 +6,31 @@ import hr.fer.zemris.project.forecasting.gp.tree.nodes.TerminalNode;
 import hr.fer.zemris.project.forecasting.gp.tree.nodes.UniVariableNode;
 import hr.fer.zemris.project.forecasting.gp.values.ValueTypes;
 import hr.fer.zemris.project.forecasting.util.NumericErrorUtil;
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeView;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class BinaryTree implements Serializable {
 
     public static final Function<BinaryTree, Double> getTrainFitness = m -> m.getTrainFitness();
     public static final Function<BinaryTree, Double> getTestFitness  = m -> m.getTestFitness();
 
-    private Node topNode;
+    public static final Supplier<javafx.scene.Node>
+        ROOT_ICON = () -> new ImageView(new Image(BinaryTree.class.getClassLoader().getResourceAsStream("root.png")));
+    public static final Supplier<javafx.scene.Node>
+        LOG_ICON = () -> new ImageView(new Image(BinaryTree.class.getClassLoader().getResourceAsStream("log.png")));
+    public static final Supplier<javafx.scene.Node>
+        LEAF_ICON = () -> new ImageView(new Image(BinaryTree.class.getClassLoader().getResourceAsStream("leaf.png")));
 
+    private Node   topNode;
     private double trainFitness;
 
     private double testFitness;
@@ -157,8 +168,9 @@ public class BinaryTree implements Serializable {
         }
         return lastInput;
     }
+
     public double[] predictNextValues(DatasetEntry lastEntry, int numberOfPredictions) {
-        double[] lastInput = getLastInput(lastEntry);
+        double[] lastInput   = getLastInput(lastEntry);
         double[] predictions = new double[numberOfPredictions];
         for (int i = 0; i < predictions.length; i++) {
             predictions[i] = getOutput(lastInput);
@@ -252,6 +264,13 @@ public class BinaryTree implements Serializable {
         return bt;
     }
 
+    public TreeView<String> toTreeView(boolean expand) {
+        TreeItem<String> root = topNode.asTreeItem(expand);
+        root.setGraphic(ROOT_ICON.get());
+        return new TreeView<>(root);
+    }
+
+
     @Override
     public String toString() {
         return topNode.toString();
@@ -284,4 +303,5 @@ public class BinaryTree implements Serializable {
     public double getTestFitness() {
         return testFitness;
     }
+
 }

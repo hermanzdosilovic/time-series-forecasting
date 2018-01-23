@@ -37,6 +37,7 @@ public class GeneticProgramming implements IObserver<BinaryTree> {
     private BinaryTree             bestSolution;
     private boolean                stop;
     private List<IListener<BinaryTree>> listeners = new ArrayList<>();
+    private ValueTypes valueTypes;
 
     public GeneticProgramming(
         int maxIter,
@@ -68,13 +69,14 @@ public class GeneticProgramming implements IObserver<BinaryTree> {
         this.offset = offset;
         this.trainSet = trainSet;
         this.testSet = testSet;
+        valueTypes = new ValueTypes(offset);
+
         random = new Random();
     }
 
     public BinaryTree compute(
     ) {
         stop = false;
-        ValueTypes valueTypes = new ValueTypes(offset);
         replication = new Replication(random, trainSet, testSet, valueTypes);
         mutation = new Mutation(random, trainSet, testSet, valueTypes, maxNodes, maxDepth);
         crossover = new Crossover(random, trainSet, testSet, valueTypes, maxNodes, maxDepth);

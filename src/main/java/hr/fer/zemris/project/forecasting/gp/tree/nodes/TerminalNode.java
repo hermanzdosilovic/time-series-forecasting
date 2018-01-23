@@ -1,10 +1,12 @@
 package hr.fer.zemris.project.forecasting.gp.tree.nodes;
 
+import hr.fer.zemris.project.forecasting.gp.tree.BinaryTree;
 import hr.fer.zemris.project.forecasting.gp.tree.Node;
 import hr.fer.zemris.project.forecasting.gp.util.functionalInterface.FiveParametarInterface;
 import hr.fer.zemris.project.forecasting.gp.util.functionalInterface.FourParametarInterface;
 import hr.fer.zemris.project.forecasting.gp.util.functionalInterface.ThreeParametarInterface;
 import hr.fer.zemris.project.forecasting.gp.values.ValueTypes;
+import javafx.scene.control.TreeItem;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +26,12 @@ public class TerminalNode extends Node {
     @Override
     public void setNewDepth(int depth) {
         setDepth(depth);
+    }
+
+    @Override public TreeItem<String> asTreeItem(boolean expand) {
+        TreeItem<String> node = new TreeItem<>(value.toString(), BinaryTree.LEAF_ICON.get());
+        node.setExpanded(expand);
+        return node;
     }
 
     @Override

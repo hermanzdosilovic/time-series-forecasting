@@ -63,6 +63,8 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
 
     private long lastUpdated;
 
+    private Button showResult;
+
     public GeneticProgrammingUI(Data data) {
         this.data = data;
     }
@@ -78,6 +80,10 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
 
         Button predict = new Button("Predict future values");
         predict.setDisable(true);
+
+        showResult = new Button("Show result");
+        showResult.setDisable(true);
+        showResult.setOnAction(showResultAction());
 
         Button editParams = new Button("Set parameters");
         editParams.setDisable(false);
@@ -98,6 +104,7 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
 
         setActionForStop(start, stop);
         grid.add(stop, 1, 5);
+        grid.add(showResult, 1, 7);
 
         grid.add(predictionChart, 2, 1, 3, 3);
         grid.add(mseChart, 5, 1, 3, 3);
@@ -119,6 +126,21 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
         parent.getChildren().add(grid);
     }
 
+    private EventHandler<ActionEvent> showResultAction() {
+        return event -> {
+            Stage showResultStage = new Stage();
+            showResultStage.setTitle("Tree representation");
+            showResultStage.initOwner(data.getPrimaryStage());
+            showResultStage.initModality(Modality.WINDOW_MODAL);
+
+            TreeView<String> treeView = geneticProgramming.getBestSolution().toTreeView(true);
+            treeView.setShowRoot(true);
+            Scene showResultScene = new Scene(treeView);
+            showResultStage.setScene(showResultScene);
+            showResultStage.show();
+        };
+    }
+
     private void initializePredictionChart(Button start, Button predict) {
         predictionChart = Data.lineChart("Training chart", PREDICTION_WIDTH, PREDICTION_HEIGHT);
         XYChart.Series series = new XYChart.Series("Dataset", getChartData(data.getDatasetValues()));
@@ -137,6 +159,7 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
         datasetValues.addListener((ListChangeListener<DatasetValue>) c -> {
             start.setDisable(true);
             predict.setDisable(true);
+            showResult.setDisable(true);
             mseChart.getData().clear();
             trainMseL.setText("");
             testMseL.setText("");
@@ -191,8 +214,9 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
                             start.setDisable(false);
                             stop.setDisable(true);
                             predictions.setDisable(false);
-                            trainMseL.setText(String.format("Train MSE:  %.2f", solution.getTrainFitness()));
-                            testMseL.setText(String.format("Test MSE:  %.2f", solution.getTestFitness()));
+                            trainMseL.setText(String.format("Train MSE:  %.2f", -solution.getTrainFitness()));
+                            testMseL.setText(String.format("Test MSE:  %.2f", -solution.getTestFitness()));
+                            showResult.setDisable(false);
                         });
                     } catch (RuntimeException r) {
                         GUIUtil.showErrorMessage(
@@ -434,10 +458,10 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
                     lastUpdated = currentTime;
                 }
             }
-            mseTrainSeries.getData().add(new XYChart.Data<>(mseTrainSeries.getData().size(), best.getTrainFitness()));
-            mseTestSeries.getData().add(new XYChart.Data<>(mseTestSeries.getData().size(), best.getTestFitness()));
-            trainMseL.setText(String.format("Train MSE: %.2f", best.getTrainFitness()));
-            testMseL.setText(String.format("Test MSE: %.2f", best.getTestFitness()));
+            mseTrainSeries.getData().add(new XYChart.Data<>(mseTrainSeries.getData().size(), -best.getTrainFitness()));
+            mseTestSeries.getData().add(new XYChart.Data<>(mseTestSeries.getData().size(), -best.getTestFitness()));
+            trainMseL.setText(String.format("Train MSE: %.2f", -best.getTrainFitness()));
+            testMseL.setText(String.format("Test MSE: %.2f", -best.getTestFitness()));
             iteration.setText(String.format("Iter: %d", iter));
         });
     }

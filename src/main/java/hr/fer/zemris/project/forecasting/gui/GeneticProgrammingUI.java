@@ -142,8 +142,15 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
             showResultStage.initModality(Modality.WINDOW_MODAL);
 
             TreeView<String> treeView = geneticProgramming.getBestSolution().toTreeView(true);
-            treeView.setShowRoot(true);
-            Scene showResultScene = new Scene(treeView);
+
+            Label nodeNumber = new Label(
+                String.format("Number of nodes: %d", geneticProgramming.getBestSolution().getNodesSize()));
+            Label maxDepth = new Label(
+                String.format("Max depth: %d", geneticProgramming.getBestSolution().getDepth())
+            );
+            VBox vBox = new VBox(nodeNumber, maxDepth, treeView);
+
+            Scene showResultScene = new Scene(vBox);
             showResultStage.setScene(showResultScene);
             showResultStage.show();
         };

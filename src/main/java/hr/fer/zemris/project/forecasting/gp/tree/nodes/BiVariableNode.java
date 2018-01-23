@@ -49,7 +49,7 @@ public class BiVariableNode extends Node {
     }
 
     @Override public TreeItem<String> asTreeItem(boolean expand) {
-        TreeItem<String> parent = new TreeItem<>(value.toString(), BinaryTree.LOG_ICON.get());
+        TreeItem<String> parent = new TreeItem<>(value.toString() + String.format(" (depth: %d)", getDepth()), BinaryTree.LOG_ICON.get());
         parent.setExpanded(expand);
         parent.getChildren().add(leftNode.asTreeItem(expand));
         parent.getChildren().add(rightNode.asTreeItem(expand));

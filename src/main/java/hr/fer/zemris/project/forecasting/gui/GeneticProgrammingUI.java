@@ -191,8 +191,8 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
                             start.setDisable(false);
                             stop.setDisable(true);
                             predictions.setDisable(false);
-                            trainMseL.setText(String.format("Train MSE:  %.2f", solution.getTrainFitness()));
-                            testMseL.setText(String.format("Test MSE:  %.2f", solution.getTestFitness()));
+                            trainMseL.setText(String.format("Train MSE:  %.2f", -solution.getTrainFitness()));
+                            testMseL.setText(String.format("Test MSE:  %.2f", -solution.getTestFitness()));
                         });
                     } catch (RuntimeException r) {
                         GUIUtil.showErrorMessage(
@@ -434,10 +434,10 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
                     lastUpdated = currentTime;
                 }
             }
-            mseTrainSeries.getData().add(new XYChart.Data<>(mseTrainSeries.getData().size(), best.getTrainFitness()));
-            mseTestSeries.getData().add(new XYChart.Data<>(mseTestSeries.getData().size(), best.getTestFitness()));
-            trainMseL.setText(String.format("Train MSE: %.2f", best.getTrainFitness()));
-            testMseL.setText(String.format("Test MSE: %.2f", best.getTestFitness()));
+            mseTrainSeries.getData().add(new XYChart.Data<>(mseTrainSeries.getData().size(), -best.getTrainFitness()));
+            mseTestSeries.getData().add(new XYChart.Data<>(mseTestSeries.getData().size(), -best.getTestFitness()));
+            trainMseL.setText(String.format("Train MSE: %.2f", -best.getTrainFitness()));
+            testMseL.setText(String.format("Test MSE: %.2f", -best.getTestFitness()));
             iteration.setText(String.format("Iter: %d", iter));
         });
     }

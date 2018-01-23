@@ -7,7 +7,7 @@ import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
 public class NeuralNetworkBuilder {
 
     public static INeuralNetwork createNeuralNetwork(INeuralNetwork nn) {
-        INeuralNetwork neuralNetwork = null;
+        INeuralNetwork neuralNetwork;
         if (nn instanceof FeedForwardANN) {
             neuralNetwork = new FeedForwardANN(nn.getArchitecture(), nn.getLayerActivations());
         } else {

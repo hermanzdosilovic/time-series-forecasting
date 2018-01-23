@@ -68,7 +68,8 @@ public class NeuralNetworkObservers {
             }
 
             long currentTime = System.currentTimeMillis();
-            if ((currentTime - lastPlottingTime < PERIOD || Arrays.equals(lastSeenWeights, solution.getRepresentative()))&& !lastIteration) {
+            if ((currentTime - lastPlottingTime < PERIOD || Arrays.equals(lastSeenWeights, solution.getRepresentative()))
+                    && !lastIteration && iteration != 0) {
                 return;
             }
             lastPlottingTime = System.currentTimeMillis();

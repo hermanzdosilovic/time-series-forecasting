@@ -152,11 +152,15 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
             treeViewButton.setOnAction(createStage(treeView));
 
             Button swingButton = new Button("Ugly representation  ");
-            swingButton.setOnAction(createStage(new HBox(new ScrollPane(node))));
+            ScrollPane pane = new ScrollPane(node);
+            pane.setMaxSize(300, 300);
+            swingButton.setOnAction(createStage(pane));
 
             Button labelButton = new Button("Text representation  ");
             Label labelRepresentation = new Label(geneticProgramming.getBestSolution().toString());
-            labelButton.setOnAction(createStage(new ScrollPane(labelRepresentation)));
+            ScrollPane pane2 = new ScrollPane(labelRepresentation);
+            pane2.setMaxSize(300, 300);
+            labelButton.setOnAction(createStage(pane2));
 
             Label nodeNumber = new Label(
                 String.format("Number of nodes: %d", geneticProgramming.getBestSolution().getNodesSize()));
@@ -171,6 +175,9 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
                 labelButton
             );
 
+            vBox.setPadding(new Insets(20, 20, 20, 20));
+            vBox.setSpacing(10);
+
             Scene showResultScene = new Scene(vBox);
             showResultStage.setScene(showResultScene);
             showResultStage.show();
@@ -181,6 +188,7 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
         return event -> {
             Stage stage = new Stage();
             Scene scene = new Scene(root);
+            stage.initOwner(data.getPrimaryStage());
             stage.setScene(scene);
             stage.show();
         };

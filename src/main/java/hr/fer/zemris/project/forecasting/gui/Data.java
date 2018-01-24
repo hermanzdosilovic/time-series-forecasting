@@ -126,7 +126,7 @@ public class Data {
         table.setPrefWidth(MAX_TABLE_WIDTH);
         table.setPlaceholder(new Label(USAGE));
 
-        TableColumn<DatasetValue, Double> values = new TableColumn("Value");
+        TableColumn<DatasetValue, Double> values = new TableColumn("x(t)");
         values.setSortable(false);
         values.setEditable(true);
         values.setCellValueFactory(new PropertyValueFactory<>("value"));
@@ -146,7 +146,7 @@ public class Data {
                                    );
                                });
 
-        TableColumn<DatasetValue, Integer> indices = new TableColumn<>("Index");
+        TableColumn<DatasetValue, Integer> indices = new TableColumn<>("t");
         indices.setSortable(false);
         indices.setEditable(false);
 
@@ -292,7 +292,7 @@ public class Data {
         table.getSelectionModel().clearSelection();
 
         // create new record and add it to the model
-        DatasetValue data = new DatasetValue(row + 2, 0.0);
+        DatasetValue data = new DatasetValue(row + 1, 0.0);
         if (row < table.getItems().size() - 1) {
             table.getItems().add(row + 1, data);
             for (int i = row + 2; i < datasetValues.size(); i++) {

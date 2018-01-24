@@ -50,7 +50,7 @@ public class DatasetValue implements Comparable<DatasetValue>{
     public static List<DatasetValue> encapsulateDoubleArray(double[] dataset){
         List<DatasetValue> tmp = new ArrayList<>(dataset.length);
         for(int i = 0; i < dataset.length; i++){
-            tmp.add(new DatasetValue(i + 1, dataset[i]));
+            tmp.add(new DatasetValue(i, dataset[i]));
         }
         return tmp;
     }

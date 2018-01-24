@@ -3,8 +3,8 @@ package hr.fer.zemris.project.forecasting.gui.forms.annForms;
 public class SAForm {
 
 
-    private String outerIterations = "100";
-    private String outerInitialTemperature = "1000";
+    private String outerIterations = "1000";
+    private String outerInitialTemperature = "100";
     private String outerFinalTemperature = "1E-4";
     private String innerIterations = "4000";
     private String desiredPenalty = "0";

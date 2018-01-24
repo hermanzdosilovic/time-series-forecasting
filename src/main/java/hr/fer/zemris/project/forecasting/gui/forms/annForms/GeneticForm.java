@@ -2,11 +2,11 @@ package hr.fer.zemris.project.forecasting.gui.forms.annForms;
 
 public class GeneticForm {
 
-    private String populationSize = "200";
-    private String maxGenerations = "2000";
+    private String populationSize = "100";
+    private String maxGenerations = "1000";
     private String desiredFitness = "0";
     private String desiredPrecision = "1E-3";
-    private String tournamentSize = "20";
+    private String tournamentSize = "5";
     private String minComponentValue = "-5";
     private String maxComponentValue = "5";
     private String alpha = "0.9";
@@ -14,7 +14,7 @@ public class GeneticForm {
     private String sigma = "0.9";
     private boolean useElitism = true;
     private boolean allowRepeat = true;
-    private boolean forceMutation = false;
+    private boolean forceMutation = true;
 
     private static GeneticForm ourInstance = new GeneticForm();
 

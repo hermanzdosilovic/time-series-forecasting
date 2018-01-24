@@ -3,13 +3,13 @@ package hr.fer.zemris.project.forecasting.gui.forms.annForms;
 public class PSOForm {
 
     private String numberOfParticles = "100";
-    private String maxIteration = "2000";
+    private String maxIteration = "1000";
     private String desiredFitness = "0";
     private String desiredPrecision = "1E-2";
-    private String individualFactor = "2.05";
+    private String individualFactor = "5.05";
     private String socialFactor = "2.05";
-    private String minValue = "-20";
-    private String maxValue = "20";
+    private String minValue = "-5";
+    private String maxValue = "5";
     private String minSpeed = "-0.1";
     private String maxSpeed = "0.1";
     private boolean fullyFormed = false;

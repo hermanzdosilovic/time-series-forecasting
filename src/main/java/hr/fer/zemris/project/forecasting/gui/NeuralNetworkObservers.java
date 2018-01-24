@@ -230,7 +230,6 @@ public class NeuralNetworkObservers {
         public void update(double currentMSE) {
             currentMSE = Math.abs(currentMSE);
             ++iteration;
-            System.out.println(currentMSE);
             String mseText = currentMSE > MAX_MSE ? "too large" : String.format("%7.2f", currentMSE);
             String text = String.format("Iteration: %10d Current mse: %s", iteration, mseText);
             Platform.runLater(() -> statusBar.setText(text));

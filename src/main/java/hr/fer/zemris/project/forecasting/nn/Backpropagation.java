@@ -54,10 +54,6 @@ public class Backpropagation extends AbstractMetaheuristic<double[]> {
 
     @Override
     public ISolution<double[]> run() {
-        if(isStopped.get()){
-            isStopped.set(false);
-        }
-
         List<DatasetEntry>[] batches = createBatches(batchSize, trainingSet);
         RealMatrix[] layerOutputs = new RealMatrix[neuralNetwork.getNumberOfLayers()];
 

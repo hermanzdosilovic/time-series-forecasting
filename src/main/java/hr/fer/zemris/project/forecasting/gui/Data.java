@@ -296,7 +296,7 @@ public class Data {
         if (row < table.getItems().size() - 1) {
             table.getItems().add(row + 1, data);
             for (int i = row + 2; i < datasetValues.size(); i++) {
-                datasetValues.get(i).setIndex(i + 1);
+                datasetValues.get(i).setIndex(i);
             }
         } else {
             table.getItems().add(data);
@@ -309,7 +309,7 @@ public class Data {
         table.edit(row + 1, selectedColumn);
 
         // scroll to new row
-        table.scrollTo(row + 1);
+        table.scrollTo(row);
 
     }
 

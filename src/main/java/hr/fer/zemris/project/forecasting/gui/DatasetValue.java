@@ -70,7 +70,7 @@ public class DatasetValue implements Comparable<DatasetValue>{
     public static ObservableList<XYChart.Data<Integer, Double>> getChartData (ObservableList<DatasetValue> dataset){
         ObservableList<XYChart.Data<Integer, Double>> observableList = FXCollections.observableArrayList();
         for(int i = 0; i < dataset.size(); i++){
-            observableList.add(new XYChart.Data<>(i + 1, dataset.get(i).getValue()));
+            observableList.add(new XYChart.Data<>(i, dataset.get(i).getValue()));
             observableList.get(i).setNode(new HoveredThresholdNode(
                     observableList.get(i).getXValue(), observableList.get(i).getYValue()
             ));

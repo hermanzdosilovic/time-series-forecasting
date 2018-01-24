@@ -249,13 +249,13 @@ public class NeuralNetworkUI {
         table.setItems(data.getDatasetValues());
 
 
-        TableColumn<DatasetValue, Integer> indices = new TableColumn<>("Index");
+        TableColumn<DatasetValue, Integer> indices = new TableColumn<>("t");
         indices.setSortable(false);
         indices.setEditable(false);
         indices.setCellValueFactory(new PropertyValueFactory<>("index"));
         table.getColumns().add(indices);
 
-        TableColumn<DatasetValue, Double> values = new TableColumn("Value");
+        TableColumn<DatasetValue, Double> values = new TableColumn("x(t)");
         values.setSortable(false);
         values.setEditable(true);
         values.setCellValueFactory(new PropertyValueFactory<>("value"));

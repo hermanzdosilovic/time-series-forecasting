@@ -97,7 +97,7 @@ public class NeuralNetworkObservers {
                 mseSeries.setName("MSE");
             }
             double[] weights = solution.getRepresentative();
-            nn.setWeights(weights);
+            nn.setParameters(weights);
 
             for (int i = 0; i < nn.getInputSize(); ++i) {
                 outputList.get(i).setYValue(dataset.get(0).getInput()[i]);

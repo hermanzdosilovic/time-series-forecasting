@@ -5,7 +5,6 @@ import hr.fer.zemris.project.forecasting.gp.GeneticProgramming;
 import hr.fer.zemris.project.forecasting.gp.gui.IListener;
 import hr.fer.zemris.project.forecasting.gp.selections.Tournament;
 import hr.fer.zemris.project.forecasting.gp.tree.BinaryTree;
-import hr.fer.zemris.project.forecasting.gp.tree.Node;
 import hr.fer.zemris.project.forecasting.gp.values.ValueTypes;
 import hr.fer.zemris.project.forecasting.gp.values.biVariable.IDoubleBinaryOperatorGenerator;
 import hr.fer.zemris.project.forecasting.gp.values.terminating.ITerminatorGenerator;
@@ -72,9 +71,9 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
 
     private long lastUpdated;
 
-    private Button showResult;
+    private Button     showResult;
     private ValueTypes valueTypes;
-    private TextField offsetTF;
+    private TextField  offsetTF;
 
     public GeneticProgrammingUI(Data data) {
         this.data = data;
@@ -145,22 +144,26 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
             showResultStage.initModality(Modality.WINDOW_MODAL);
 
             TreeView<String> treeView = geneticProgramming.getBestSolution().toTreeView(true);
-            SwingNode node = new SwingNode();
+            SwingNode        node     = new SwingNode();
+
             node.setContent(geneticProgramming.getBestSolution().toJTree());
 
             Button treeViewButton = new Button("Pretty representation");
-            treeViewButton.setOnAction(createStage(treeView));
+            Stage  treeStage      = createStage(treeView);
+            treeViewButton.setOnAction(e -> treeStage.show());
 
-            Button swingButton = new Button("Ugly representation  ");
-            ScrollPane pane = new ScrollPane(node);
+            Button     swingButton = new Button("Ugly representation  ");
+            ScrollPane pane        = new ScrollPane(node);
             pane.setMaxSize(300, 300);
-            swingButton.setOnAction(createStage(pane));
+            Stage swing = createStage(pane);
+            swingButton.setOnAction(e -> swing.show());
 
-            Button labelButton = new Button("Text representation  ");
-            Label labelRepresentation = new Label(geneticProgramming.getBestSolution().toString());
-            ScrollPane pane2 = new ScrollPane(labelRepresentation);
+            Button     labelButton         = new Button("Text representation  ");
+            Label      labelRepresentation = new Label(geneticProgramming.getBestSolution().toString());
+            ScrollPane pane2               = new ScrollPane(labelRepresentation);
             pane2.setMaxSize(300, 300);
-            labelButton.setOnAction(createStage(pane2));
+            Stage labelStage = createStage(pane2);
+            labelButton.setOnAction(e -> labelStage.show());
 
             Label nodeNumber = new Label(
                 String.format("Number of nodes: %d", geneticProgramming.getBestSolution().getNodesSize()));
@@ -184,14 +187,12 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
         };
     }
 
-    private EventHandler<ActionEvent> createStage(Parent root) {
-        return event -> {
-            Stage stage = new Stage();
-            Scene scene = new Scene(root);
-            stage.initOwner(data.getPrimaryStage());
-            stage.setScene(scene);
-            stage.show();
-        };
+    private Stage createStage(Parent root) {
+        Stage stage = new Stage();
+        Scene scene = new Scene(root);
+        stage.initOwner(data.getPrimaryStage());
+        stage.setScene(scene);
+        return stage;
     }
 
     private void initializePredictionChart(Button start, Button predict) {
@@ -262,7 +263,7 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
                 new Thread(() -> {
                     try {
                         geneticProgramming.addListener(this);
-                        BinaryTree            solution = geneticProgramming.start();
+                        BinaryTree solution = geneticProgramming.start();
                         Platform.runLater(() -> {
                             start.setDisable(false);
                             stop.setDisable(true);
@@ -324,7 +325,7 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
             Label     mutationProbabilityL  = new Label("Probability of mutation:");
             TextField mutationProbabilityTF = new TextField(gpForm.getMutationProbability());
 
-            Label     offsetL  = new Label("Number of past values used (offset):");
+            Label offsetL = new Label("Number of past values used (offset):");
             offsetTF = new TextField(gpForm.getOffset());
 
             CheckBox useElitismCB = new CheckBox("Use elitism?");
@@ -477,7 +478,7 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
 
             TerminatingForm terminatingForm = TerminatingForm.getInstance();
             UniVariableForm uniVariableForm = UniVariableForm.getInstance();
-            BiVariableForm biVariableForm = BiVariableForm.getInstance();
+            BiVariableForm  biVariableForm  = BiVariableForm.getInstance();
 
             CheckBox inputCB = new CheckBox("X");
             inputCB.setSelected(terminatingForm.isInput());
@@ -612,7 +613,9 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
                     terminatingForm.setMinInput(minXCB.isSelected());
                     terminatingForm.setPi(piCB.isSelected());
                     terminatingForm.setEuler(eulerCB.isSelected());
-                    List<ITerminatorGenerator> terminators = terminatingForm.getAsList(Integer.parseInt(offsetTF.getText()));
+                    List<ITerminatorGenerator>
+                        terminators =
+                        terminatingForm.getAsList(Integer.parseInt(offsetTF.getText()));
 
                     uniVariableForm.setSin(sinCB.isSelected());
                     uniVariableForm.setLog(logCB.isSelected());
@@ -683,9 +686,9 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
 
     @Override public void newBest(BinaryTree best, Integer iter) {
         Platform.runLater(() -> {
-            Map<String, double[]> data = geneticProgramming.getForecastedData(best);
-            double[] forecasted = obtainForecasted(data);
-            String key = "Forecasted";
+            Map<String, double[]> data       = geneticProgramming.getForecastedData(best);
+            double[]              forecasted = obtainForecasted(data);
+            String                key        = "Forecasted";
             if (predictionChart.getData().size() == 1) {
                 predictionSeries = new XYChart.Series(key, DatasetValue.getChartData(
                     FXCollections.observableArrayList(DatasetValue.encapsulateDoubleArray(forecasted))));
@@ -707,7 +710,7 @@ public class GeneticProgrammingUI implements IListener<BinaryTree> {
     }
 
     private double[] obtainForecasted(Map<String, double[]> data) {
-        double[] forecasted = data.get("Forecasted");
+        double[]     forecasted   = data.get("Forecasted");
         DatasetEntry datasetEntry = geneticProgramming.returnFirst();
         return ArrayUtils.addAll(
             datasetEntry.getInput(),

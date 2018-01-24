@@ -51,35 +51,35 @@ public class Correction implements IHFunction {
         for (int i = 0; i < a.length; i++) {
             error[i] = a[i];
 
-            for (int j = 1; j <= p; j++) {
+            for (int j = 0; j < p; j++) {
                 if (i - j >= 0)
-                    error[i] -= vector.get(j - 1, 0) * u[i - j];
+                    error[i] -= vector.get(j, 0) * u[i - j];
             }
 
-            for (int j = 1; j <= q; j++) {
+            for (int j = 0; j < q; j++) {
                 if (i - j >= 0)
-                    error[i] -= vector.get(j - 1 + p, 0) * v[i - j];
+                    error[i] -= vector.get(j + p, 0) * v[i - j];
             }
         }
 
-        for (int i = 1; i <= p; i++) {
+        for (int i = 0; i < p; i++) {
             double diff = 0;
             for (int j = 0; j < a.length; j++) {
                 if (j - i >= 0)
                     diff -= 2 * u[j - i] * error[j];
 
             }
-            grad.set(i - 1, 0, diff);
+            grad.set(i, 0, diff);
         }
 
-        for (int i = 1; i <= q; i++) {
+        for (int i = 0; i < q; i++) {
             double diff = 0;
             for (int j = 0; j < a.length; j++) {
                 if (j - i >= 0)
                     diff -= 2 * v[j - i] * error[j];
 
             }
-            grad.set(i - 1 + p, 0, diff);
+            grad.set(i + p, 0, diff);
         }
         return grad;
     }
@@ -142,9 +142,9 @@ public class Correction implements IHFunction {
             }
         }
 
-        for (int i = 1; i <= q; i++) {
+        for (int i = 0; i < q; i++) {
 
-            for (int j = 1; j <= q; j++) {
+            for (int j = 0; j < q; j++) {
 
                 double diff = 0;
 
@@ -156,7 +156,7 @@ public class Correction implements IHFunction {
 
                 }
 
-                hess.set(i - 1 + p, j - 1 + p, diff);
+                hess.set(i + p, j + p, diff);
             }
         }
 

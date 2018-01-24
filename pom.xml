@@ -23,6 +23,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.codefx.libfx/LibFX -->
+        <dependency>
+            <groupId>org.codefx.libfx</groupId>
+            <artifactId>LibFX</artifactId>
+            <version>0.3.0</version>
+        </dependency>
+
         <!-- https://mvnrepository.com/artifact/gov.nist.math/jama -->
         <dependency>
             <groupId>gov.nist.math</groupId>

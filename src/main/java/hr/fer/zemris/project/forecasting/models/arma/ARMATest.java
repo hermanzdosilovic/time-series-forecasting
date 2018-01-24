@@ -1,42 +1,40 @@
 package hr.fer.zemris.project.forecasting.models.arma;
 
+import hr.fer.zemris.project.forecasting.util.DataReaderUtil;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 
 public class ARMATest {
 
     public static void main(String[] args) {
         double[] dataset;
+
         try {
-            List<String> b = Files.readAllLines(
-                Paths.get("C:\\Users\\JARVIS\\workspace\\ARMA\\target\\ARDataset.txt"));
-            int i = 0;
-            dataset = new double[b.size()];
-            for (String s : b) {
-                double value = Double.parseDouble(s.split(" ")[4]);
-                //					int k = (int)(value * 100);
-                //					int l = k % 1000;
-                //					value = l / 100.;
-                dataset[i] = value;
-                //					System.out.println(value + ",");
-                i++;
-            }
+            dataset = DataReaderUtil.readDataset("datasets/exchange-rate-twi-may-1970-aug-1.csv");
+
         } catch (IOException e) {
             System.out.println(e);
             return;
         }
+//
+        double[] backupDataset = dataset.clone();
+        ARMA arma = new ARMA(0, 2, dataset, false);
 
-        ARMA arma = new ARMA(5, 0, dataset, false);
 
-        List<Double> armaForecast = arma.forecast(100);
-        System.out.println(armaForecast.size());
-        System.out.println(armaForecast);
-
-        armaForecast = arma.forecast(100);
-        System.out.println(armaForecast.size());
-        System.out.println(armaForecast);
-
+        for(int i = 0; i < backupDataset.length; i++){
+            System.out.println(backupDataset[i] - arma.testDataset()[i]);
+        }
+//
+//        List<Double> armaForecast = arma.forecast(100);
+//        System.out.println(armaForecast.size());
+//        System.out.println(armaForecast);
+//
+//        armaForecast = arma.forecast(100);
+//        System.out.println(armaForecast.size());
+//        System.out.println(armaForecast);
     }
 }

@@ -1,6 +1,7 @@
 package hr.fer.zemris.project.forecasting.nn.util;
 
 import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
+import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 import hr.fer.zemris.project.forecasting.util.GraphUtil;
 import hr.fer.zemris.project.forecasting.util.Pair;
 
@@ -8,11 +9,11 @@ import java.util.*;
 
 public final class NeuralNetworkUtil {
 
-    public static double[] forward(INeuralNetwork neuralNetwork, List<DataEntry> tdnnDataset) {
+    public static double[] forward(INeuralNetwork neuralNetwork, List<DatasetEntry> tdnnDataset) {
         int      offset = 0;
         double[] output = new double[tdnnDataset.size() * neuralNetwork.getOutputSize()];
 
-        for (DataEntry entry : tdnnDataset) {
+        for (DatasetEntry entry : tdnnDataset) {
             double[] results = (neuralNetwork.forward(entry.getInput()));
             for (double result : results) {
                 output[offset++] = result;
@@ -33,14 +34,14 @@ public final class NeuralNetworkUtil {
         );
     }
 
-    public static List<DataEntry> createTDNNDateset(
+    public static List<DatasetEntry> createTDNNDateset(
         double[] dataset,
         int inputSize,
         int outputSize
     ) {
-        List<DataEntry> tdnnDataset = new ArrayList<>(dataset.length - inputSize - outputSize + 1);
+        List<DatasetEntry> tdnnDataset = new ArrayList<>(dataset.length - inputSize - outputSize + 1);
         for (int i = inputSize; i <= dataset.length - outputSize; i++) {
-            tdnnDataset.add(new DataEntry(
+            tdnnDataset.add(new DatasetEntry(
                 Arrays.copyOfRange(dataset, i - inputSize, i),
                 Arrays.copyOfRange(dataset, i, i + outputSize)
             ));
@@ -49,8 +50,8 @@ public final class NeuralNetworkUtil {
         return tdnnDataset;
     }
 
-    public static Pair<List<DataEntry>, List<DataEntry>> splitTDNNDataset(
-        List<DataEntry> dataset,
+    public static Pair<List<DatasetEntry>, List<DatasetEntry>> splitTDNNDataset(
+        List<DatasetEntry> dataset,
         double trainPercentage
     ) {
         int trainSize = (int) (dataset.size() * trainPercentage);
@@ -61,12 +62,12 @@ public final class NeuralNetworkUtil {
     }
 
 
-    public static double[] joinExpectedValues(List<DataEntry> tdnnDataset) {
+    public static double[] joinExpectedValues(List<DatasetEntry> tdnnDataset) {
         int      offset       = 0;
-        double[] joinedValues = new double[tdnnDataset.size() * tdnnDataset.get(0).getExpectedOutput().length];
+        double[] joinedValues = new double[tdnnDataset.size() * tdnnDataset.get(0).getOutput().length];
 
-        for (DataEntry dataEntry : tdnnDataset) {
-            double[] entries = dataEntry.getExpectedOutput();
+        for (DatasetEntry dataEntry : tdnnDataset) {
+            double[] entries = dataEntry.getOutput();
             for (double entry : entries) {
                 joinedValues[offset++] = entry;
             }
@@ -75,7 +76,7 @@ public final class NeuralNetworkUtil {
         return joinedValues;
     }
 
-    public static void plot(String graphName, INeuralNetwork neuralNetwork, List<DataEntry> dataset) {
+    public static void plot(String graphName, INeuralNetwork neuralNetwork, List<DatasetEntry> dataset) {
         double[] expectedValues  = NeuralNetworkUtil.joinExpectedValues(dataset);
         double[] predictedValues = NeuralNetworkUtil.forward(neuralNetwork, dataset);
 

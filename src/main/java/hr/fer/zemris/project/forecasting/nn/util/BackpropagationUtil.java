@@ -3,6 +3,7 @@ package hr.fer.zemris.project.forecasting.nn.util;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
 
 import java.util.Arrays;
 import java.util.List;
@@ -45,10 +46,18 @@ public class BackpropagationUtil {
                 batches[i] = trainingSet.subList(i * batchSize, (i + 1) * batchSize);
             } else {
                 int len = trainingSet.size() % batchSize;
-                len = len == 0 ? 32 : len;
+                len = len == 0 ? batchSize : len;
                 batches[i] = trainingSet.subList(i * batchSize, i * batchSize + len);
             }
         }
         return batches;
+    }
+
+    public static double calculateSetMSE(RealVector mseVector, int size) {
+        double mse = 0;
+        for (int j = 0; j < mseVector.getDimension(); ++j) {
+            mse += mseVector.getEntry(j);
+        }
+        return mse / size;
     }
 }

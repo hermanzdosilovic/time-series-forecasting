@@ -1,7 +1,12 @@
 package hr.fer.zemris.project.forecasting.nn;
 
+import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.AbstractMetaheuristic;
+import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.util.IObserver;
+import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.ISolution;
+import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.SimpleSolution;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.activations.IActivation;
+import com.dosilovic.hermanzvonimir.ecfjava.neural.errors.NNErrorUtil;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
@@ -14,7 +19,7 @@ import java.util.List;
 
 import static hr.fer.zemris.project.forecasting.nn.util.BackpropagationUtil.*;
 
-public class Backpropagation {
+public class Backpropagation extends AbstractMetaheuristic<double[]> {
 
     private List<DatasetEntry> trainingSet;
     private List<DatasetEntry> validationSet;
@@ -22,27 +27,45 @@ public class Backpropagation {
     private long maxIteration;
     private double desiredError;
     private double desiredPrecision;
-    private long currentIteration;
+    private long currentIteration = 1;
     private double trainingMSE;
     private double validationMSE;
+    private INeuralNetwork neuralNetwork;
+    private int batchSize;
+    private List<IObserver<double[]>> observers = new ArrayList<>();
+    private DatasetEntry[] datasetArray;
 
-    private List<BackpropagationObserver> observers = new ArrayList<>();
-
-    public Backpropagation(List<DatasetEntry> trainingSet, List<DatasetEntry> validationSet, double learningRate,
-                           long maxIteration, double desiredError, double desiredPrecision) {
+    public Backpropagation(List<DatasetEntry> trainingSet, List<DatasetEntry> validationSet,
+                           double learningRate, long maxIteration, double desiredError,
+                           double desiredPrecision, INeuralNetwork neuralNetwork, int batchSize) {
         this.trainingSet = trainingSet;
         this.validationSet = validationSet;
         this.learningRate = learningRate;
         this.maxIteration = maxIteration;
         this.desiredError = desiredError;
         this.desiredPrecision = desiredPrecision;
+        this.neuralNetwork = neuralNetwork;
+        this.batchSize = batchSize;
+        datasetArray = new DatasetEntry[trainingSet.size() + validationSet.size()];
+        List<DatasetEntry> dataset = new ArrayList<>(trainingSet);
+        dataset.addAll(trainingSet);
+        datasetArray = dataset.toArray(datasetArray);
     }
 
-    public void train(INeuralNetwork neuralNetwork, int batchSize) {
+    @Override
+    public ISolution<double[]> run() {
+        if(isStopped.get()){
+            isStopped.set(false);
+        }
+
         List<DatasetEntry>[] batches = createBatches(batchSize, trainingSet);
         RealMatrix[] layerOutputs = new RealMatrix[neuralNetwork.getNumberOfLayers()];
 
-        for (currentIteration = 1; currentIteration <= maxIteration; ++currentIteration) {
+        while (currentIteration <= maxIteration) {
+            if(isStopped.get()){
+                break;
+            }
+
             RealVector trainingMse = new ArrayRealVector(neuralNetwork.getOutputSize());
             for (List<DatasetEntry> batch : batches) {
                 RealMatrix outputMatrix = new Array2DRowRealMatrix(batch.size(), neuralNetwork.getOutputSize());
@@ -74,29 +97,36 @@ public class Backpropagation {
                 RealMatrix forecastMatrix = layerOutputs[layerOutputs.length - 1];
                 RealMatrix outputDeltaMatrix = outputMatrix.subtract(forecastMatrix);
                 for (int k = 0; k < outputDeltaMatrix.getRowDimension(); ++k) {
-                    trainingMse = trainingMse.add(outputDeltaMatrix.getRowVector(k));
+                    trainingMse = trainingMse.add(outputDeltaMatrix.getRowVector(k)
+                            .ebeMultiply(outputDeltaMatrix.getRowVector(k)));
                 }
                 doBackpropagation(neuralNetwork, outputDeltaMatrix, layerOutputs);
             }
-            trainingMSE = trainingMse.dotProduct(trainingMse) / trainingSet.size();
+            trainingMSE = calculateSetMSE(trainingMse, trainingSet.size());
 
             RealVector validationMse = new ArrayRealVector(neuralNetwork.getOutputSize());
             for (DatasetEntry entry : validationSet) {
                 RealVector forecast = new ArrayRealVector(neuralNetwork.forward(entry.getInput()));
                 RealVector expected = new ArrayRealVector(entry.getOutput());
-                validationMse = validationMse.add(expected.subtract(forecast));
+                RealVector delta = expected.subtract(forecast);
+                validationMse = validationMse.add(delta.ebeMultiply(delta));
             }
             double validationSetMse = validationMSE;
-            validationMSE = validationMse.dotProduct(validationMse) / validationSet.size();
+            validationMSE = calculateSetMSE(validationMse, validationSet.size());
 
-            notifyObservers();
-            System.err.println("iteration: " + currentIteration + " training set mse: " + trainingMSE
-                    + " validation set mse: " + validationMSE);
+            double datasetError = NNErrorUtil.meanSquaredError(neuralNetwork, datasetArray);
+            bestSolution.setFitness(datasetError);
+            System.err.println("Iter: #" + currentIteration + ":\n\t train mse: " + trainingMSE
+                    + "\n\t validation mse: " + validationMSE + "\n\t dataset mse: " + datasetError);
             if ((validationSetMse < validationMSE && currentIteration > maxIteration / 2)
                     || Math.abs(trainingMSE - desiredError) < desiredPrecision) {
                 break;
             }
+
+            notifyObservers();
+            ++currentIteration;
         }
+        return bestSolution;
     }
 
     private void doBackpropagation(INeuralNetwork neuralNetwork, RealMatrix outputDeltaMatrix, RealMatrix[] allLayerOutputs) {
@@ -153,9 +183,9 @@ public class Backpropagation {
             }
         }
         double[] weights = extractWeights(layerWeights, neuralNetwork.getNumberOfWeights());
+        bestSolution = new SimpleSolution<>(weights);
         neuralNetwork.setWeights(weights);
     }
-
 
     public List<DatasetEntry> getTrainingSet() {
         return trainingSet;
@@ -193,15 +223,4 @@ public class Backpropagation {
         return validationMSE;
     }
 
-    private void notifyObservers() {
-        observers.forEach(o -> o.update(this));
-    }
-
-    public void addObserver(BackpropagationObserver observer) {
-        observers.add(observer);
-    }
-
-    public void removeObserver(BackpropagationObserver observer) {
-        observers.remove(observer);
-    }
 }

@@ -1,5 +1,7 @@
 package hr.fer.zemris.project.forecasting.models.arma;
 
+import hr.fer.zemris.project.forecasting.util.DataUtil;
+
 import java.util.Arrays;
 
 public class Dataset {
@@ -8,17 +10,14 @@ public class Dataset {
     private double[] dataset;
     private double[] datasetBackup;
 
-    public Dataset(double[] dataset) {
-        datasetBackup = dataset.clone();
+    public Dataset(double[] dataset, boolean differenced) {
         this.dataset = dataset;
-        double sum = 0;
-        for (double d : dataset) {
-            sum += d;
-        }
-        this.mean = sum / dataset.length;
+        mean = DataUtil.getMean(dataset);
+        if(differenced) mean = 0;
         for (int i = 0; i < dataset.length; i++) {
             this.dataset[i] -= mean;
         }
+        datasetBackup = dataset.clone();
     }
 
     public double getMean() {

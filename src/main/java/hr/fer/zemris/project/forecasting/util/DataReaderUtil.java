@@ -17,12 +17,24 @@ public final class DataReaderUtil {
 
         for (int i = 0, n = dataset.size(); i < n; ++i) {
             String[] data  = dataset.get(i).trim().split(String.format("[%s]", delimiter));
-            int      index = (indexOfValue == LAST_VALUE_INDICATOR ? data.length - 1 : indexOfValue);
-
+            int      index = checkIndex(indexOfValue, data.length - 1);
             result[i] = Double.parseDouble(data[index].trim());
         }
 
         return result;
+    }
+
+    private static int checkIndex(int indexOfValue, int max) {
+        if (indexOfValue == LAST_VALUE_INDICATOR) {
+            return max;
+        }
+        if (indexOfValue < 0) {
+            return 0;
+        }
+        if (indexOfValue > max) {
+            return max;
+        }
+        return indexOfValue;
     }
 
     public static double[] readDataset(Path path, Integer indexOfValue) throws IOException {

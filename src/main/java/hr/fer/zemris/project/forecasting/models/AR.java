@@ -9,20 +9,22 @@ import org.apache.commons.math3.linear.RealVector;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AR {
+public class AR extends AModel {
 
     /* Order of AR model */
     private int p;
 
     private List<Double> data;
 
+    double[] coefficients;
+
     public AR(int p, List<Double> data) {
         this.p = p;
         this.data = new ArrayList<>(data);
+        coefficients = YuleWalker(data, p);
     }
 
     public double computeNextValue() {
-        double[] coefficients = YuleWalker(data, p);
         double   nextValue    = computeValue(coefficients, data.size());
 
         double[] error = computeErrorArray(coefficients);
@@ -33,12 +35,18 @@ public class AR {
         return nextValue;
     }
 
-    public List<Double> computeNextValues(int number) {
-        List<Double> result = new ArrayList<>();
-        for (int i = 0; i < number; i++) {
-            result.add(computeNextValue());
+    @Override
+    public double[] getCoeffs() {
+        return coefficients;
+    }
+
+    @Override
+    public double[] testDataset() {
+        double[] test = new double[data.size()];
+        for(int i = p; i < data.size(); i++){
+            test[i] = computeValue(coefficients, i);
         }
-        return result;
+        return test;
     }
 
     public List<Double> getData() {

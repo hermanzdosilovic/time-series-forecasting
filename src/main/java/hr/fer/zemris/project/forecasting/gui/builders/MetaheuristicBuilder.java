@@ -31,7 +31,7 @@ import com.dosilovic.hermanzvonimir.ecfjava.numeric.IFunction;
 import com.dosilovic.hermanzvonimir.ecfjava.util.DatasetEntry;
 import hr.fer.zemris.project.forecasting.gui.AlgorithmsGUI;
 import hr.fer.zemris.project.forecasting.gui.forms.annForms.*;
-import hr.fer.zemris.project.forecasting.nn.Backpropagation;
+import hr.fer.zemris.project.forecasting.nn.backpropagation.Backpropagation;
 
 import java.util.Collection;
 import java.util.List;

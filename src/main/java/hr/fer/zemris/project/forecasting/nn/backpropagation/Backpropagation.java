@@ -1,7 +1,5 @@
-package hr.fer.zemris.project.forecasting.nn;
+package hr.fer.zemris.project.forecasting.nn.backpropagation;
 
-import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.AbstractMetaheuristic;
-import com.dosilovic.hermanzvonimir.ecfjava.metaheuristics.util.IObserver;
 import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.ISolution;
 import com.dosilovic.hermanzvonimir.ecfjava.models.solutions.SimpleSolution;
 import com.dosilovic.hermanzvonimir.ecfjava.neural.INeuralNetwork;
@@ -13,43 +11,19 @@ import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import static hr.fer.zemris.project.forecasting.nn.util.BackpropagationUtil.*;
 
-public class Backpropagation extends AbstractMetaheuristic<double[]> {
-
-    private List<DatasetEntry> trainingSet;
-    private List<DatasetEntry> validationSet;
-    private double learningRate;
-    private long maxIteration;
-    private double desiredError;
-    private double desiredPrecision;
-    private long currentIteration = 1;
-    private double trainingMSE;
-    private double validationMSE;
-    private INeuralNetwork neuralNetwork;
-    private int batchSize;
-    private List<IObserver<double[]>> observers = new ArrayList<>();
-    private DatasetEntry[] datasetArray;
+public class Backpropagation extends AbstractBackpropagation {
 
     public Backpropagation(List<DatasetEntry> trainingSet, List<DatasetEntry> validationSet,
                            double learningRate, long maxIteration, double desiredError,
                            double desiredPrecision, INeuralNetwork neuralNetwork, int batchSize) {
-        this.trainingSet = trainingSet;
-        this.validationSet = validationSet;
-        this.learningRate = learningRate;
-        this.maxIteration = maxIteration;
-        this.desiredError = desiredError;
-        this.desiredPrecision = desiredPrecision;
-        this.neuralNetwork = neuralNetwork;
-        this.batchSize = batchSize;
-        datasetArray = new DatasetEntry[trainingSet.size() + validationSet.size()];
-        List<DatasetEntry> dataset = new ArrayList<>(trainingSet);
-        dataset.addAll(trainingSet);
-        datasetArray = dataset.toArray(datasetArray);
+
+        super(trainingSet, validationSet, learningRate, maxIteration,
+                desiredError, desiredPrecision, neuralNetwork, batchSize);
     }
 
     @Override
@@ -58,7 +32,7 @@ public class Backpropagation extends AbstractMetaheuristic<double[]> {
         RealMatrix[] layerOutputs = new RealMatrix[neuralNetwork.getNumberOfLayers()];
 
         while (currentIteration <= maxIteration) {
-            if(isStopped.get()){
+            if (isStopped.get()) {
                 break;
             }
 
@@ -182,41 +156,4 @@ public class Backpropagation extends AbstractMetaheuristic<double[]> {
         bestSolution = new SimpleSolution<>(weights);
         neuralNetwork.setWeights(weights);
     }
-
-    public List<DatasetEntry> getTrainingSet() {
-        return trainingSet;
-    }
-
-    public List<DatasetEntry> getValidationSet() {
-        return validationSet;
-    }
-
-    public double getLearningRate() {
-        return learningRate;
-    }
-
-    public long getMaxIteration() {
-        return maxIteration;
-    }
-
-    public double getDesiredError() {
-        return desiredError;
-    }
-
-    public double getDesiredPrecision() {
-        return desiredPrecision;
-    }
-
-    public long getCurrentIteration() {
-        return currentIteration;
-    }
-
-    public double getTrainingMSE() {
-        return trainingMSE;
-    }
-
-    public double getValidationMSE() {
-        return validationMSE;
-    }
-
 }

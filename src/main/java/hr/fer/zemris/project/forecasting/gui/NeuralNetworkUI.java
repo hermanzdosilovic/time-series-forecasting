@@ -21,7 +21,7 @@ import hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.RealVectorSt
 import hr.fer.zemris.project.forecasting.gui.builders.MetaheuristicBuilder;
 import hr.fer.zemris.project.forecasting.gui.builders.NeuralNetworkBuilder;
 import hr.fer.zemris.project.forecasting.gui.forms.annForms.NeuralNetworkForm;
-import hr.fer.zemris.project.forecasting.nn.Backpropagation;
+import hr.fer.zemris.project.forecasting.nn.backpropagation.Backpropagation;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;

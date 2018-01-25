@@ -21,7 +21,7 @@ import hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.RealVectorSt
 import hr.fer.zemris.project.forecasting.gui.builders.MetaheuristicBuilder;
 import hr.fer.zemris.project.forecasting.gui.builders.NeuralNetworkBuilder;
 import hr.fer.zemris.project.forecasting.gui.forms.annForms.NeuralNetworkForm;
-import hr.fer.zemris.project.forecasting.nn.Backpropagation;
+import hr.fer.zemris.project.forecasting.nn.backpropagation.Backpropagation;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -54,6 +54,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static hr.fer.zemris.project.forecasting.gui.Data.*;
 import static hr.fer.zemris.project.forecasting.gui.DatasetValue.getChartData;
 import static hr.fer.zemris.project.forecasting.gui.GUIUtil.*;
+import static hr.fer.zemris.project.forecasting.gui.NeuralNetworkObservers.GraphObserver.MAX_PLOTTING_VALUE;
 
 public class NeuralNetworkUI {
 
@@ -394,8 +395,12 @@ public class NeuralNetworkUI {
                         predictions[nnInputSize - 1] = dataset.get(dataset.size() - 1).getOutput()[0];
                         for (int i = 0; i < predictions.length - nnInputSize; ++i) {
                             double[] input = Arrays.copyOfRange(predictions, i, i + nnInputSize);
-                            double[] expected = neuralNetwork.get().forward(input);
-                            predictions[i + nnInputSize] = expected[0];
+                            double[] forecast = neuralNetwork.get().forward(input);
+                            forecast[0] = forecast[0] > MAX_PLOTTING_VALUE || Double.isNaN(forecast[0])
+                                    || Double.isInfinite(forecast[0]) ? MAX_PLOTTING_VALUE : forecast[0];
+                            forecast[0] = forecast[0] < -MAX_PLOTTING_VALUE || Double.isNaN(forecast[0])
+                                    || Double.isInfinite(forecast[0]) ? -MAX_PLOTTING_VALUE : forecast[0];
+                            predictions[i + nnInputSize] = forecast[0];
                         }
                         ObservableList<DatasetValue> observableList = FXCollections.observableList(
                                 DatasetValue.encapsulateDoubleArray(Arrays.copyOfRange(predictions, nnInputSize, predictions.length)));

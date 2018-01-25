@@ -1,9 +1,10 @@
 package hr.fer.zemris.project.forecasting.util;
 
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 public final class DataReaderUtil {
@@ -11,17 +12,29 @@ public final class DataReaderUtil {
     private static final int    LAST_VALUE_INDICATOR = -1;
     private static final String DEFAULT_DELIMITER    = ",";
 
-    public static double[] readDataset(Path path, Integer indexOfValue, String delimiter) throws IOException {
-        List<String> dataset = Files.readAllLines(path);
-        double[]     result  = new double[dataset.size()];
+    public static double[] readDataset(InputStream inputStream, Integer indexOfValue, String delimiter) throws IOException {
+        BufferedReader reader  = new BufferedReader(new InputStreamReader(inputStream));
 
-        for (int i = 0, n = dataset.size(); i < n; ++i) {
-            String[] data  = dataset.get(i).trim().split(String.format("[%s]", delimiter));
+        List<Double> dataset = new ArrayList<>();
+
+        String line;
+        while( (line = reader.readLine()) != null) {
+            String[] data  = line.trim().split(String.format("[%s]", delimiter));
             int      index = checkIndex(indexOfValue, data.length - 1);
-            result[i] = Double.parseDouble(data[index].trim());
+            dataset.add(Double.parseDouble(data[index].trim()));
+        }
+
+        Double[] doubleResult = dataset.toArray(new Double[dataset.size()]);
+        double[] result = new double[doubleResult.length];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = doubleResult[i];
         }
 
         return result;
+    }
+
+    public static double[] readDataset(Path path, Integer indexOfValue, String delimiter) throws IOException {
+        return readDataset(new FileInputStream(path.toFile()), indexOfValue, delimiter);
     }
 
     private static int checkIndex(int indexOfValue, int max) {
@@ -63,5 +76,9 @@ public final class DataReaderUtil {
 
     public static double[] readDataset(String path) throws IOException {
         return readDataset(Paths.get(path));
+    }
+
+    public static double[] readDataset(InputStream inputStream) throws IOException {
+        return readDataset(inputStream, LAST_VALUE_INDICATOR, DEFAULT_DELIMITER);
     }
 }

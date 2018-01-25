@@ -18,6 +18,7 @@
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
+  <link rel="icon" href="favicon.ico"/>
 </head>
 <body>
 <header>
@@ -31,6 +32,28 @@
 <p>Vremenska serija poredani je niz podataka <span class="math inline">\(x(t),\ t \geq 0\)</span> gdje je <span class="math inline">\(x(t)\)</span> tipično skalarna vrijednost.</p>
 <p>Problem predikcije vremenske serije jest problem predviđanja jedne ili više sljedećih vrijednosti na temelju prethodno viđenih vrijednosti.</p>
 <p>U okviru ovog projekta razvili smo aplikaciju za predviđanje vremenskih serija koristeći statističke modele, modele temeljene na umjetnim neuronskim mrežama i model temeljen na genetskom programiranju.</p>
+<h2 id="opis-rješenja">Opis rješenja</h2>
+<h3 id="razvijeni-modeli">Razvijeni modeli</h3>
+<p>Od statističkih modela implementirali smo AR (<em>Auto regressive</em>) i MA (<em>Moving average</em>) modele.</p>
+<p>Implementirali smo dvije umjetne neuronske mreže: umjetnu neuronsku mrežu s vremenskim odmakom (engl. <em>Time Delay Neural Network</em>, skraćeno <em>TDNN</em>) i Elmanovu neuronsku mrežu. <em>TDNN</em> je ustvari potpuno povezana unaprijedna neuronska mreža koja na ulaz dobiva <span class="math inline">\(n\)</span> prošlih vrijednosti, a na izlazu daje jednu ili više vrijednosti koje predviđa.</p>
+<p>U genetskom programiranju koristimo stablo operatora kako bi pronašli izraz koji najbolje predviđa zadanu vremensku seriju.</p>
+<h3 id="treniranje-umjetne-neuronske-mreže">Treniranje umjetne neuronske mreže</h3>
+<p>Umjetne neuronske mreže možemo trenirati s četiri metaheuristike: simulranim kaljenjem, populacijskim genetskim algoritmom, genetskim algoritmom sa selekcijom potomstva (engl. <em>Offspring selection genetic algorithm</em>) i optimizacijom roja čestica (engl. <em>Particle swarm optimization</em>). Osim metaheuristika, implementirali smo algoritam unazadne propagacije (engl. <em>Backpropagation</em>).</p>
+<h3 id="prikaz-rješenja-metaheuristike">Prikaz rješenja metaheuristike</h3>
+<p>Metaheuristike traže parametre umjetne neuronske mreže. Parametri umjetne neuronske mreže s vremenskim odmakom su njezine težine, a parametri Elmanove neuronske mreže su njezine težine i početne vrijednosti kontekstnog sloja.</p>
+<p>Rješenje metaheuristike je vektor realnih brojeva koji sadrži parametre umjetne neuronske mreže. Broj komponenti vektora rješenja jednak je broju parametara umjetne neuronske mreže.</p>
+<p>Kaznu rješenja definirali smo kao srednju kvadratnu pogrešku koju umjetna neuronska mreža ostvaruje nad ulaznim skupom podataka. Dobrotu rješenja definirali smo kao negativnu kaznu.</p>
+<h4 id="simulirano-kaljenje">Simulirano kaljenje</h4>
+<p>Simulirano kaljenje koristi geometrijsko hlađenje. Susjede generiramo dodavanjem slučajnog broja, iz Gaussove razdiobe, na trenutnu vrijednost komponente rješenja.</p>
+<p>Korisnik kroz sučelje može odabrati početnu i završnu temperaturu hlađenja, te može unesti proizvoljan parametar <span class="math inline">\(\sigma\)</span> Gaussove razdiobe.</p>
+<h4 id="genetski-algoritam">Genetski algoritam</h4>
+<p>Implementirali smo populacijski genetski algoritam koristeći turnirsku selekciju, <em>BLX</em>-<span class="math inline">\(\alpha\)</span> križanje i mutaciju Gaussovom razdiobom.</p>
+<h4 id="optimizacija-rojem-čestica">Optimizacija rojem čestica</h4>
+<p>Koristimo jednostavnu regulaciju brzine čestice. Čestica može biti potpuno ili djelomično informirana u potpuno povezanoj topologiji.</p>
+<h3 id="algoritam-unazadne-propagacije">Algoritam unazadne propagacije</h3>
+<p>Korisnik može odabrati proizvoljan broj iteracija. Treniranje može biti grupno ili pojedinačno, te se može koristiti proizvoljna stopa učenja <span class="math inline">\(\mu\)</span>.</p>
+<h3 id="genetsko-programiranje">Genetsko programiranje</h3>
+<p>U stablo operatora koje predstavlja izraz s kojim predviđamo vremensku seriju mutiramo i križamo njegova podstabla.</p>
 <h2 id="članovi-tima">Članovi tima</h2>
 <table style="width:15%;">
 <colgroup>
@@ -57,22 +80,46 @@
 </tbody>
 </table>
 <h2 id="preuzimanja">Preuzimanja</h2>
-<p><a href="https://github.com/hermanzdosilovic/time-series-forecasting">Izvorni kôd</a></p>
-<p><a href="https://github.com/hermanzdosilovic/time-series-forecasting/raw/master/time-series-forecasting.jar">Izvršni kôd</a></p>
-<p><a href="https://github.com/hermanzdosilovic/time-series-forecasting/raw/master/dokumentacija.pdf">Dokumentacija</a></p>
-<p><a href="https://github.com/hermanzdosilovic/time-series-forecasting/raw/master/prezentacija.pdf">Prezentacija</a></p>
-<p><a href="https://github.com/hermanzdosilovic/time-series-forecasting/raw/master/upute.pdf">Korisničke upute</a></p>
+<ul>
+<li><p>Izvorni kôd (<a href="https://github.com/hermanzdosilovic/time-series-forecasting/archive/master.zip">zip</a>)</p></li>
+<li><p>Izvršni kôd (<a href="https://github.com/hermanzdosilovic/time-series-forecasting/raw/master/time-series-forecasting.jar">jar</a>)</p></li>
+<li><p>Dokumentacija (<a href="https://github.com/hermanzdosilovic/time-series-forecasting/raw/master/dokumentacija.pdf">pdf</a>)</p></li>
+<li><p>Prezentacija (<a href="https://github.com/hermanzdosilovic/time-series-forecasting/raw/master/prezentacija.pdf">pdf</a>)</p></li>
+<li><p>Korisničke upute (<a href="https://github.com/hermanzdosilovic/time-series-forecasting/raw/master/upute.pdf">pdf</a>)</p></li>
+</ul>
 <h2 id="slike">Slike</h2>
+<div class="center">
 <figure>
-<img src="images/screenshot01.png" alt="Slika 1: Učitavanje vremenske serije" /><figcaption>Slika 1: Učitavanje vremenske serije</figcaption>
+<img src="images/screenshot00.png" alt="Slika 1: Učitavanje vremenske serije" /><figcaption>Slika 1: Učitavanje vremenske serije</figcaption>
 </figure>
 <figure>
-<img src="images/screenshot02.png" alt="Slika 2: Odabir statističke metode za predviđanje" /><figcaption>Slika 2: Odabir statističke metode za predviđanje</figcaption>
+<img src="images/screenshot01.png" alt="Slika 2: Odabir statističkog modela za predviđanje" /><figcaption>Slika 2: Odabir statističkog modela za predviđanje</figcaption>
 </figure>
 <figure>
-<img src="images/screenshot03.png" alt="Slika 3: Odabir umjetne neuronske mreže za predviđanje" /><figcaption>Slika 3: Odabir umjetne neuronske mreže za predviđanje</figcaption>
+<img src="images/screenshot02.png" alt="Slika 3: Predviđanje AR modela" /><figcaption>Slika 3: Predviđanje AR modela</figcaption>
 </figure>
-<p><br></p>
+<figure>
+<img src="images/screenshot03.png" alt="Slika 4: Odabir umjetne neuronske mreže za predviđanje" /><figcaption>Slika 4: Odabir umjetne neuronske mreže za predviđanje</figcaption>
+</figure>
+<figure>
+<img src="images/screenshot04.png" alt="Slika 5: Odabir parametara umjetne neuronske mreže" /><figcaption>Slika 5: Odabir parametara umjetne neuronske mreže</figcaption>
+</figure>
+<figure>
+<img src="images/screenshot05.png" alt="Slika 6: Odabir parametara populacijskog genetskog algoritma" /><figcaption>Slika 6: Odabir parametara populacijskog genetskog algoritma</figcaption>
+</figure>
+<figure>
+<img src="images/screenshot06.png" alt="Slika 7: Predviđanje umjetne neuronske mreže" /><figcaption>Slika 7: Predviđanje umjetne neuronske mreže</figcaption>
+</figure>
+<figure>
+<img src="images/screenshot07.png" alt="Slika 8: Odabir genetskog programiranja za predviđanje" /><figcaption>Slika 8: Odabir genetskog programiranja za predviđanje</figcaption>
+</figure>
+<figure>
+<img src="images/screenshot08.png" alt="Slika 9: Odabir parametara populacijskog genetskog algoritma" /><figcaption>Slika 9: Odabir parametara populacijskog genetskog algoritma</figcaption>
+</figure>
+<figure>
+<img src="images/screenshot09.png" alt="Slika 10: Odabir čvorova dostupnih u stablu operatora" /><figcaption>Slika 10: Odabir čvorova dostupnih u stablu operatora</figcaption>
+</figure>
+</div>
 <hr />
 <div class="center">
 <p>© 2018. <a href="https://www.fer.unizg.hr/">Fakultet elektrotehnike i računarstva</a>, <a href="http://www.unizg.hr/">Sveučilište u Zagrebu</a></p>

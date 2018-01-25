@@ -9,19 +9,19 @@ img {
   max-width: 100%;
 }
 
-figure > img + figcaption {
-  text-align: center;
+table {
+  width: 100% !important;
+  border-collapse: collapse;
 }
 
-table {
-    width: 100% !important;
-    border-collapse: collapse;
+figure {
+  margin-bottom: 2em;  
 }
 
 table th, 
 table td {
-    border-bottom: 1px solid black;
-    padding: 15px;
+  border-bottom: 1px solid black;
+  padding: 15px;
 }
 
 .center {

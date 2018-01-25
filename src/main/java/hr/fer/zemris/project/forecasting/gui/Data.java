@@ -46,10 +46,10 @@ public class Data {
     private static List<ListenerHandle>       listenerHandles       = new LinkedList<>();
     private static List<MyListChangeListener> myListChangeListeners = new LinkedList<>();
 
-    public static final String DEFAULT_DATASET = "datasets/exchange-rate-twi-may-1970-aug-1.csv";
+    public static final String DEFAULT_DATASET = "default.csv";
 
-    public final static double INDEX_SIZE = 0.3;
-    public final static int GRAPH_WIDTH = 880;
+    public final static double INDEX_SIZE  = 0.3;
+    public final static int    GRAPH_WIDTH = 880;
 
     public static final String USAGE = String.format("Press + to add a sample");
 
@@ -70,6 +70,18 @@ public class Data {
                                                                          path,
                                                                          index - 1,
                                                                          delimiter
+                                                                     )));
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    public static ObservableList<DatasetValue> getDefaultDataset() {
+        try {
+            return FXCollections.observableArrayList(DatasetValue.
+                                                                     encapsulateDoubleArray(DataReaderUtil.readDataset(
+                                                                         Data.class.getClassLoader()
+                                                                                   .getResourceAsStream(DEFAULT_DATASET)
                                                                      )));
         } catch (IOException e) {
             return null;
@@ -134,16 +146,17 @@ public class Data {
         values.setCellFactory(TextFieldTableCell.forTableColumn(new MyDoubleStringConverter()));
         values.setOnEditCommit((e) ->
                                {
-                                   if(e.getNewValue() != null) {
+                                   if (e.getNewValue() != null) {
                                        e.getTableView().getItems().set(
                                            e.getTablePosition().getRow(),
                                            new DatasetValue(e.getTablePosition().getRow(), e.getNewValue())
                                        );
+                                   } else {
+                                       e.getTableView().getItems().set(
+                                           e.getTablePosition().getRow(),
+                                           new DatasetValue(e.getTablePosition().getRow(), e.getOldValue())
+                                       );
                                    }
-                                   else e.getTableView().getItems().set(
-                                       e.getTablePosition().getRow(),
-                                       new DatasetValue(e.getTablePosition().getRow(), e.getOldValue())
-                                   );
                                });
 
         TableColumn<DatasetValue, Integer> indices = new TableColumn<>("t");

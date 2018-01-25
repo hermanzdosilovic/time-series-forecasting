@@ -1,5 +1,5 @@
 ---
-title: Predviđanje Vremenskih Serija
+title: Predviđanje vremenskih serija
 lang: hr
 ---
 
@@ -11,8 +11,8 @@ pod mentorstvom [doc. dr. sc. Marka Čupića](https://www.fer.unizg.hr/marko.cup
 
 ---
 
-## Opis Projekta
-Vremenska serija poredani je niz podataka $x(t),\ t \geq 1$ gdje je $x(t)$
+## Opis projekta
+Vremenska serija poredani je niz podataka $x(t),\ t \geq 0$ gdje je $x(t)$
 tipično skalarna vrijednost.
 
 Problem predikcije vremenske serije jest problem predviđanja jedne ili više
@@ -22,7 +22,7 @@ U okviru ovog projekta razvili smo aplikaciju za predviđanje vremenskih serija
 koristeći statističke modele, modele temeljene na umjetnim neuronskim
 mrežama i model temeljen na genetskom programiranju.
 
-## Članovi Tima
+## Članovi tima
 |||
 |:---|:---:|
 |[Luka Banović](https://github.com/LBanovic) (voditelj tima)|statistički modeli, grafičko korisničko sučelje, dokumentacija|
@@ -31,11 +31,15 @@ mrežama i model temeljen na genetskom programiranju.
 |[Marin Sokol](https://github.com/marinsokol5)|statistički modeli, genetsko programiranje, grafičko korisničko sučelje|
 
 ## Preuzimanja
-[[Izvorni kôd]](https://github.com/hermanzdosilovic/time-series-forecasting)
+[Izvorni kôd](https://github.com/hermanzdosilovic/time-series-forecasting)
 
-[[Izvršni kôd]]()
+[Izvršni kôd](https://github.com/hermanzdosilovic/time-series-forecasting/raw/master/time-series-forecasting.jar)
 
-[[Dokumentacija]]()
+[Dokumentacija](https://github.com/hermanzdosilovic/time-series-forecasting/raw/master/dokumentacija.pdf)
+
+[Prezentacija](https://github.com/hermanzdosilovic/time-series-forecasting/raw/master/prezentacija.pdf)
+
+[Korisničke upute](https://github.com/hermanzdosilovic/time-series-forecasting/raw/master/upute.pdf)
 
 ## Slike
 ![Slika 1: Učitavanje vremenske serije](images/screenshot01.png)

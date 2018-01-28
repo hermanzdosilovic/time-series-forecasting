@@ -92,8 +92,6 @@ mutiramo i križamo njegova podstabla.
 
 * Izvršni kôd ([jar](https://github.com/hermanzdosilovic/time-series-forecasting/raw/master/time-series-forecasting.jar))
 
-* Dokumentacija ([pdf](https://github.com/hermanzdosilovic/time-series-forecasting/raw/master/dokumentacija.pdf))
-
 * Prezentacija ([pdf](https://github.com/hermanzdosilovic/time-series-forecasting/raw/master/prezentacija.pdf))
 
 * Korisničke upute ([pdf](https://github.com/hermanzdosilovic/time-series-forecasting/raw/master/upute.pdf))
